@@ -27,7 +27,7 @@ Some objectives are similar to projects like [Swagger](http://swagger.io/)
 The advantage of Xtend Active Annotations over DSL's for code generation, is that we can mix the meta-programming, models and definitions with the user code.
 * The code generation is easily controlled by developers. Other annotations can be added.
 * The re-generation do not interfere with already existent user code.
-
+* API definitions and implementations can still be separated (but in the same language), using interfaces.
 
 ### Why not REST API ?
 The communication protocol is a custom JSON message system, using Websockets. 
