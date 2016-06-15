@@ -1,0 +1,9 @@
+.git
+.classpath
+.project
+*.log
+
+.vertx/
+.settings/
+target/
+xtend-gen/
