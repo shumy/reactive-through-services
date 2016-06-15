@@ -61,8 +61,8 @@ class AnnotatedServiceTest {
 		val sync = ctx.async(1)
 
 		println('serviceAlexBrothersCall')
-		val msg = new JsonObject('{ "id":1, "cmd":"alexBrothers", "client":"source", "path":"srv:test" }')
-		val reply = new JsonObject('{ "id":1, "cmd":"ok", "client":"source", "result":{ "type":"map", "value":{ "name":"Alex", "brothers":["Jorge", "Mary"], "age":35 } } }')
+		val msg = new JsonObject('{ "id":1, "cmd":"alexBrothers", "client":"source", "path":"srv:test", "args":[{ "name":"Alex", "age":35 }] }')
+		val reply = new JsonObject('{ "id":1, "cmd":"ok", "client":"source", "result":{ "type":"map", "value":{ "name":"Alex", "age":35, "brothers":["Jorge", "Mary"] } } }')
 		
 		val r = pipeline.createResource("uid", "r", [ ctx.assertEquals(it, reply) sync.countDown ], null)
 		r.process(msg)

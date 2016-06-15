@@ -2,6 +2,7 @@ package rt.node
 
 import rt.node.annotation.Service
 import rt.node.annotation.Public
+import java.util.Map
 
 @Service("test")
 class AnnotatedService {
@@ -17,10 +18,10 @@ class AnnotatedService {
 	}
 	
 	@Public
-	def alexBrothers() {
+	def alexBrothers(Map<String, Object> data) {
 		return #{
-			'name' -> 'Alex',
-			'age' -> 35,
+			'name' -> data.get('name'),
+			'age' -> data.get('age'),
 			'brothers' -> #[ 'Jorge', 'Mary' ]
 		}
 	}

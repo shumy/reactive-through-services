@@ -79,11 +79,13 @@ class ServiceProcessor extends AbstractClassProcessor {
 	}
 	
 	def addArgType(TypeReference type, int index) {
-		var method = type.simpleName.toFirstUpper
-		if(method == "Int") {
-			method = "Integer"
-		}
+		val simpleType = type.simpleName.replaceFirst('<.*>', '').toFirstUpper
 		
-		return '''args.get«method»(«index»)'''
+		switch simpleType {
+			case 'Int': return '''args.getInteger(«index»)'''
+			case 'Map': return '''args.getJsonObject(«index»).getMap()'''
+			default:
+				return '''args.get«simpleType»(«index»)'''
+		}
 	}
 }
