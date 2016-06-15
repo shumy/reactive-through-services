@@ -54,7 +54,7 @@ class ServiceProcessor extends AbstractClassProcessor {
 						«ENDIF»
 					«ENDFOR»
 					default:
-						System.out.println("No public method: " + cmd);
+						ctx.replyError("No public method: " + cmd);
 						break;
 				}
 			'''
@@ -62,7 +62,7 @@ class ServiceProcessor extends AbstractClassProcessor {
 	}
 	
 	def addCase(MutableMethodDeclaration meth) {
-		val retType = meth.returnType.simpleName
+		val retType = meth.returnType.simpleName.replaceFirst('<.*>', '')
 
 		//TODO: add support for non native types
 		var i = 0

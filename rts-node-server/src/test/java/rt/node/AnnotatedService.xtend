@@ -15,4 +15,13 @@ class AnnotatedService {
 	def sum(int first, long second, float third, double fourth) {
 		return first + second + third + fourth
 	}
+	
+	@Public
+	def alexBrothers() {
+		return #{
+			'name' -> 'Alex',
+			'age' -> 35,
+			'brothers' -> #[ 'Jorge', 'Mary' ]
+		}
+	}
 }
