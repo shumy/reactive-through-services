@@ -43,7 +43,7 @@ class ConsoleTransferListener extends AbstractTransferListener {
 		}
 	}
 	
-	override def void transferCorrupted(TransferEvent event) {
+	override void transferCorrupted(TransferEvent event) {
 		event.exception.printStackTrace
 	}
 

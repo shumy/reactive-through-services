@@ -4,7 +4,7 @@ import rt.node.annotation.Service
 import rt.node.annotation.Public
 import java.util.Map
 
-@Service("test")
+@Service('test')
 class AnnotatedService {
 	
 	@Public

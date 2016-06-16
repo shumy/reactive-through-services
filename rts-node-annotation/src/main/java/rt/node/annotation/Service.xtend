@@ -12,6 +12,9 @@ import org.eclipse.xtend.lib.macro.declaration.MutableMethodDeclaration
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import org.eclipse.xtend.lib.macro.declaration.TypeReference
+import java.util.List
+import org.eclipse.xtend.lib.macro.declaration.ClassDeclaration
+import org.eclipse.xtend.lib.macro.CodeGenerationContext
 
 @Target(TYPE)
 @Active(ServiceProcessor)
@@ -60,6 +63,33 @@ class ServiceProcessor extends AbstractClassProcessor {
 			'''
 		]
 	}
+	
+	/*
+	override doGenerateCode(List<? extends ClassDeclaration> annotatedSourceElements, @Extension CodeGenerationContext context) {
+		val filePath = annotatedSourceElements.get(0).compilationUnit.filePath
+		val file = filePath.projectFolder.append('/src/main/resources/plugin.properties')
+
+		file.contents = '''
+			«FOR clazz: annotatedSourceElements»
+				«clazz.qualifiedName»
+					«FOR method: clazz.declaredMethods»
+						«method.simpleName»
+					«ENDFOR»
+			«ENDFOR»
+		'''
+	}
+	
+	override doGenerateCode(ClassDeclaration clazz, @Extension CodeGenerationContext context) {
+		val filePath = clazz.compilationUnit.filePath
+		val file = filePath.projectFolder.append('/src/main/resources/' + clazz.simpleName + '.properties')
+		
+		file.contents = '''
+			«FOR method : clazz.declaredMethods»
+				«method.simpleName»
+			«ENDFOR»
+      	'''
+	}
+	*/
 	
 	def addCase(MutableMethodDeclaration meth) {
 		val retType = meth.returnType.simpleName.replaceFirst('<.*>', '')

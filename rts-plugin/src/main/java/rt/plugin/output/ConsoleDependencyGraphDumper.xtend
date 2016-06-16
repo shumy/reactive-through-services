@@ -10,13 +10,13 @@ import org.eclipse.aether.util.artifact.ArtifactIdUtils
 class ConsoleDependencyGraphDumper implements DependencyVisitor {
 	val childInfos = new ArrayList<ChildInfo>
 
-	override def visitEnter(DependencyNode node) {
+	override visitEnter(DependencyNode node) {
 		println(formatIndentation + formatNode(node))
 		childInfos.add(new ChildInfo(node.children.size))
 		return true
 	}
 	
-	override def visitLeave(DependencyNode node) {
+	override visitLeave(DependencyNode node) {
 		if (!childInfos.isEmpty) {
 			childInfos.remove(childInfos.size() - 1)
 		}
