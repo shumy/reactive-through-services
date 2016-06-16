@@ -17,6 +17,8 @@ import org.eclipse.aether.util.graph.manager.DependencyManagerUtils
 import org.eclipse.xtend.lib.annotations.Accessors
 import org.eclipse.aether.repository.RemoteRepository
 import java.util.HashMap
+import java.net.URL
+import java.net.URLClassLoader
 
 class PluginRepository {
 	@Accessors(PACKAGE_GETTER) val RepositorySystem system
@@ -27,6 +29,12 @@ class PluginRepository {
 	
 	val String localPath
 	val remotePath = 'http://central.maven.org/maven2/'
+	
+	//all registered files from resolve operation
+	var isResolved = false
+	val classPath = new HashMap<String, URL>
+	
+	var URLClassLoader urlClassLoader = null
 	
 	new(String localPath) {
 		this.localPath = localPath
@@ -56,8 +64,38 @@ class PluginRepository {
 		session.localRepositoryManager = system.newLocalRepositoryManager(session, localRepo)
 	}
 	
-	def void resolve() {
-		plugins.plugins.forEach[ key, plugin | plugin.resolve ]
+	def boolean resolve() {
+		isResolved = true
+		
+		plugins.plugins.values.forEach[
+			resolve.forEach[
+				val reference = '''«artifact.groupId»:«artifact.artifactId»:«artifact.version»'''
+				isResolved = resolved
+
+				classPath.put(reference, artifact.file.toURI.toURL)		
+			]
+		]
+
+		println('''ClassPath (resolved=«isResolved», size=«classPath.keySet.size») «classPath.keySet»''')
+		return isResolved		
+	}
+	
+	def Class<?> load(String clazz) {
+		if (!isResolved)
+			throw new RuntimeException('ClassPath is not resolved, or something went wrong in the resolve process!')
+		
+		if (urlClassLoader == null) {
+			var i = 0
+			val URL[] urls = newArrayOfSize(classPath.size)
+			for (url: classPath.values) {
+				urls.set(i, url)
+				i++
+			}
+			
+			urlClassLoader = new URLClassLoader(urls)
+		}
+		
+		return urlClassLoader.loadClass(clazz)
 	}
 	
 	static class PluginList {
@@ -66,6 +104,10 @@ class PluginRepository {
 		
 		new(PluginRepository repo) {
 			this.repo = repo
+		}
+		
+		def += (String reference) {
+			addPlugin(reference)
 		}
 		
 		def addPlugin(String reference) {
@@ -78,9 +120,5 @@ class PluginRepository {
 		def getPlugin(String reference) {
 			return plugins.get(reference)
 		}
-		
-		def += (String reference) {
-			addPlugin(reference)
-		} 
 	}
 }

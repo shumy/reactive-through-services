@@ -9,48 +9,44 @@ import org.eclipse.aether.resolution.DependencyRequest
 import org.eclipse.aether.util.filter.DependencyFilterUtils
 import org.eclipse.aether.util.artifact.JavaScopes
 import org.eclipse.aether.graph.Dependency
+import org.eclipse.aether.graph.DependencyFilter
+import org.eclipse.aether.resolution.DependencyResult
 
 class PluginArtifact {
 	@Accessors val String reference
 	
 	val PluginRepository repo
-	val ArtifactDescriptorRequest descriptorRequest
 	
-	new(PluginRepository repo, String reference) {
+	val DependencyFilter filterRequest
+	val ArtifactDescriptorRequest descriptorRequest
+	val CollectRequest collectRequest
+	val DependencyRequest dependencyRequest
+	
+	var DependencyResult result = null
+	
+	package new(PluginRepository repo, String reference) {
 		this.repo = repo
 		this.reference = reference
+		
+		filterRequest = DependencyFilterUtils.classpathFilter(JavaScopes.COMPILE)
 		
 		descriptorRequest = new ArtifactDescriptorRequest => [
 			artifact = new DefaultArtifact(reference)
 			repositories = #[repo.centraRepository]
 		]
-	}
-	
-	/*def void collect() {
-		val descriptorResult = repo.system.readArtifactDescriptor(repo.session, descriptorRequest)
 		
-		val collectRequest = new CollectRequest => [
-			rootArtifact = descriptorResult.artifact
-			dependencies = descriptorResult.dependencies
-			managedDependencies = descriptorResult.managedDependencies
-			repositories = descriptorRequest.repositories
-		]
-		
-		val result = repo.system.collectDependencies(repo.session, collectRequest)
-		result.root.accept(new ConsoleDependencyGraphDumper)
-	}*/
-	
-	def void resolve() {
-		val classpathFilter = DependencyFilterUtils.classpathFilter(JavaScopes.COMPILE)
-		
-		val collectRequest = new CollectRequest => [
+		collectRequest = new CollectRequest => [
 			root = new Dependency(descriptorRequest.artifact, JavaScopes.COMPILE)
 			repositories = descriptorRequest.repositories
 		]
 		
-		val dependencyRequest = new DependencyRequest(collectRequest, classpathFilter)
-		
-		val result = repo.system.resolveDependencies(repo.session, dependencyRequest)
+		dependencyRequest = new DependencyRequest(collectRequest, filterRequest)
+	}
+	
+	def resolve() {
+		result = repo.system.resolveDependencies(repo.session, dependencyRequest)
 		result.root.accept(new ConsoleDependencyGraphDumper)
+		
+		return result.artifactResults
 	}
 }
