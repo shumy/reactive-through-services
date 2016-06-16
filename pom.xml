@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>rt.syncher</groupId>
 	<artifactId>rt-syncher</artifactId>
-	<version>1</version>
+	<version>0.1.0</version>
 	<packaging>pom</packaging>
 
 	<properties>
@@ -30,9 +30,6 @@
 		<resources>
 			<resource>
 				<directory>src/main/resources</directory>
-				<!--<excludes>
-					<exclude>**/*.xtend</exclude>
-				</excludes>-->
 			</resource>
 		</resources>
 		
@@ -61,5 +58,6 @@
 		<module>rts-node</module>
 		<module>rts-node-annotation</module>
 		<module>rts-node-server</module>
+		<module>rts-plugin</module>
 	</modules>
 </project>
