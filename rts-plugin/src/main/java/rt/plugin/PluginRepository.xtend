@@ -56,7 +56,7 @@ class PluginRepository {
 			transferListener = new ConsoleTransferListener
 			repositoryListener = new ConsoleRepositoryListener
 			
-			setConfigProperty(ConflictResolver.CONFIG_PROP_VERBOSE, true)
+			setConfigProperty(ConflictResolver.NODE_DATA_WINNER, true)
 			setConfigProperty(DependencyManagerUtils.CONFIG_PROP_VERBOSE, true)
 		]
 		
