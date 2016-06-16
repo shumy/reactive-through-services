@@ -2,26 +2,24 @@ package rt.plugin.test
 
 import rt.plugin.PluginRepository
 import org.junit.Test
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import static extension rt.plugin.InvokerHelper.*
+import java.io.File
+import org.junit.Assert
 
 class RemoteLoadTest {
 	
 	@Test
 	def void loadLogbackAndDependencies() {
-		val repo = new PluginRepository('target/local-repo') => [
-			plugins += 'org.slf4j:slf4j-api:1.7.21'
+		val home = System.getProperty('user.home')
+		val local = '''«home»«File.separator».m2«File.separator»repository'''
+		
+		val repo = new PluginRepository(local) => [
+			plugins += 'rt.syncher:rts-plugin-test:0.1.0'
+			resolve
 		]
-		
-		repo.resolve
-		
-		val factory = repo.load('org.slf4j.LoggerFactory')
-		val method = factory.getMethod('getLogger', String)
-		
-		val nLogger = LoggerFactory.getLogger('NORMAL-LOGGER')
-		nLogger.info('Just a log {}', 'Test')
-		
-		val pLogger = method.invoke(factory, 'PLUGIN-LOGGER') as Logger
-		pLogger.info('Just a log {}', 'Test')
+
+		val iHello = repo.instanceOf('rt.plugin.test.HelloWorld')
+		val result = iHello.invoke('hello', 'Alex')
+		Assert.assertEquals(result, 'Hello Alex')
 	}
 }

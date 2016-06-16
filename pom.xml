@@ -22,11 +22,6 @@
 			<artifactId>slf4j-api</artifactId>
 			<version>1.7.21</version>
 		</dependency>
-		<dependency>
-			<groupId>ch.qos.logback</groupId>
-			<artifactId>logback-classic</artifactId>
-			<version>1.1.7</version>
-		</dependency>
 		
 		<dependency>
 			<groupId>junit</groupId>
@@ -68,6 +63,7 @@
 		<module>rts-node</module>
 		<module>rts-node-annotation</module>
 		<module>rts-node-server</module>
+		<module>rts-plugin-test</module>
 		<module>rts-plugin</module>
 	</modules>
 </project>

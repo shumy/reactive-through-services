@@ -23,12 +23,13 @@ import java.net.URLClassLoader
 class PluginRepository {
 	@Accessors(PACKAGE_GETTER) val RepositorySystem system
 	@Accessors(PACKAGE_GETTER) val RemoteRepository centraRepository
+	@Accessors(PACKAGE_GETTER) val LocalRepository localRepository
 	@Accessors(PACKAGE_GETTER) val DefaultRepositorySystemSession session
 	
 	@Accessors val plugins = new PluginList(this)
 	
 	val String localPath
-	val remotePath = 'http://central.maven.org/maven2/'
+	val remoteRepoPath = 'http://central.maven.org/maven2/'
 	
 	//all registered files from resolve operation
 	var isResolved = false
@@ -38,8 +39,6 @@ class PluginRepository {
 	
 	new(String localPath) {
 		this.localPath = localPath
-
-		val localRepo = new LocalRepository(localPath)
 		
 		val locator = MavenRepositorySystemUtils.newServiceLocator => [
 			addService(RepositoryConnectorFactory, BasicRepositoryConnectorFactory)
@@ -50,7 +49,8 @@ class PluginRepository {
 		
 		system = locator.getService(RepositorySystem)
 		
-		centraRepository = new RemoteRepository.Builder('central', 'default', remotePath).build
+		centraRepository = new RemoteRepository.Builder('central', 'default', remoteRepoPath).build
+		localRepository = new LocalRepository(localPath)
 		
 		session = MavenRepositorySystemUtils.newSession => [
 			transferListener = new ConsoleTransferListener
@@ -61,7 +61,7 @@ class PluginRepository {
 		]
 		
 		// needed after session create
-		session.localRepositoryManager = system.newLocalRepositoryManager(session, localRepo)
+		session.localRepositoryManager = system.newLocalRepositoryManager(session, localRepository)
 	}
 	
 	def boolean resolve() {
@@ -80,7 +80,7 @@ class PluginRepository {
 		return isResolved		
 	}
 	
-	def Class<?> load(String clazz) {
+	def Class<?> loadClass(String clazz) {
 		if (!isResolved)
 			throw new RuntimeException('ClassPath is not resolved, or something went wrong in the resolve process!')
 		
@@ -96,6 +96,10 @@ class PluginRepository {
 		}
 		
 		return urlClassLoader.loadClass(clazz)
+	}
+	
+	def instanceOf(String clazz) {
+		return loadClass(clazz).newInstance
 	}
 	
 	static class PluginList {
