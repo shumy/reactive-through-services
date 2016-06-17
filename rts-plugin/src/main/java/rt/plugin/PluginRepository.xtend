@@ -73,9 +73,10 @@ class PluginRepository {
 		plugins.artifacts.values.forEach[
 			resolve.forEach[
 				val reference = '''«artifact.groupId»:«artifact.artifactId»:«artifact.version»'''
-				isResolved = resolved
-
-				classPath.put(reference, artifact.file.toURI.toURL)		
+				classPath.put(reference, artifact.file.toURI.toURL)
+				
+				if (!resolved)
+					throw new RuntimeException('''Unresolved artifact: «reference»''')
 			]
 		]
 

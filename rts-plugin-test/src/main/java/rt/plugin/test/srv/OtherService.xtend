@@ -1,7 +1,7 @@
 package rt.plugin.test.srv
 
-import rt.node.annotation.Service
-import rt.node.annotation.Public
+import rt.plugin.service.Service
+import rt.plugin.service.Public
 
 @Service('other')
 class OtherService {

@@ -6,18 +6,5 @@
 		<version>0.2.0</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
-	<artifactId>rts-plugin-service</artifactId>
-
-	<dependencies>
-		<dependency>
-			<groupId>rt.syncher</groupId>
-			<artifactId>rts-pipeline</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>rt.syncher</groupId>
-			<artifactId>rts-plugin</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-	</dependencies>
+	<artifactId>rts-pipeline</artifactId>
 </project>

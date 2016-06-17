@@ -1,8 +1,8 @@
 package rt.plugin.test.srv
 
-import rt.node.annotation.Service
-import rt.node.annotation.Public
 import java.util.Map
+import rt.plugin.service.Service
+import rt.plugin.service.Public
 
 @Service('test')
 class AnnotatedService {

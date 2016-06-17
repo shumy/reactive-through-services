@@ -3,7 +3,7 @@
 	<parent>
 		<groupId>rt.syncher</groupId>
 		<artifactId>rt-syncher</artifactId>
-		<version>0.1.0</version>
+		<version>0.2.0</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<artifactId>rts-plugin-test-loader</artifactId>
@@ -11,7 +11,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>rt.syncher</groupId>
-			<artifactId>rts-node</artifactId>
+			<artifactId>rts-pipeline</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>

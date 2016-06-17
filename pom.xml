@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>rt.syncher</groupId>
 	<artifactId>rt-syncher</artifactId>
-	<version>0.1.0</version>
+	<version>0.2.0</version>
 	<packaging>pom</packaging>
 
 	<properties>
@@ -60,11 +60,11 @@
 	</build>
 
 	<modules>
+		<module>rts-pipeline</module>
 		<module>rts-plugin</module>
 		<module>rts-plugin-service</module>
-		<module>rts-node</module>
 		<module>rts-plugin-test</module>
 		<module>rts-plugin-test-loader</module>
-		<module>rts-node-server</module>
+		<module>rts-vertx-server</module>
 	</modules>
 </project>
