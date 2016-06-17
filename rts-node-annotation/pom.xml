@@ -14,5 +14,10 @@
 			<artifactId>rts-node</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>rt.syncher</groupId>
+			<artifactId>rts-plugin</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 	</dependencies>
 </project>

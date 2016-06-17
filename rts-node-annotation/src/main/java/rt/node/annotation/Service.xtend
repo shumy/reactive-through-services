@@ -12,9 +12,12 @@ import org.eclipse.xtend.lib.macro.declaration.MutableMethodDeclaration
 import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import org.eclipse.xtend.lib.macro.declaration.TypeReference
-import java.util.List
 import org.eclipse.xtend.lib.macro.declaration.ClassDeclaration
 import org.eclipse.xtend.lib.macro.CodeGenerationContext
+import rt.plugin.config.PluginConfig
+import rt.plugin.config.PluginConfigFactory
+import java.io.PipedInputStream
+import java.io.PipedOutputStream
 
 @Target(TYPE)
 @Active(ServiceProcessor)
@@ -23,6 +26,7 @@ annotation Service {
 }
 
 class ServiceProcessor extends AbstractClassProcessor {
+
 	override doTransform(MutableClassDeclaration clazz, extension TransformationContext ctx) {
 		val anno = clazz.findAnnotation(Service.findTypeGlobally)
 		val name = anno.getStringValue("value")
@@ -34,11 +38,6 @@ class ServiceProcessor extends AbstractClassProcessor {
 			body = '''
 				return "srv:«name»";
 			'''
-		]
-		
-		
-		clazz.declaredMethods.forEach[
-			println(it.simpleName)
 		]
 		
 		clazz.addMethod("apply")[
@@ -64,32 +63,24 @@ class ServiceProcessor extends AbstractClassProcessor {
 		]
 	}
 	
-	/*
-	override doGenerateCode(List<? extends ClassDeclaration> annotatedSourceElements, @Extension CodeGenerationContext context) {
-		val filePath = annotatedSourceElements.get(0).compilationUnit.filePath
-		val file = filePath.projectFolder.append('/src/main/resources/plugin.properties')
-
-		file.contents = '''
-			«FOR clazz: annotatedSourceElements»
-				«clazz.qualifiedName»
-					«FOR method: clazz.declaredMethods»
-						«method.simpleName»
-					«ENDFOR»
-			«ENDFOR»
-		'''
-	}
-	
 	override doGenerateCode(ClassDeclaration clazz, @Extension CodeGenerationContext context) {
 		val filePath = clazz.compilationUnit.filePath
-		val file = filePath.projectFolder.append('/src/main/resources/' + clazz.simpleName + '.properties')
+		val file = filePath.projectFolder.append('/src/main/resources/plugin-config.xml')
+		val factory = new PluginConfigFactory
 		
-		file.contents = '''
-			«FOR method : clazz.declaredMethods»
-				«method.simpleName»
-			«ENDFOR»
-      	'''
+		// read plugin-config.xml
+		val config = if (file.exists) factory.readFrom(file.contentsAsStream) else new PluginConfig
+		
+		// change config
+		val entry = config.findOrCreateEntry('service', clazz.qualifiedName)
+		entry => [
+			type = 'service'
+			ref = clazz.qualifiedName
+		]
+		
+		// write plugin-config.xml
+		file.contents = factory.transform(config)
 	}
-	*/
 	
 	def addCase(MutableMethodDeclaration meth) {
 		val retType = meth.returnType.simpleName.replaceFirst('<.*>', '')
