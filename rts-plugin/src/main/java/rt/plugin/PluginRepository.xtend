@@ -56,8 +56,8 @@ class PluginRepository {
 		localRepository = new LocalRepository(localPath)
 		
 		session = MavenRepositorySystemUtils.newSession => [
-			transferListener = new ConsoleTransferListener
-			repositoryListener = new ConsoleRepositoryListener
+			//transferListener = new ConsoleTransferListener
+			//repositoryListener = new ConsoleRepositoryListener
 			
 			setConfigProperty(ConflictResolver.NODE_DATA_WINNER, true)
 			setConfigProperty(DependencyManagerUtils.CONFIG_PROP_VERBOSE, true)

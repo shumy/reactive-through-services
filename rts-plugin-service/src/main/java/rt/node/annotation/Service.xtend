@@ -7,16 +7,17 @@ import org.eclipse.xtend.lib.macro.declaration.MutableClassDeclaration
 import org.eclipse.xtend.lib.macro.TransformationContext
 import rt.node.IComponent
 import rt.node.pipeline.PipeContext
-import rt.node.pipeline.PipeMessage
 import org.eclipse.xtend.lib.macro.declaration.MutableMethodDeclaration
-import io.vertx.core.json.JsonArray
-import io.vertx.core.json.JsonObject
 import org.eclipse.xtend.lib.macro.declaration.TypeReference
 import org.eclipse.xtend.lib.macro.declaration.ClassDeclaration
 import org.eclipse.xtend.lib.macro.CodeGenerationContext
 import rt.plugin.config.PluginConfig
 import rt.plugin.config.PluginConfigFactory
 import rt.plugin.config.PluginEntry
+import rt.node.IMessageBus.Message
+import java.util.List
+import java.util.Map
+import java.util.HashMap
 
 @Target(TYPE)
 @Active(ServiceProcessor)
@@ -43,19 +44,18 @@ class ServiceProcessor extends AbstractClassProcessor {
 			addParameter('ctx', ctx.newTypeReference(PipeContext))
 			
 			body = '''
-				final «PipeMessage» msg = ctx.getMessage();
-				final «String» cmd = msg.getCmd();
-				final «JsonArray» args = msg.getArgs();
-				final «JsonObject» ret = new «JsonObject»();
+				final «Message» msg = ctx.getMessage();
+				final «List»<Object> args = msg.args;
+				final «Map»<String, Object> ret = new «HashMap»<>();
 				
-				switch(cmd) {
+				switch(msg.cmd) {
 					«FOR meth : clazz.declaredMethods»
 						«IF meth.findAnnotation(Public.findTypeGlobally) != null»
 							«meth.addCase»
 						«ENDIF»
 					«ENDFOR»
 					default:
-						ctx.replyError("No public method: " + cmd);
+						ctx.replyError("No public method: " + msg.cmd);
 						break;
 				}
 			'''
@@ -103,13 +103,6 @@ class ServiceProcessor extends AbstractClassProcessor {
 	}
 	
 	def addArgType(TypeReference type, int index) {
-		val simpleType = type.simpleName.replaceFirst('<.*>', '').toFirstUpper
-		
-		switch simpleType {
-			case 'Int': return '''args.getInteger(«index»)'''
-			case 'Map': return '''args.getJsonObject(«index»).getMap()'''
-			default:
-				return '''args.get«simpleType»(«index»)'''
-		}
+		return '''(«type»)args.get(«index»)'''
 	}
 }

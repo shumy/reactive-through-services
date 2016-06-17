@@ -10,7 +10,7 @@ class ValidatorInterceptor implements IComponent {
 	override def apply(PipeContext ctx) {
 		val msg = ctx.message
 
-		if(msg.id == null)
+		if(msg.id == 0)
 			ctx.fail("No mandatory field 'id'")
 		
 		if(msg.cmd == null)

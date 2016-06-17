@@ -12,10 +12,14 @@ import rt.node.Registry
 
 import rt.node.IComponent
 import rt.node.pipeline.PipeContext
-import io.vertx.core.json.JsonObject
+import rt.node.VertxMessageBus
+import rt.node.IMessageBus.Message
+import org.junit.Assert
+import com.google.gson.Gson
 
 @RunWith(VertxUnitRunner)
 class PipelineTest {
+	Gson gson
 	Registry registry
 	
 	@Rule
@@ -23,7 +27,17 @@ class PipelineTest {
 	
 	@Before
 	def void init(TestContext ctx) {
-		this.registry = new Registry("domain", rule.vertx)
+		val mb = new VertxMessageBus(rule.vertx.eventBus)
+		
+		this.gson = new Gson
+		this.registry = new Registry('domain', mb)
+	}
+	
+	@Test
+	def compareMessages() {
+		val msg1 = new Message => [id=1 cmd='ping' client='source']
+		val msg2 = new Message => [id=1 cmd='ping' client='source']
+		Assert.assertEquals(gson.toJson(msg1), gson.toJson(msg2))
 	}
 	
 	@Test(timeout = 500)
@@ -50,23 +64,23 @@ class PipelineTest {
 			]
 		]
 		
-		val r = pipeline.createResource("uid", "r", [ println(it) ], null)
-		r.process(new JsonObject('{}'))
-		r.process(new JsonObject('{"id":1}'))
-		r.process(new JsonObject('{"id":1,"cmd":"ping"}'))
-		r.process(new JsonObject('{"id":1,"cmd":"ping","client":"source"}'))
+		val r = pipeline.createResource('uid', 'r', [ println(it) ], null)
+		r.process(new Message => [])
+		r.process(new Message => [id=1])
+		r.process(new Message => [id=1 cmd='ping'])
+		r.process(new Message => [id=1 cmd='ping' client='source'])
 	}
 	
 	@Test
 	def void deliverMessageToService(TestContext ctx) {
 		println('deliverMessageToService')
-		val msg = new JsonObject('{"id":1,"cmd":"ping","client":"source","path":"srv:test"}')
+		val msg = new Message => [id=1 cmd='ping' client='source' path='srv:test']
 
 		val srv = new IComponent {
-			override getName() { return "srv:test" }
+			override getName() { return 'srv:test' }
 			
 			override apply(PipeContext pctx) {
-				ctx.assertEquals(pctx.message.json, msg)
+				ctx.assertEquals(gson.toJson(pctx.message), gson.toJson(msg))
 			}
 		}
 		
@@ -76,7 +90,7 @@ class PipelineTest {
 			failHandler = [ ctx.fail(it) ]
 		]
 		
-		val r = pipeline.createResource("uid", "r", null, null)
+		val r = pipeline.createResource('uid', 'r', null, null)
 		r.process(msg)
 	}
 	
@@ -85,14 +99,14 @@ class PipelineTest {
 		val sync = ctx.async(1)
 		
 		println('serviceReplyToMessage')
-		val msg = new JsonObject('{"id":1,"cmd":"ping","client":"source","path":"srv:test"}')
-		val reply = new JsonObject('{"id":1,"cmd":"ok","client":"source"}')
+		val msg = new Message => [id=1 cmd='ping' client='source' path='srv:test']
+		val reply = new Message => [id=1 cmd='ok' client='source']
 
 		val srv = new IComponent {
-			override getName() { return "srv:test" }
+			override getName() { return 'srv:test' }
 			
 			override apply(PipeContext pctx) {
-				ctx.assertEquals(pctx.message.json, msg)
+				ctx.assertEquals(gson.toJson(pctx.message), gson.toJson(msg))
 				pctx.replyOK
 			}
 		}
@@ -103,7 +117,7 @@ class PipelineTest {
 			failHandler = [ ctx.fail(it) ]
 		]
 		
-		val r = pipeline.createResource("uid", "r", [ ctx.assertEquals(it, reply) sync.countDown ], null)
+		val r = pipeline.createResource('uid', 'r', [ ctx.assertEquals(gson.toJson(it), gson.toJson(reply)) sync.countDown ], null)
 		r.process(msg)
 	}
 	
@@ -112,20 +126,20 @@ class PipelineTest {
 		val sync = ctx.async(2)
 
 		println('deliverMessageToSubscriptors')
-		val msg = new JsonObject('{"id":1,"cmd":"ping","client":"source","path":"target"}')
+		val msg = new Message => [id=1 cmd='ping' client='source' path='target']
 		
 		val pipeline = registry.createPipeline => [
 			addInterceptor(new ValidatorInterceptor)
 			failHandler = [ ctx.fail(it) ]
 		]
 		
-		val r1 = pipeline.createResource("uid1", "r1", [ ctx.assertEquals(it, msg) sync.countDown ], null)
-		r1.subscribe("target")
+		val r1 = pipeline.createResource('uid1', 'r1', [ ctx.assertEquals(gson.toJson(it), gson.toJson(msg)) sync.countDown ], null)
+		r1.subscribe('target')
 		
-		val r2 = pipeline.createResource("uid2", "r2", [ ctx.assertEquals(it, msg) sync.countDown ], null)
-		r2.subscribe("target")
+		val r2 = pipeline.createResource('uid2', 'r2', [ ctx.assertEquals(gson.toJson(it), gson.toJson(msg)) sync.countDown ], null)
+		r2.subscribe('target')
 		
-		val r3 = pipeline.createResource("uid3", "r3", null, null)
+		val r3 = pipeline.createResource('uid3', 'r3', null, null)
 		r3.process(msg)
 	}
 	
@@ -134,15 +148,15 @@ class PipelineTest {
 		val sync = ctx.async(2)
 		
 		println('deliverMessageToMultipleConnectionsOfSameSession')
-		val msg = new JsonObject('{"id":1,"cmd":"ping","client":"source","path":"uid"}')
+		val msg = new Message => [id=1 cmd='ping' client='source' path='uid']
 		
 		val pipeline = registry.createPipeline => [
 			addInterceptor(new ValidatorInterceptor)
 			failHandler = [ ctx.fail(it) ]
 		]
 		
-		pipeline.createResource("uid", "r1", [ ctx.assertEquals(it, msg) sync.countDown ], null)
-		val r2 = pipeline.createResource("uid", "r2", [ ctx.assertEquals(it, msg) sync.countDown ], null)
+		pipeline.createResource('uid', 'r1', [ ctx.assertEquals(gson.toJson(it), gson.toJson(msg)) sync.countDown ], null)
+		val r2 = pipeline.createResource('uid', 'r2', [ ctx.assertEquals(gson.toJson(it), gson.toJson(msg)) sync.countDown ], null)
 		r2.process(msg)
 	}
 }

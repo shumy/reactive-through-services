@@ -9,12 +9,17 @@ import org.junit.Before
 import io.vertx.ext.unit.TestContext
 import org.junit.Test
 import rt.node.pipeline.use.ValidatorInterceptor
-import rt.node.AnnotatedService
-import io.vertx.core.json.JsonObject
 import rt.node.pipeline.Pipeline
+import java.io.File
+import rt.plugin.PluginRepository
+import rt.node.IComponent
+import rt.node.VertxMessageBus
+import rt.node.IMessageBus.Message
+import com.google.gson.Gson
 
 @RunWith(VertxUnitRunner)
 class AnnotatedServiceTest {
+	Gson gson
 	Registry registry
 	Pipeline pipeline
 	
@@ -23,11 +28,24 @@ class AnnotatedServiceTest {
 	
 	@Before
 	def void init(TestContext ctx) {
-		this.registry = new Registry("domain", rule.vertx)
+		val home = System.getProperty('user.home')
+		val local = '''«home»«File.separator».m2«File.separator»repository'''
 		
+		val repo = new PluginRepository(local) => [
+			plugins += 'rt.syncher:rts-plugin-test:0.1.0'
+			resolve
+		]
+		
+		val plugin = repo.plugins.artifact('rt.syncher:rts-plugin-test:0.1.0')
+		val srv = plugin.newInstanceFromEntry(IComponent, 'srv', 'rt.plugin.test.srv.AnnotatedService')
+		
+		val mb = new VertxMessageBus(rule.vertx.eventBus)
+		
+		this.gson = new Gson
+		this.registry = new Registry("domain", mb)
 		this.pipeline = registry.createPipeline => [
 			addInterceptor(new ValidatorInterceptor)
-			addService(new AnnotatedService)
+			addService(srv)
 			failHandler = [ ctx.fail(it) ]
 		]
 	}
@@ -37,10 +55,10 @@ class AnnotatedServiceTest {
 		val sync = ctx.async(1)
 
 		println('serviceHelloCall')
-		val msg = new JsonObject('{ "id":1, "cmd":"hello", "client":"source", "path":"srv:test", "args":["Micael", "Pedrosa"] }')
-		val reply = new JsonObject('{ "id":1, "cmd":"ok", "client":"source", "result":{ "type":"string", "value":"Hello Micael Pedrosa!" } }')
+		val msg = new Message => [id=1 cmd='hello' client='source' path='srv:test' args=#['Micael', 'Pedrosa']]
+		val reply = new Message => [id=1 cmd='ok' client='source' result=#{'type'->'string', 'value'->'Hello Micael Pedrosa!'}]
 		
-		val r = pipeline.createResource("uid", "r", [ ctx.assertEquals(it, reply) sync.countDown ], null)
+		val r = pipeline.createResource("uid", "r", [ ctx.assertEquals(gson.toJson(it), gson.toJson(reply)) sync.countDown ], null)
 		r.process(msg)
 	}
 	
@@ -49,10 +67,10 @@ class AnnotatedServiceTest {
 		val sync = ctx.async(1)
 
 		println('serviceSumCall')
-		val msg = new JsonObject('{ "id":1, "cmd":"sum", "client":"source", "path":"srv:test", "args":[1, 2, 1.5, 2.5] }')
-		val reply = new JsonObject('{ "id":1, "cmd":"ok", "client":"source", "result":{ "type":"double", "value":7 } }')
+		val msg = new Message => [id=1 cmd='sum' client='source' path='srv:test' args=#[1, 2L, 1.5f, 2.5]]
+		val reply = new Message => [id=1 cmd='ok' client='source' result=#{'type'->'double', 'value'->7.0}]
 		
-		val r = pipeline.createResource("uid", "r", [ ctx.assertEquals(it, reply) sync.countDown ], null)
+		val r = pipeline.createResource("uid", "r", [ ctx.assertEquals(gson.toJson(it), gson.toJson(reply)) sync.countDown ], null)
 		r.process(msg)
 	}
 	
@@ -61,10 +79,10 @@ class AnnotatedServiceTest {
 		val sync = ctx.async(1)
 
 		println('serviceAlexBrothersCall')
-		val msg = new JsonObject('{ "id":1, "cmd":"alexBrothers", "client":"source", "path":"srv:test", "args":[{ "name":"Alex", "age":35 }] }')
-		val reply = new JsonObject('{ "id":1, "cmd":"ok", "client":"source", "result":{ "type":"map", "value":{ "name":"Alex", "age":35, "brothers":["Jorge", "Mary"] } } }')
+		val msg = new Message => [id=1 cmd='alexBrothers' client='source' path='srv:test' args=#[#{'name'->'Alex', 'age'->35}]]
+		val reply = new Message => [id=1 cmd='ok' client='source' result=#{'type'->'map', 'value'->#{'name'->'Alex', 'age'->35, 'brothers'->#['Jorge', 'Mary']}}]
 		
-		val r = pipeline.createResource("uid", "r", [ ctx.assertEquals(it, reply) sync.countDown ], null)
+		val r = pipeline.createResource("uid", "r", [ ctx.assertEquals(gson.toJson(it), gson.toJson(reply)) sync.countDown ], null)
 		r.process(msg)
 	}
 }

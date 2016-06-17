@@ -63,10 +63,8 @@
 		<module>rts-plugin</module>
 		<module>rts-plugin-service</module>
 		<module>rts-node</module>
-		<module>rts-node-server</module>
-
-		<!--test modules-->
 		<module>rts-plugin-test</module>
 		<module>rts-plugin-test-loader</module>
+		<module>rts-node-server</module>
 	</modules>
 </project>

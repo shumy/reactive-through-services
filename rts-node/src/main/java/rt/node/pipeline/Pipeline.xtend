@@ -1,21 +1,20 @@
 package rt.node.pipeline
 
 import java.util.ArrayList
-import io.vertx.core.Handler
 import org.eclipse.xtend.lib.annotations.Accessors
 import rt.node.Registry
 import java.util.HashMap
 import rt.node.IComponent
-import io.vertx.core.json.JsonObject
+import rt.node.IMessageBus.Message
 
 class Pipeline {
 	@Accessors val Registry registry
-	@Accessors(PUBLIC_SETTER) Handler<String> failHandler = null
+	@Accessors(PUBLIC_SETTER) (String) => void failHandler = null
 	
 	val interceptors = new ArrayList<IComponent>
 	val services = new HashMap<String, IComponent>
 	
-	def void process(PipeResource resource, PipeMessage msg) {
+	def void process(PipeResource resource, Message msg) {
 		val ctx = new PipeContext(this, resource, msg, interceptors.iterator)
 		ctx.next
 	}
@@ -24,13 +23,13 @@ class Pipeline {
 		this.registry = registry
 	}
 	
-	def createResource(String session, String resource, (JsonObject) => void sendCallback, () => void closeCallback) {
+	def createResource(String session, String resource, (Message) => void sendCallback, () => void closeCallback) {
 		return new PipeResource(this, session, resource, sendCallback, closeCallback)
 	}
 	
 	def fail(String error) {
 		if(failHandler != null)
-			failHandler.handle(error)
+			failHandler.apply(error)
 	}
 	
 	def void addInterceptor(IComponent interceptor) {

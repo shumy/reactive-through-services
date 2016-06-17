@@ -1,13 +1,13 @@
 package rt.node.pipeline
 
 import java.util.Iterator
-import rt.node.pipeline.PipeMessage
 import org.eclipse.xtend.lib.annotations.Accessors
 import rt.node.IComponent
-import io.vertx.core.json.JsonObject
+import rt.node.IMessageBus.Message
+import java.util.Map
 
 class PipeContext {
-	@Accessors val PipeMessage message
+	@Accessors val Message message
 	@Accessors val PipeResource resource
 
 	boolean inFail = false
@@ -15,7 +15,7 @@ class PipeContext {
 	val Pipeline pipeline
 	val Iterator<IComponent> iter
 	
-	new(Pipeline pipeline, PipeResource resource, PipeMessage message, Iterator<IComponent> iter) {
+	new(Pipeline pipeline, PipeResource resource, Message message, Iterator<IComponent> iter) {
 		this.pipeline = pipeline
 		this.resource = resource
 		this.message = message
@@ -62,10 +62,10 @@ class PipeContext {
 	/** Publish message to address in msg.to
 	 * @param msg Should be a new message to publish
 	 */
-	def void publish(PipeMessage msg) {
+	def void publish(Message msg) {
 		if(!inFail) {
 			println("PUBLISH(" + msg.path + ")")
-			pipeline.registry.eb.publish(msg.path, msg.json)
+			pipeline.registry.mb.publish(msg.path, msg)
 		}
 	}
 
@@ -84,14 +84,14 @@ class PipeContext {
 	/** Does nothing to the pipeline flow and sends a reply back.
 	 * @param reply Should be a new PipeMessage
 	 */
-	def void reply(PipeMessage reply) {
+	def void reply(Message reply) {
 		if(!inFail) {
 			reply => [
-				id = message.id ?: 0L
+				id = message.id
 				client = message.client
 			]
 			
-			resource.reply(reply.json)
+			resource.reply(reply)
 		}
 	}
 	
@@ -99,8 +99,8 @@ class PipeContext {
 	 */
 	def void replyOK() {
 		if(!inFail) {
-			val reply = new PipeMessage => [
-				cmd = PipeMessage.OK
+			val reply = new Message => [
+				cmd = Message.OK
 			]
 	
 			reply(reply)
@@ -110,9 +110,10 @@ class PipeContext {
 	/** Does nothing to the pipeline flow and sends a OK reply back with a pre formatted JSON schema.
 	 * @param value The address that will be on "from".
 	 */
-	def void replyOK(JsonObject resultObj) {
+	def void replyOK(Map<String, Object> resultObj) {
 		if(!inFail) {
-			val reply = new PipeMessage => [
+			val reply = new Message => [
+				cmd = Message.OK
 				result = resultObj
 			]
 	
@@ -125,7 +126,8 @@ class PipeContext {
 	 */
 	def void replyError(String errorMsg) {
 		if(!inFail) {
-			val reply = new PipeMessage => [
+			val reply = new Message => [
+				cmd = Message.ERROR
 				error = errorMsg
 			]
 			

@@ -2,20 +2,20 @@ package rt.node.pipeline
 
 import org.eclipse.xtend.lib.annotations.Accessors
 import java.util.HashMap
-import io.vertx.core.eventbus.MessageConsumer
-import io.vertx.core.json.JsonObject
+import rt.node.IMessageBus.IListener
+import rt.node.IMessageBus.Message
 
 class PipeResource {
 	@Accessors val String session
 	@Accessors val String resource
 
 	val Pipeline pipeline
-	val subscriptions = new HashMap<String, MessageConsumer<JsonObject>>
+	val subscriptions = new HashMap<String, IListener>
 	
-	val (JsonObject) => void sendCallback
+	val (Message) => void sendCallback
 	val () => void closeCallback
 		
-	new(Pipeline pipeline, String session, String resource, (JsonObject) => void sendCallback, () => void closeCallback) {
+	new(Pipeline pipeline, String session, String resource, (Message) => void sendCallback, () => void closeCallback) {
 		println('''OPEN( #«session»?«resource» )''')
 		
 		this.pipeline = pipeline
@@ -29,12 +29,12 @@ class PipeResource {
 		subscribe(session)
 	}
 	
-	def void process(JsonObject msg) {
+	def void process(Message msg) {
 		println('''PROCESS( #«session»?«resource» ) «msg»''')
-		pipeline.process(this, new PipeMessage(msg))
+		pipeline.process(this, msg)
 	}
 	
-	def void reply(JsonObject msg) {
+	def void reply(Message msg) {
 		println('''REPLY( #«session»?«resource» ) «msg»''')
 		sendCallback.apply(msg)
 	}
@@ -44,26 +44,26 @@ class PipeResource {
 			return false
 		
 		println('''SUBSCRIBE( #«session»?«resource» ) «address»''')
-		val value = pipeline.registry.eb.consumer(address)[ msg |
-			println('''SEND( #«session»?«resource» ) «msg.body»''')
-			sendCallback.apply(msg.body)
+		val listener = pipeline.registry.mb.listener(address)[ msg |
+			println('''SEND( #«session»?«resource» ) «msg»''')
+			sendCallback.apply(msg)
 		]
 		
-		subscriptions.put(address, value)
+		subscriptions.put(address, listener)
 		return true
 	}
 	
 	def void unsubscribe(String address) {
-		val value = subscriptions.remove(address)
-		if(value != null) {
+		val listener = subscriptions.remove(address)
+		if(listener != null) {
 			println('''UNSUBSCRIBE( #«session»?«resource» ) «address»''')
-			value.unregister
+			listener.remove
 		}
 	}
 
 	def void release() {
 		println('''CLOSE( #«session»?«resource» )''')
-		subscriptions.values.forEach[ unregister ]
+		subscriptions.values.forEach[ remove ]
 		subscriptions.clear
 	}
 	

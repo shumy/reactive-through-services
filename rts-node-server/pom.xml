@@ -11,13 +11,28 @@
 	<dependencies>
 		<dependency>
 			<groupId>rt.syncher</groupId>
-			<artifactId>rts-plugin-service</artifactId>
+			<artifactId>rts-plugin</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>rt.syncher</groupId>
 			<artifactId>rts-node</artifactId>
 			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+			<version>2.6.2</version>
+		</dependency>
+		<dependency>
+			<groupId>io.vertx</groupId>
+			<artifactId>vertx-core</artifactId>
+			<version>3.2.0</version>
+		</dependency>
+		<dependency>
+			<groupId>io.vertx</groupId>
+			<artifactId>vertx-hazelcast</artifactId>
+			<version>3.2.0</version>
 		</dependency>
 		<dependency>
 			<groupId>ch.qos.logback</groupId>

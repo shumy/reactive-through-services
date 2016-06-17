@@ -7,24 +7,4 @@
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<artifactId>rts-node</artifactId>
-
-	<dependencies>
-		<dependency>
-			<groupId>io.vertx</groupId>
-			<artifactId>vertx-core</artifactId>
-			<version>3.2.0</version>
-		</dependency>
-		<dependency>
-			<groupId>io.vertx</groupId>
-			<artifactId>vertx-hazelcast</artifactId>
-			<version>3.2.0</version>
-		</dependency>
-
-		<dependency>
-			<groupId>io.vertx</groupId>
-			<artifactId>vertx-unit</artifactId>
-			<version>3.2.0</version>
-			<scope>test</scope>
-		</dependency>
-	</dependencies>
 </project>

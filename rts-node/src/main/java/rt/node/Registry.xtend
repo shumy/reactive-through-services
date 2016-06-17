@@ -1,17 +1,15 @@
 package rt.node
 
-import io.vertx.core.Vertx
 import org.eclipse.xtend.lib.annotations.Accessors
-import io.vertx.core.eventbus.EventBus
 import rt.node.pipeline.Pipeline
 
 class Registry {
 	@Accessors val String domain
-	@Accessors val EventBus eb
+	@Accessors val IMessageBus mb
 
-	new(String domain, Vertx vertx) {
+	new(String domain, IMessageBus mb) {
 		this.domain = domain
-		this.eb = vertx.eventBus
+		this.mb = mb
 	}
 	
 	def createPipeline() {
