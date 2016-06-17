@@ -16,8 +16,7 @@ import org.eclipse.xtend.lib.macro.declaration.ClassDeclaration
 import org.eclipse.xtend.lib.macro.CodeGenerationContext
 import rt.plugin.config.PluginConfig
 import rt.plugin.config.PluginConfigFactory
-import java.io.PipedInputStream
-import java.io.PipedOutputStream
+import rt.plugin.config.PluginEntry
 
 @Target(TYPE)
 @Active(ServiceProcessor)
@@ -29,19 +28,19 @@ class ServiceProcessor extends AbstractClassProcessor {
 
 	override doTransform(MutableClassDeclaration clazz, extension TransformationContext ctx) {
 		val anno = clazz.findAnnotation(Service.findTypeGlobally)
-		val name = anno.getStringValue("value")
+		val name = anno.getStringValue('value')
 		
 		clazz.extendedClass = ctx.newTypeReference(IComponent)
 		
-		clazz.addMethod("getName")[
+		clazz.addMethod('getName')[
 			returnType = ctx.newTypeReference(String)
 			body = '''
 				return "srv:«name»";
 			'''
 		]
 		
-		clazz.addMethod("apply")[
-			addParameter("ctx", ctx.newTypeReference(PipeContext))
+		clazz.addMethod('apply')[
+			addParameter('ctx', ctx.newTypeReference(PipeContext))
 			
 			body = '''
 				final «PipeMessage» msg = ctx.getMessage();
@@ -64,19 +63,23 @@ class ServiceProcessor extends AbstractClassProcessor {
 	}
 	
 	override doGenerateCode(ClassDeclaration clazz, @Extension CodeGenerationContext context) {
+		val anno = clazz.findAnnotation(Service.findTypeGlobally)
+		val serviceName = anno.getStringValue('value')
+		
 		val filePath = clazz.compilationUnit.filePath
 		val file = filePath.projectFolder.append('/src/main/resources/plugin-config.xml')
 		val factory = new PluginConfigFactory
 		
 		// read plugin-config.xml
 		val config = if (file.exists) factory.readFrom(file.contentsAsStream) else new PluginConfig
+		config.cleanVoidEntries
 		
 		// change config
-		val entry = config.findOrCreateEntry('service', clazz.qualifiedName)
-		entry => [
+		config.addEntry(new PluginEntry => [
 			type = 'service'
 			ref = clazz.qualifiedName
-		]
+			name = serviceName
+		])
 		
 		// write plugin-config.xml
 		file.contents = factory.transform(config)

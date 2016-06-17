@@ -6,8 +6,14 @@ import javax.xml.bind.annotation.XmlElement
 
 @XmlRootElement(name='entry')
 class PluginEntry {
-	@XmlAttribute public String type
-	@XmlAttribute public String ref
+	@XmlAttribute(required=true) public String type
+	@XmlAttribute(required=true) public String ref
 	
 	@XmlElement public String name
+	
+	def copyFrom(PluginEntry entry) {
+		type = entry.type
+		ref = entry.ref
+		name = entry.name
+	}
 }

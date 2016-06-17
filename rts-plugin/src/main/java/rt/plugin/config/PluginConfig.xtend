@@ -13,6 +13,15 @@ class PluginConfig {
 	@XmlElement(name='entry')
 	public List<PluginEntry> entries = new ArrayList
 	
+	def void addEntry(PluginEntry entry) {
+		val found = findEntry(entry.type, entry.ref)
+		if (found == null) {
+			entries.add(entry)
+		} else {
+			found.copyFrom(entry)
+		}
+	}
+	
 	def findOrCreateEntry(String type, String ref) {
 		var entry = findEntry(type, ref)
 		if (entry == null) {
@@ -24,11 +33,14 @@ class PluginConfig {
 	}
 	
 	def findEntry(String type, String ref) {
-		for (entry: entries) {
+		for (entry: entries)
 			if (entry.type == type && entry.ref == ref)
 				return entry
-		}
 		
 		return null
+	}
+	
+	def void cleanVoidEntries() {
+		entries = entries.filter[type != null && ref != null].toList
 	}
 }
