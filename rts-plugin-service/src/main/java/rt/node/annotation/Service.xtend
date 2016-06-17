@@ -76,7 +76,7 @@ class ServiceProcessor extends AbstractClassProcessor {
 		
 		// change config
 		config.addEntry(new PluginEntry => [
-			type = 'service'
+			type = 'srv'
 			ref = clazz.qualifiedName
 			name = serviceName
 		])

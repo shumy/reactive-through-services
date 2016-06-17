@@ -6,12 +6,17 @@
 		<version>0.1.0</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
-	<artifactId>rts-plugin-test</artifactId>
+	<artifactId>rts-plugin-test-loader</artifactId>
 
 	<dependencies>
 		<dependency>
 			<groupId>rt.syncher</groupId>
-			<artifactId>rts-plugin-service</artifactId>
+			<artifactId>rts-node</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>rt.syncher</groupId>
+			<artifactId>rts-plugin</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 	</dependencies>

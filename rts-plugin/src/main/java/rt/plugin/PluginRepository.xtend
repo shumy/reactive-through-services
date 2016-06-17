@@ -19,14 +19,17 @@ import org.eclipse.aether.repository.RemoteRepository
 import java.util.HashMap
 import java.net.URL
 import java.net.URLClassLoader
+import rt.plugin.config.PluginConfigFactory
 
 class PluginRepository {
-	@Accessors(PACKAGE_GETTER) val RepositorySystem system
-	@Accessors(PACKAGE_GETTER) val RemoteRepository centraRepository
-	@Accessors(PACKAGE_GETTER) val LocalRepository localRepository
-	@Accessors(PACKAGE_GETTER) val DefaultRepositorySystemSession session
-	
 	@Accessors val plugins = new PluginList(this)
+
+	package val RepositorySystem system
+	package val RemoteRepository centraRepository
+	package val LocalRepository localRepository
+	package val DefaultRepositorySystemSession session
+	
+	package val pluginConfigFactory = new PluginConfigFactory
 	
 	val String localPath
 	val remoteRepoPath = 'http://central.maven.org/maven2/'
@@ -67,7 +70,7 @@ class PluginRepository {
 	def boolean resolve() {
 		isResolved = true
 		
-		plugins.plugins.values.forEach[
+		plugins.artifacts.values.forEach[
 			resolve.forEach[
 				val reference = '''«artifact.groupId»:«artifact.artifactId»:«artifact.version»'''
 				isResolved = resolved
@@ -77,7 +80,7 @@ class PluginRepository {
 		]
 
 		println('''ClassPath (resolved=«isResolved», size=«classPath.keySet.size») «classPath.keySet»''')
-		return isResolved		
+		return isResolved
 	}
 	
 	def Class<?> loadClass(String clazz) {
@@ -104,25 +107,33 @@ class PluginRepository {
 	
 	static class PluginList {
 		val PluginRepository repo
-		val plugins = new HashMap<String, PluginArtifact>
+		val artifacts = new HashMap<String, PluginArtifact>
 		
-		new(PluginRepository repo) {
+		package new(PluginRepository repo) {
 			this.repo = repo
 		}
 		
 		def += (String reference) {
-			addPlugin(reference)
+			addArtifact(reference)
 		}
 		
-		def addPlugin(String reference) {
+		def addArtifact(String reference) {
 			val artifact = new PluginArtifact(repo, reference)
-			plugins.put(reference, artifact)
+			artifacts.put(reference, artifact)
 		
 			return artifact
 		}
 		
-		def getPlugin(String reference) {
-			return plugins.get(reference)
+		def getArtifacts() {
+			return artifacts.values
+		}
+		
+		def artifact(String reference) {
+			return artifacts.get(reference)
+		}
+		
+		override toString() {
+			return artifacts.keySet.toString
 		}
 	}
 }

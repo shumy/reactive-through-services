@@ -2,11 +2,12 @@ package rt.plugin.test
 
 import rt.plugin.PluginRepository
 import org.junit.Test
-import static extension rt.plugin.InvokerHelper.*
 import java.io.File
 import org.junit.Assert
+import static extension rt.plugin.InvokerHelper.*
+import rt.node.IComponent
 
-class RemoteLoadTest {
+class PluginLoaderTest {
 	
 	@Test
 	def void loadLogbackAndDependencies() {
@@ -17,6 +18,10 @@ class RemoteLoadTest {
 			plugins += 'rt.syncher:rts-plugin-test:0.1.0'
 			resolve
 		]
+
+		val plugin = repo.plugins.artifact('rt.syncher:rts-plugin-test:0.1.0')
+		val srv = plugin.newInstanceFromEntry(IComponent, 'srv', 'rt.plugin.test.srv.AnnotatedService')
+		Assert.assertEquals(srv.name, 'srv:test')
 
 		val iHello = repo.instanceOf('rt.plugin.test.HelloWorld')
 		val result = iHello.invoke('hello', 'Alex')

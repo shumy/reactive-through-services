@@ -22,8 +22,8 @@ class PluginConfigFactory {
 		jaxbReader = jaxbContext.createUnmarshaller
 	}
 	
-	def readFrom(InputStream io) {
-		return jaxbReader.unmarshal(io) as PluginConfig
+	def readFrom(InputStream is) {
+		return jaxbReader.unmarshal(is) as PluginConfig
 	}
 	
 	def writeTo(PluginConfig config, OutputStream os) {	
