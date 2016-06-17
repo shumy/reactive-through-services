@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<config>
+    <entries>
+        <entry type="service" ref="rt.node.OtherService">
+            <name>other</name>
+        </entry>
+        <entry type="service" ref="rt.node.AnnotatedService">
+            <name>test</name>
+        </entry>
+    </entries>
+</config>

@@ -6,7 +6,7 @@
 		<version>0.1.0</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
-	<artifactId>rts-node-annotation</artifactId>
+	<artifactId>rts-plugin-service</artifactId>
 
 	<dependencies>
 		<dependency>

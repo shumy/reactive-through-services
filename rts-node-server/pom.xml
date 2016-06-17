@@ -11,7 +11,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>rt.syncher</groupId>
-			<artifactId>rts-node-annotation</artifactId>
+			<artifactId>rts-plugin-service</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
