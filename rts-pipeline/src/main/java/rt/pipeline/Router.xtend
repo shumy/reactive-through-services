@@ -9,6 +9,4 @@ abstract class Router {
 	def void route(String path, Pipeline pipeline) {
 		routes.put(path, pipeline)
 	}
-	
-	abstract def void listen(int port)
 }

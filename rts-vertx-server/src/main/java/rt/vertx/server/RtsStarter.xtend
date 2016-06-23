@@ -49,11 +49,11 @@ class RtsStarter extends AbstractVerticle {
 		
 		val pipeline = registry.createPipeline => [
 			addInterceptor(new ValidatorInterceptor)
-			failHandler = [ println("PIPELINE-FAIL: " + it) ]
+			failHandler = [ println('PIPELINE-FAIL: ' + it) ]
 		]
 		
 		val router = new VertxRouter(server) => [
-			route("/ws", pipeline)
+			route('/ws', pipeline)
 		]
 		
 		router.listen(port)

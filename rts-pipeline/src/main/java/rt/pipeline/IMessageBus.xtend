@@ -12,14 +12,6 @@ interface IMessageBus {
 	}
 	
 	public static class Message {
-		public static val String ID = 'id'
-		public static val String CMD = 'cmd'
-		public static val String CLIENT = 'client'
-		public static val String PATH = 'path'
-	
-		public static val String ARGS = 'args'
-		public static val String RESULT = 'result'
-		
 		public static val String OK = 'ok'
 		public static val String ERROR = 'error'
 		
