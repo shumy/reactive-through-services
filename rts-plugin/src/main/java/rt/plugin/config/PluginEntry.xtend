@@ -11,7 +11,7 @@ class PluginEntry {
 	
 	@XmlElement public String name
 	
-	def copyFrom(PluginEntry entry) {
+	def void copyFrom(PluginEntry entry) {
 		type = entry.type
 		ref = entry.ref
 		name = entry.name

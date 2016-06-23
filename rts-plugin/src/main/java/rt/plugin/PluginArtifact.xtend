@@ -14,10 +14,11 @@ import rt.plugin.config.PluginConfig
 import org.eclipse.aether.resolution.ArtifactResult
 import java.util.List
 import java.util.zip.ZipFile
+import rt.plugin.config.PluginEntry
 
 class PluginArtifact {
 	@Accessors val String reference
-	@Accessors(PUBLIC_GETTER) var PluginConfig config
+	var PluginConfig config
 	
 	val PluginRepository repo
 	
@@ -47,7 +48,7 @@ class PluginArtifact {
 		dependencyRequest = new DependencyRequest(collectRequest, filterRequest)
 	}
 	
-	def List<ArtifactResult> resolve() {
+	package def List<ArtifactResult> resolve() {
 		result = repo.system.resolveDependencies(repo.session, dependencyRequest)
 		//result.root.accept(new ConsoleDependencyGraphDumper)
 		
@@ -58,10 +59,16 @@ class PluginArtifact {
 		return artifacts
 	}
 	
-	def findEntry(String type, String name) {
+	def getConfig() {
 		if (config == null)
 			throw new RuntimeException('''Not resolved plugin-config.xml in artifact: «reference»''')
 		
+		return config
+	}
+	
+	def findEntry(String type, String name) {
+		getConfig
+
 		val entry = config.findEntry(type, name)
 		if (entry == null)
 			throw new RuntimeException('''No entry found («type», «name») in artifact: «reference»''')
@@ -73,6 +80,11 @@ class PluginArtifact {
 		val entry = findEntry(type, className)
 		return repo.instanceOf(entry.ref) as T
 	}
+	
+	def <T> T newInstanceFromEntry(Class<T> clazz, PluginEntry entry) {
+		return repo.instanceOf(entry.ref) as T
+	}
+	
 	
 	override toString() { return reference }
 	
