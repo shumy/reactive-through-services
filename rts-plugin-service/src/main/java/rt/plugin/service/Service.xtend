@@ -31,17 +31,17 @@ class ServiceProcessor extends AbstractClassProcessor {
 		val anno = clazz.findAnnotation(Service.findTypeGlobally)
 		val name = anno.getStringValue('value')
 		
-		clazz.extendedClass = ctx.newTypeReference(IComponent)
+		clazz.extendedClass = IComponent.newTypeReference
 		
 		clazz.addMethod('getName')[
-			returnType = ctx.newTypeReference(String)
+			returnType = String.newTypeReference
 			body = '''
 				return "srv:«name»";
 			'''
 		]
 		
 		clazz.addMethod('apply')[
-			addParameter('ctx', ctx.newTypeReference(PipeContext))
+			addParameter('ctx', PipeContext.newTypeReference)
 			
 			body = '''
 				final «Message» msg = ctx.getMessage();
