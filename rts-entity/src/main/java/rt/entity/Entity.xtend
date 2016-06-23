@@ -8,6 +8,9 @@ import org.eclipse.xtend.lib.macro.TransformationContext
 import rt.entity.sync.SyncEntity
 import java.util.List
 import java.util.ArrayList
+import rt.entity.change.IObservable
+import rt.entity.change.Change
+import rt.entity.change.ChangeType
 
 @Target(TYPE)
 @Active(EntityProcessor)
@@ -58,7 +61,7 @@ class EntityProcessor extends AbstractClassProcessor {
 					if (field.equals("«field.simpleName»")) return this.«field.simpleName»;
 				«ENDFOR»
 
-				throw new RuntimeException("No field '" + name + "' for «clazz.qualifiedName»");
+				throw new RuntimeException("No field '" + field + "' for «clazz.qualifiedName»");
 			''']
 		]
 		
@@ -67,13 +70,13 @@ class EntityProcessor extends AbstractClassProcessor {
 			addParameter('value', object)
 			body = ['''
 				if(value == null)
-					throw new RuntimeException("Trying to set null value on field '" + name + "' in «clazz.qualifiedName»");
+					throw new RuntimeException("Trying to set null value on field '" + field + "' in «clazz.qualifiedName»");
 
 				«FOR field: observedFields»
 					if (field.equals("«field.simpleName»")) { this.set«field.simpleName.toFirstUpper»( («field.type»)value ); return; }
 				«ENDFOR»
 
-				throw new RuntimeException("No field '" + name + "' for «clazz.qualifiedName»");
+				throw new RuntimeException("No field '" + field + "' for «clazz.qualifiedName»");
 			''']
 		]
 		
@@ -90,7 +93,12 @@ class EntityProcessor extends AbstractClassProcessor {
 			clazz.addMethod('set' + field.simpleName.toFirstUpper)[
 				addParameter('value', fType)
 				body = ['''
-					//TODO: publish change...
+					final «Change.name» change = new «Change.name»(«ChangeType.name».UPDATE, value, "«field.simpleName»");
+					publisher.publish(change);
+					«IF IObservable.newTypeReference.isAssignableFrom(fType)»
+						observe("«field.simpleName»", («IObservable.name»)value);
+					«ENDIF»
+					
 					this.«field.simpleName» = value;
 				''']
 			]

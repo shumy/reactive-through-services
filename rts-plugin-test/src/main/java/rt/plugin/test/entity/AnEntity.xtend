@@ -6,6 +6,7 @@ import rt.entity.Entity
 class AnEntity {
 	val constant = 'not observed'
 
+	OtherEntity other
 	boolean active
 	String text
 	String name

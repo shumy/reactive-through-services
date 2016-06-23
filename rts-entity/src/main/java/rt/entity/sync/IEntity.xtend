@@ -7,4 +7,6 @@ interface IEntity {
 	
 	def Object getValue(String field)
 	def void setValue(String field, Object value)
+	
+	//def void applyChange(Change change)
 }

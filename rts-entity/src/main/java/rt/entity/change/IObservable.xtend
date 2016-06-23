@@ -1,5 +1,6 @@
 package rt.entity.change
 
 interface IObservable {
-	def void onChange((Change) => void listener)
+	def Publisher getPublisher()
+	def String onChange((Change) => void listener)
 }
