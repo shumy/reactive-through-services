@@ -11,8 +11,6 @@ import rt.entity.change.IObservable
 import rt.entity.change.Change
 import rt.entity.change.ChangeType
 import rt.entity.sync.EntitySync
-import rt.entity.sync.EntityList
-import rt.entity.sync.EntityMap
 import java.util.Map
 
 @Target(TYPE)
@@ -116,13 +114,15 @@ class EntityProcessor extends AbstractClassProcessor {
 			clazz.addMethod('set' + field.simpleName.toFirstUpper)[
 				addParameter('value', fTypeRef)
 				body = ['''
-					«IF IObservable.newTypeReference.isAssignableFrom(fTypeRef)»
-						unobserve("«field.simpleName»", («IObservable.name»)this.«field.simpleName»);
-						observe("«field.simpleName»", («IObservable.name»)value);
+					«IF field.findAnnotation(Ignore.findTypeGlobally) == null»
+						«IF IObservable.newTypeReference.isAssignableFrom(fTypeRef)»
+							unobserve("«field.simpleName»", («IObservable.name»)this.«field.simpleName»);
+							observe("«field.simpleName»", («IObservable.name»)value);
+							
+						«ENDIF»
+						final «Change.name» change = new «Change.name»(«ChangeType.name».UPDATE, value, "«field.simpleName»");
+						publisher.publish(change);
 					«ENDIF»
-					
-					final «Change.name» change = new «Change.name»(«ChangeType.name».UPDATE, value, "«field.simpleName»");
-					publisher.publish(change);
 					this.«field.simpleName» = value;
 				''']
 			]

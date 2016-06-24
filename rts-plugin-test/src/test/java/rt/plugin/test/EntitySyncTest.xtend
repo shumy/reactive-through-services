@@ -23,6 +23,8 @@ class EntitySyncTest {
 			name = 'not observed'
 			onChange[ changes.add(gson.toJson(it)) ]
 			
+			uuid = 'ignored'
+			
 			//start change listening...
 			name = 'Alex'
 			active = true
@@ -38,6 +40,9 @@ class EntitySyncTest {
 		
 		entity.othersList.remove(0)
 		canonEntity.name = 'Canon-Update-2'
+		
+		//not observed
+		nikonEntity.name = 'Nikon-Update'
 		
 		val expected = #[
 			new Change(ChangeType.UPDATE, 'Alex', #['name']),
