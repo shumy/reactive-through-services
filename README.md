@@ -1,4 +1,4 @@
-# remote-entity (experimental)
+# real-time-server (experimental)
 
 Using Xtend Active Annotations and Vertx.io server.
 Main objective of this project is to define services in the form of, ex:

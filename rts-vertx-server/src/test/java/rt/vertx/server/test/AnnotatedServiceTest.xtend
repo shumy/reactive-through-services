@@ -32,11 +32,11 @@ class AnnotatedServiceTest {
 		val local = '''«home»«File.separator».m2«File.separator»repository'''
 		
 		val repo = new PluginRepository(local) => [
-			plugins += 'rt.syncher:rts-plugin-test:0.2.0'
+			plugins += 'rts.core:rts-plugin-test:0.2.0'
 			resolve
 		]
 		
-		val plugin = repo.plugins.artifact('rt.syncher:rts-plugin-test:0.2.0')
+		val plugin = repo.plugins.artifact('rts.core:rts-plugin-test:0.2.0')
 		val srv = plugin.newInstanceFromEntry(IComponent, 'srv', 'rt.plugin.test.srv.AnnotatedService')
 		
 		val mb = new VertxMessageBus(rule.vertx.eventBus)
