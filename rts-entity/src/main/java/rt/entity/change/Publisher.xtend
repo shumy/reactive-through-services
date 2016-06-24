@@ -1,10 +1,10 @@
 package rt.entity.change
 
-import java.util.HashMap
 import java.util.UUID
+import java.util.LinkedHashMap
 
 class Publisher {
-	val listeners = new HashMap<String, (Change) => void>
+	val listeners = new LinkedHashMap<String, (Change) => void>
 	
 	def addListener((Change) => void listener) {
 		val uuid = UUID.randomUUID.toString

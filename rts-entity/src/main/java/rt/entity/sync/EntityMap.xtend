@@ -51,7 +51,7 @@ class EntityMap<K, V> extends HashMap<K, V> implements IObservable {
 	
 	private def void unobserve(Object key) {
 		val element = this.get(key)
-		if (IObservable.isAssignableFrom(element.class)) {
+		if (element != null && IObservable.isAssignableFrom(element.class)) {
 			val observable = element as IObservable
 			val uuid = listeners.remove(key)
 			
@@ -60,7 +60,7 @@ class EntityMap<K, V> extends HashMap<K, V> implements IObservable {
 	}
 	
 	private def void observe(Object key, V element) {
-		if (IObservable.isAssignableFrom(element.class)) {
+		if (element != null && IObservable.isAssignableFrom(element.class)) {
 			val observable = element as IObservable
 			val uuid = observable.onChange [ change |
 				publisher.publish(change.addPath(key.toString))

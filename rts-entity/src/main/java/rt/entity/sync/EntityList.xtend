@@ -85,7 +85,7 @@ class EntityList<T> extends ArrayList<T> implements IObservable {
 	//TODO: other methods (...)
 	
 	private def void unobserve(Object element) {
-		if (IObservable.isAssignableFrom(element.class)) {
+		if (element != null && IObservable.isAssignableFrom(element.class)) {
 			val observable = element as IObservable
 			val uuid = listeners.remove(element)
 			
@@ -94,7 +94,7 @@ class EntityList<T> extends ArrayList<T> implements IObservable {
 	}
 	
 	private def void observe(Object element) {
-		if (IObservable.isAssignableFrom(element.class)) {
+		if (element != null && IObservable.isAssignableFrom(element.class)) {
 			val observable = element as IObservable
 			val uuid = observable.onChange [ change |
 				//TODO: needs some perfomance optimizations
