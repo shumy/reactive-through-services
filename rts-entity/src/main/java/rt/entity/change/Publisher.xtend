@@ -12,11 +12,11 @@ class Publisher {
 		return uuid
 	}
 	
-	def removeListener(String uuid) {
+	def void removeListener(String uuid) {
 		listeners.remove(uuid)
 	}
 	
 	def void publish(Change change) {
 		listeners.values.forEach[ apply(change) ]
-	} 
+	}
 }

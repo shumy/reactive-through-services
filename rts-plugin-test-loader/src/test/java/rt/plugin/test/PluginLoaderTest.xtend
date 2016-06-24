@@ -19,19 +19,19 @@ class PluginLoaderTest {
 		val local = '''«home»«File.separator».m2«File.separator»repository'''
 		
 		repo = new PluginRepository(local) => [
-			plugins += 'rt.syncher:rts-plugin-test:0.2.0'
+			plugins += 'rts.core:rts-plugin-test:0.2.0'
 			resolve
 		]
 		
-		plugin = repo.plugins.artifact('rt.syncher:rts-plugin-test:0.2.0')
+		plugin = repo.plugins.artifact('rts.core:rts-plugin-test:0.2.0')
 	}
 	
 	@Test
 	def void containsServices() {
-		val contains = #['rt.plugin.test.srv.AnnotatedService', 'rt.plugin.test.srv.OtherService']
+		val expected = #['rt.plugin.test.srv.AnnotatedService', 'rt.plugin.test.srv.OtherService']
 		val services = plugin.config.entries.map[ if (type == 'srv') ref ].toList
 		services.forEach[
-			Assert.assertTrue(contains.contains(it))
+			Assert.assertTrue(expected.contains(it))
 		]
 	}
 	

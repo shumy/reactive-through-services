@@ -1,24 +1,39 @@
 package rt.entity.change
 
-import java.util.ArrayList
+import java.util.List
+import java.util.LinkedList
 
 enum ChangeType {
-	ADD, UPDATE, REMOVE, CLEAR
+	UPDATE, ADD, REMOVE, CLEAR
 }
 
 class Change {
 	public static val PATH_SEPARATOR = '.'
 	
-	public var ChangeType type
-	public var Object newValue
-	public var Object oldValue
+	public val ChangeType oper
+	var String type
+	public val Object value
 	
-	public val path = new ArrayList<String>
+	val List<Object> path
 	
-	new(){}
-	new(ChangeType type, Object newValue, String path) {
-		this.type = type
-		this.newValue = newValue
+	new(ChangeType oper, Object value, List<Object> path) {
+		this.oper = oper
+		this.value = value
+		this.path = path
+	
+		if (oper == ChangeType.UPDATE || oper == ChangeType.ADD)
+			this.type = value.class.simpleName
+	}
+	
+	new(ChangeType oper, Object value, Object path) {
+		this(oper, value, new LinkedList<Object>)
 		this.path.add(path)
+	}
+	
+	def Change addPath(Object path) {
+		val newChange = new Change(this.oper, this.value, this.path)
+		newChange.path.add(path)
+		
+		return newChange
 	}
 }
