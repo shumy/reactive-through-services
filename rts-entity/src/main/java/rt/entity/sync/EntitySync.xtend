@@ -8,8 +8,9 @@ import org.eclipse.xtend.lib.annotations.Accessors
 import java.util.List
 import java.util.Map
 
-abstract class EntitySync implements IEntity, IObservable {
-	@Accessors transient protected val publisher = new Publisher
+abstract class EntitySync implements IEntity {
+	@Accessors transient val key = new EntityKey
+	@Accessors transient val publisher = new Publisher
 	
 	//<FieldName, ListenerUUID>
 	transient val observableFields = new HashMap<String, String>
@@ -18,14 +19,23 @@ abstract class EntitySync implements IEntity, IObservable {
 		return publisher.addListener(listener)
 	}
 	
+	protected def void publish(Change change) {
+		if (!change.tr) key.version++
+		publisher.publish(change)
+	}
+	
 	protected def void unobserve(String field, IObservable observable) {
 		if (observable != null)
 			observable.publisher.removeListener(observableFields.remove(field))
 	}
 	
 	protected def void observe(String field, IObservable observable) {
+		val transitive = IEntity.isAssignableFrom(observable.class)
 		val uuid = observable.onChange[ change |
-			publisher.publish(change.addPath(field))
+			val newChange = change.addPath(field, transitive)
+			
+			if (!newChange.tr) key.version++
+			publisher.publish(newChange)
 		]
 		
 		observableFields.put(field, uuid)

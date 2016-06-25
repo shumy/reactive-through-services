@@ -62,8 +62,9 @@ class EntityMap<K, V> extends HashMap<K, V> implements IObservable {
 	private def void observe(Object key, V element) {
 		if (element != null && IObservable.isAssignableFrom(element.class)) {
 			val observable = element as IObservable
+			val transitive = IEntity.isAssignableFrom(element.class)
 			val uuid = observable.onChange [ change |
-				publisher.publish(change.addPath(key.toString))
+				publisher.publish(change.addPath(key, transitive))
 			]
 			
 			listeners.put(key, uuid)

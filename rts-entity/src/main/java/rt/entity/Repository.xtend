@@ -6,37 +6,49 @@ import org.eclipse.xtend.lib.annotations.Accessors
 import rt.entity.change.Publisher
 import java.util.HashMap
 import rt.entity.change.ChangeType
-import rt.entity.sync.EntitySync
+import rt.entity.sync.IEntity
 
-class Repository<T extends EntitySync> implements IObservable {
+class Repository<E extends IEntity> implements IObservable {
 	@Accessors val String name
 	@Accessors val publisher = new Publisher
+	@Accessors boolean ignoreTransitive = true
 	
-	val cache = new HashMap<String, T>
+	val cache = new HashMap<String, E>
 	
 	new(String name) {
-		this.name = name
+		this.name = 'repo-' + name
 	}
 	
 	override onChange((Change)=>void listener) {
 		return publisher.addListener(listener)
 	}
 	
-	def addEntity(T entity) {
-		val uuid = entity.onChange[ change |
-			publisher.publish(change.addPath(name))
+	def void addEntity(E entity) {
+		val prePath = name + ':' + entity.key.uuid
+		cache.put(entity.key.uuid, entity)
+		
+		entity.publisher.addListener(entity.key.uuid)[ change |
+			if (!ignoreTransitive || !change.tr) {
+				val path = prePath + ':' + entity.key.version
+				val newChange = if (IEntity.isAssignableFrom(change.value.class)) {
+					val eValue = change.value as IEntity
+					new Change(change.oper, change.type, eValue.key.toString, change.path).addPath(path, false)
+				} else {
+					change.addPath(path, false)
+				}
+				
+				publisher.publish(newChange)
+			}
 		]
 		
-		cache.put(uuid, entity)
-		
-		publisher.publish(new Change(ChangeType.ADD, uuid, name))
-		return uuid
+		publisher.publish(new Change(ChangeType.ADD, entity, prePath + ':' + entity.key.version))
 	}
 	
 	def void removeEntity(String uuid) {
 		val entity = cache.remove(uuid)
-		entity.publisher.removeListener(uuid)
-		
-		publisher.publish(new Change(ChangeType.REMOVE, uuid, name))
+		if (entity != null) {
+			entity.publisher.removeListener(uuid)
+			publisher.publish(new Change(ChangeType.REMOVE, 1, name + ':' + entity.key))	
+		}
 	}
 }

@@ -5,6 +5,10 @@ import java.util.LinkedHashMap
 
 class Publisher {
 	val listeners = new LinkedHashMap<String, (Change) => void>
+
+	def void addListener(String uuid, (Change) => void listener) {
+		listeners.put(uuid, listener)
+	}
 	
 	def addListener((Change) => void listener) {
 		val uuid = UUID.randomUUID.toString

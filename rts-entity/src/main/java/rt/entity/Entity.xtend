@@ -121,7 +121,7 @@ class EntityProcessor extends AbstractClassProcessor {
 							
 						«ENDIF»
 						final «Change.name» change = new «Change.name»(«ChangeType.name».UPDATE, value, "«field.simpleName»");
-						publisher.publish(change);
+						publish(change);
 					«ENDIF»
 					this.«field.simpleName» = value;
 				''']

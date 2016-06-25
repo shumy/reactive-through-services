@@ -8,7 +8,6 @@ import rt.entity.Ignore
 @Entity
 class AnEntity {
 	@Ignore String uuid
-	
 	val String constant = 'not observed'
 	
 	OtherEntity other
@@ -18,4 +17,6 @@ class AnEntity {
 	
 	val List<OtherEntity> othersList
 	val Map<String, OtherEntity> othersMap
+	
+	val List<List<String>> textList
 }

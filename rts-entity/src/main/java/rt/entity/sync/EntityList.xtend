@@ -96,10 +96,11 @@ class EntityList<T> extends ArrayList<T> implements IObservable {
 	private def void observe(Object element) {
 		if (element != null && IObservable.isAssignableFrom(element.class)) {
 			val observable = element as IObservable
+			val transitive = IEntity.isAssignableFrom(element.class)
 			val uuid = observable.onChange [ change |
 				//TODO: needs some perfomance optimizations
 				val path = element.indexOf.toString
-				publisher.publish(change.addPath(path))
+				publisher.publish(change.addPath(path, transitive))
 			]
 			
 			listeners.put(observable, uuid)
