@@ -3,13 +3,11 @@ package rt.vertx.server
 import io.vertx.core.http.HttpServer
 import java.util.UUID
 import rt.pipeline.Router
-import rt.pipeline.IMessageBus.Message
-import com.google.gson.Gson
 
 class VertxRouter extends Router {
-	val gson = new Gson
 	val HttpServer server
-	
+	val converter = new MessageConverter
+
 	new(HttpServer server) {
 		this.server = server
 		
@@ -24,11 +22,11 @@ class VertxRouter extends Router {
 			}
 			
 			val sb = new StringBuilder
-			val resource = pipeline.createResource(session, ws.textHandlerID, [ msg | ws.writeFinalTextFrame(gson.toJson(msg)) ], [ ws.close ])
+			val resource = pipeline.createResource(session, ws.textHandlerID, [ msg | ws.writeFinalTextFrame(converter.toJson(msg)) ], [ ws.close ])
 			ws.frameHandler[
 				sb.append(textData)
 				if (isFinal) {
-					val msg = gson.fromJson(sb.toString, Message)
+					val msg = converter.fromJson(sb.toString)
 					sb.length = 0
 					
 					resource.process(msg)

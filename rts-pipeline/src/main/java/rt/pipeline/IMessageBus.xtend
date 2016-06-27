@@ -21,13 +21,37 @@ interface IMessageBus {
 		public String path
 		
 		// from request
-		public List<Object> args
-		public transient List<String> argsString
+		transient List<String> jsonArgs
+		transient (List<String>, Class<?>[]) => List<Object> argsConverter
+		List<Object> args
 		
 		// from response
-		public Object result
-		public transient String resultString
+		transient String jsonResult
+		transient (String, Class<?>) => Object resultConverter
+		Object res
 		
 		public String error
+		
+		new() {}
+		new(List<String> jsonArgs, (List<String>, Class<?>[]) => List<Object> argsConverter, String jsonResult, (String, Class<?>) => Object resultConverter) {
+			this.jsonArgs = jsonArgs
+			this.argsConverter = argsConverter
+			this.jsonResult = jsonResult
+			this.resultConverter = resultConverter
+		}
+		
+		def void setArgs(List<Object> args) { this.args = args }
+		def List<Object> args(Class<?> ...types) {
+			if (args == null)
+				args = argsConverter.apply(jsonArgs, types)
+			return args
+		}
+		
+		def void setResult(Object value) { this.res = value }
+		def Object result(Class<?> type) {
+			if (res == null)
+				res = resultConverter.apply(jsonResult, type)
+			return res
+		}
 	}
 }

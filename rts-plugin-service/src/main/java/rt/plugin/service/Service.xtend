@@ -43,7 +43,7 @@ class ServiceProcessor extends AbstractClassProcessor {
 			
 			body = '''
 				final «Message» msg = ctx.getMessage();
-				final «List»<Object> args = msg.args;
+				«List»<Object> args = null;
 				Object ret = null;
 				
 				switch(msg.cmd) {
@@ -84,14 +84,15 @@ class ServiceProcessor extends AbstractClassProcessor {
 	}
 	
 	def addCase(MutableMethodDeclaration meth) {
-		val retType = meth.returnType.simpleName.replaceFirst('<.*>', '')
+		val retType = meth.returnType.simpleName
 
 		//TODO: add support for non native types
 		var i = 0
 		return '''
 			case "«meth.simpleName»":
-				«IF retType != "void"»ret = «ENDIF»«meth.simpleName»(«FOR param : meth.parameters SEPARATOR ','» «param.type.addArgType(i++)»«ENDFOR» );
-				«IF retType != "void"»
+				args = msg.args(«FOR param : meth.parameters SEPARATOR ','» «param.type.simpleName.replaceFirst('<.*>', '')».class«ENDFOR» );
+				«IF retType != 'void'»ret = «ENDIF»«meth.simpleName»(«FOR param : meth.parameters SEPARATOR ','» «param.type.addArgType(i++)»«ENDFOR» );
+				«IF retType != 'void'»
 					ctx.replyOK(ret);
 				«ELSE»
 					ctx.replyOK();

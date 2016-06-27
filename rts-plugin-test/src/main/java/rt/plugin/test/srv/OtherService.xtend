@@ -7,4 +7,7 @@ import rt.plugin.service.Public
 class OtherService {
 	@Public
 	def otherServiceHello() { return 'Hello' }
+	
+	@Public
+	def void empty(String emptyArgs) { }
 }
