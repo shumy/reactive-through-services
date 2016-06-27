@@ -8,6 +8,9 @@ import io.vertx.core.http.HttpServerOptions
 import static io.vertx.core.Vertx.*
 import rt.pipeline.Registry
 import rt.pipeline.pipe.use.ValidatorInterceptor
+import java.io.File
+import rt.plugin.PluginRepository
+import rt.pipeline.IComponent
 
 class RtsStarter extends AbstractVerticle {
 	def static void main(String[] args) {
@@ -40,15 +43,31 @@ class RtsStarter extends AbstractVerticle {
 		this.port = port
 	}
 	
+	def servicePlugin() {
+		val home = System.getProperty('user.home')
+		val local = '''«home»«File.separator».m2«File.separator»repository'''
+		
+		val repo = new PluginRepository(local) => [
+			plugins += 'rts.core:rts-plugin-test:0.2.0'
+			resolve
+		]
+		
+		return repo.plugins.artifact('rts.core:rts-plugin-test:0.2.0')
+	}
+	
 	override def start() {
 		val server = vertx.createHttpServer(new HttpServerOptions => [
 			tcpKeepAlive = true
 		])
 
+		val plugin = servicePlugin
+		val service = plugin.newInstanceFromEntry(IComponent, 'srv', 'rt.plugin.test.srv.AnnotatedService')
+
 		val registry = new Registry(domain, new VertxMessageBus(vertx.eventBus))
 		
 		val pipeline = registry.createPipeline => [
 			addInterceptor(new ValidatorInterceptor)
+			addService(service)
 			failHandler = [ println('PIPELINE-FAIL: ' + it) ]
 		]
 		

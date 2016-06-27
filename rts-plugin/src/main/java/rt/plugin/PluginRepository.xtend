@@ -96,7 +96,7 @@ class PluginRepository {
 				i++
 			}
 			
-			urlClassLoader = new URLClassLoader(urls)
+			urlClassLoader = new URLClassLoader(urls, PluginRepository.classLoader)
 		}
 		
 		return urlClassLoader.loadClass(clazz)

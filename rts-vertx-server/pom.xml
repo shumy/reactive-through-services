@@ -55,7 +55,7 @@
 				<artifactId>exec-maven-plugin</artifactId>
 				<version>1.2.1</version>
 				<configuration>
-					<mainClass>rt.node.RtsStarter</mainClass>
+					<mainClass>rt.vertx.server.RtsStarter</mainClass>
 				</configuration>
 			</plugin>
 		</plugins>
