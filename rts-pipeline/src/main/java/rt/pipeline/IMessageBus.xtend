@@ -1,7 +1,6 @@
 package rt.pipeline
 
 import java.util.List
-import java.util.Map
 
 interface IMessageBus {
 	def void publish(String address, Message msg)
@@ -16,16 +15,19 @@ interface IMessageBus {
 		public static val String ERROR = 'error'
 		
 		// from all
-		public long id
+		public Long id
 		public String cmd
 		public String client
 		public String path
 		
 		// from request
 		public List<Object> args
+		public transient List<String> argsString
 		
 		// from response
-		public Map<String, Object> result
+		public Object result
+		public transient String resultString
+		
 		public String error
 	}
 }

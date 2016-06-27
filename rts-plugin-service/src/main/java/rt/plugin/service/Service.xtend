@@ -13,8 +13,6 @@ import rt.plugin.config.PluginConfig
 import rt.plugin.config.PluginConfigFactory
 import rt.plugin.config.PluginEntry
 import java.util.List
-import java.util.Map
-import java.util.HashMap
 import rt.pipeline.IComponent
 import rt.pipeline.pipe.PipeContext
 import rt.pipeline.IMessageBus.Message
@@ -46,7 +44,7 @@ class ServiceProcessor extends AbstractClassProcessor {
 			body = '''
 				final «Message» msg = ctx.getMessage();
 				final «List»<Object> args = msg.args;
-				final «Map»<String, Object> ret = new «HashMap»<>();
+				Object ret = null;
 				
 				switch(msg.cmd) {
 					«FOR meth : clazz.declaredMethods»
@@ -92,11 +90,11 @@ class ServiceProcessor extends AbstractClassProcessor {
 		var i = 0
 		return '''
 			case "«meth.simpleName»":
-				«IF retType != "void"»final «meth.returnType» «meth.simpleName»Value = «ENDIF»«meth.simpleName»(«FOR param : meth.parameters SEPARATOR ','» «param.type.addArgType(i++)»«ENDFOR» );
+				«IF retType != "void"»ret = «ENDIF»«meth.simpleName»(«FOR param : meth.parameters SEPARATOR ','» «param.type.addArgType(i++)»«ENDFOR» );
 				«IF retType != "void"»
-				ret.put("type", "«retType.toFirstLower»");
-				ret.put("value", «meth.simpleName»Value);
-				ctx.replyOK(ret);
+					ctx.replyOK(ret);
+				«ELSE»
+					ctx.replyOK();
 				«ENDIF»
 				break;
 		'''

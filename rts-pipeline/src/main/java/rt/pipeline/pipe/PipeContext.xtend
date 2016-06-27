@@ -2,7 +2,6 @@ package rt.pipeline.pipe
 
 import java.util.Iterator
 import org.eclipse.xtend.lib.annotations.Accessors
-import java.util.Map
 import rt.pipeline.IMessageBus.Message
 import rt.pipeline.IComponent
 
@@ -110,7 +109,7 @@ class PipeContext {
 	/** Does nothing to the pipeline flow and sends a OK reply back with a pre formatted JSON schema.
 	 * @param value The address that will be on "from".
 	 */
-	def void replyOK(Map<String, Object> resultObj) {
+	def void replyOK(Object resultObj) {
 		if(!inFail) {
 			val reply = new Message => [
 				cmd = Message.OK
