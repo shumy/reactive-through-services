@@ -1,28 +1,26 @@
-package rt.plugin.service.test
+package rt.pipeline
 
-import rt.pipeline.IMessageBus
-import rt.pipeline.IMessageBus.Message
 import java.util.HashMap
 
-class MessageBus implements IMessageBus {
-	val listeners = new HashMap<String, Listener>
+class DefaultMessageBus implements IMessageBus {
+	val listeners = new HashMap<String, DefaultListener>
 	
 	override publish(String address, Message msg) {
 		listeners.get(address)?.send(msg)
 	}
 	
 	override listener(String address, (Message)=>void listener) {
-		val dpfListener = new Listener(this, address, listener)
+		val dpfListener = new DefaultListener(this, address, listener)
 		listeners.put(address, dpfListener)
 		return dpfListener
 	}
 	
-	static class Listener implements IListener {
-		val MessageBus parent
+	static class DefaultListener implements IListener {
+		val DefaultMessageBus parent
 		val String address
 		val (Message)=>void  callback
 		
-		new(MessageBus parent, String address, (Message)=>void callback) {
+		package new(DefaultMessageBus parent, String address, (Message)=>void callback) {
 			this.parent = parent
 			this.address = address
 			this.callback = callback

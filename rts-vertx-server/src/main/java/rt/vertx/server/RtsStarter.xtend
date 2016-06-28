@@ -54,7 +54,7 @@ class RtsStarter extends AbstractVerticle {
 			
 			override apply(PipeContext ctx) {
 				//fire service on the client
-				ctx.send(new Message => [id=1L cmd='hello' client='server' path='srv:test' args=#['Alex']])
+				ctx.send(new Message => [id=1L cmd='hello' clt='server' path='srv:test' args=#['Alex']])
 			}
 		}
 		

@@ -36,8 +36,8 @@ class PipelineTest {
 	
 	@Test
 	def compareMessages() {
-		val msg1 = new Message => [id=1L cmd='ping' client='source']
-		val msg2 = new Message => [id=1L cmd='ping' client='source']
+		val msg1 = new Message => [id=1L cmd='ping' clt='source']
+		val msg2 = new Message => [id=1L cmd='ping' clt='source']
 		Assert.assertEquals(gson.toJson(msg1), gson.toJson(msg2))
 	}
 	
@@ -70,13 +70,13 @@ class PipelineTest {
 		r.process(new Message => [])
 		r.process(new Message => [id=1L])
 		r.process(new Message => [id=1L cmd='ping'])
-		r.process(new Message => [id=1L cmd='ping' client='source'])
+		r.process(new Message => [id=1L cmd='ping' clt='source'])
 	}
 	
 	@Test
 	def void deliverMessageToService(TestContext ctx) {
 		println('deliverMessageToService')
-		val msg = new Message => [id=1L cmd='ping' client='source' path='srv:test']
+		val msg = new Message => [id=1L cmd='ping' clt='source' path='srv:test']
 
 		val srv = new IComponent {
 			override getName() { return 'srv:test' }
@@ -102,8 +102,8 @@ class PipelineTest {
 		val sync = ctx.async(1)
 		
 		println('serviceReplyToMessage')
-		val msg = new Message => [id=1L cmd='ping' client='source' path='srv:test']
-		val reply = new Message => [id=1L cmd='ok' client='source']
+		val msg = new Message => [id=1L cmd='ping' clt='source' path='srv:test']
+		val reply = new Message => [id=1L cmd='ok' clt='source']
 
 		val srv = new IComponent {
 			override getName() { return 'srv:test' }
@@ -130,7 +130,7 @@ class PipelineTest {
 		val sync = ctx.async(2)
 
 		println('deliverMessageToSubscriptors')
-		val msg = new Message => [id=1L cmd='ping' client='source' path='target']
+		val msg = new Message => [id=1L cmd='ping' clt='source' path='target']
 		
 		val pipeline = registry.createPipeline => [
 			addInterceptor(new ValidatorInterceptor)
@@ -155,7 +155,7 @@ class PipelineTest {
 		val sync = ctx.async(2)
 		
 		println('deliverMessageToMultipleConnectionsOfSameSession')
-		val msg = new Message => [id=1L cmd='ping' client='source' path='uid']
+		val msg = new Message => [id=1L cmd='ping' clt='source' path='uid']
 		
 		val pipeline = registry.createPipeline => [
 			addInterceptor(new ValidatorInterceptor)

@@ -43,7 +43,7 @@ class MessageConverter {
 		return new Message(jsonArgs, argsConverter, jsonResult, resultConverter) => [
 			id = obj.get('id')?.asLong
 			cmd = obj.get('cmd')?.asString
-			client = obj.get('client')?.asString
+			clt = obj.get('clt')?.asString
 			path = obj.get('path')?.asString
 			error = obj.get('error')?.asString
 		]

@@ -14,13 +14,13 @@ class Pipeline {
 	val interceptors = new ArrayList<IComponent>
 	val services = new HashMap<String, IComponent>
 	
+	new(Registry registry) {
+		this.registry = registry
+	}
+	
 	def void process(PipeResource resource, Message msg) {
 		val ctx = new PipeContext(this, resource, msg, interceptors.iterator)
 		ctx.next
-	}
-	
-	new(Registry registry) {
-		this.registry = registry
 	}
 	
 	def createResource(String client, String resource, (Message) => void sendCallback, () => void closeCallback) {

@@ -16,7 +16,7 @@ class ValidatorInterceptor implements IComponent {
 		if(msg.cmd == null)
 			ctx.fail("No mandatory field 'cmd'")
 
-		if(msg.client == null)
+		if(msg.clt == null)
 			ctx.fail("No mandatory field 'client'")
 
 		if(msg.path == null)

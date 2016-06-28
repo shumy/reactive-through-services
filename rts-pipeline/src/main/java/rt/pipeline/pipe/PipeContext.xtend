@@ -14,7 +14,7 @@ class PipeContext {
 	val Pipeline pipeline
 	val Iterator<IComponent> iter
 	
-	new(Pipeline pipeline, PipeResource resource, Message message, Iterator<IComponent> iter) {
+	package new(Pipeline pipeline, PipeResource resource, Message message, Iterator<IComponent> iter) {
 		this.pipeline = pipeline
 		this.resource = resource
 		this.message = message
@@ -26,18 +26,10 @@ class PipeContext {
 	 */
 	def void deliver() {
 		if(!inFail) {
-			val srv = pipeline.getService(message.path)
-			if(srv != null) {
-				println("DELIVER(" + message.path + ")")
-				try {
-					srv.apply(this)
-				} catch(RuntimeException ex) {
-					ex.printStackTrace
-					fail('''«ex.class.simpleName»: «ex.message»''')
-				}
-			} else {
-				publish(message.path, message)
-			}
+			if (message.cmd == Message.OK || message.cmd == Message.ERROR)
+				deliverReply
+			else
+				deliverRequest
 		}
 	}
 
@@ -55,15 +47,6 @@ class PipeContext {
 			} else {
 				deliver
 			}
-		}
-	}
-
-	/** Publish message to address
-	 * @param msg Should be a new message to publish
-	 */
-	def void publish(String address, Message msg) {
-		if(!inFail) {
-			pipeline.registry.mb.publish(address, msg)
 		}
 	}
 	
@@ -95,7 +78,7 @@ class PipeContext {
 		if(!inFail) {
 			reply => [
 				id = message.id
-				client = message.client
+				clt = message.clt
 			]
 			
 			resource.send(reply)
@@ -147,5 +130,31 @@ class PipeContext {
 	 */
 	def void disconnect() {
 		resource.disconnect
+	}
+	
+	private def void publish(String address) {
+		pipeline.registry.mb.publish(address, message)
+	}
+	
+	private def void deliverRequest() {
+		val srv = pipeline.getService(message.path)
+		if(srv != null) {
+			println("DELIVER(" + message.path + ")")
+			try {
+				srv.apply(this)
+			} catch(RuntimeException ex) {
+				ex.printStackTrace
+				fail('''«ex.class.simpleName»: «ex.message»''')
+			}
+		} else {
+			println("PUBLISH(" + message.path + ")")
+			publish(message.path)
+		}
+	}
+	
+	private def void deliverReply() {
+		val address = message.clt + '+' + message.id
+		println("REPLY(" + address + ")")
+		publish(address)
 	}
 }

@@ -9,13 +9,14 @@
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<xtendVersion>2.10.0</xtendVersion>
 	</properties>
 
 	<dependencies>
 		<dependency>
 			<groupId>org.eclipse.xtend</groupId>
 			<artifactId>org.eclipse.xtend.lib</artifactId>
-			<version>2.9.2</version>
+			<version>${xtendVersion}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
@@ -42,7 +43,7 @@
 			<plugin>
 				<groupId>org.eclipse.xtend</groupId>
 				<artifactId>xtend-maven-plugin</artifactId>
-				<version>2.9.2</version>
+				<version>${xtendVersion}</version>
 				<executions>
 					<execution>
 						<goals>

@@ -17,18 +17,18 @@ interface IMessageBus {
 		// from all
 		public Long id
 		public String cmd
-		public String client
+		public String clt
 		public String path
 		
 		// from request
 		transient List<String> jsonArgs
-		transient (List<String>, Class<?>[]) => List<Object> argsConverter
-		List<Object> args
+		transient (List<String>, Class<?>[]) => List<Object> argsConverter = null
+		List<Object> args = null
 		
 		// from response
 		transient String jsonResult
-		transient (String, Class<?>) => Object resultConverter
-		Object res
+		transient (String, Class<?>) => Object resultConverter = null
+		Object res = null
 		
 		public String error
 		
@@ -43,14 +43,14 @@ interface IMessageBus {
 		def void setArgs(List<Object> args) { this.args = args }
 		def List<Object> args(Class<?> ...types) {
 			if (args == null)
-				args = argsConverter.apply(jsonArgs, types)
+				args = argsConverter?.apply(jsonArgs, types)
 			return args
 		}
 		
 		def void setResult(Object value) { this.res = value }
 		def <T> T result(Class<T> type) {
 			if (res == null)
-				res = resultConverter.apply(jsonResult, type)
+				res = resultConverter?.apply(jsonResult, type)
 			return res as T
 		}
 	}

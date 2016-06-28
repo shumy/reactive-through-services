@@ -16,6 +16,7 @@ import java.util.List
 import rt.pipeline.IComponent
 import rt.pipeline.pipe.PipeContext
 import rt.pipeline.IMessageBus.Message
+import org.eclipse.xtend.lib.macro.ValidationContext
 
 @Target(TYPE)
 @Active(ServiceProcessor)
@@ -24,7 +25,15 @@ annotation Service {
 }
 
 class ServiceProcessor extends AbstractClassProcessor {
-
+	
+	override doValidate(ClassDeclaration clazz, extension ValidationContext ctx) {
+		val reserved = #[Message.OK, Message.ERROR]	
+		clazz.declaredMethods.forEach[
+			if (reserved.contains(simpleName))
+				addError('Reserved method name!')
+		]
+	}
+	
 	override doTransform(MutableClassDeclaration clazz, extension TransformationContext ctx) {
 		val anno = clazz.findAnnotation(Service.findTypeGlobally)
 		val name = anno.getStringValue('value')

@@ -15,7 +15,7 @@ class PipeResource {
 	val (Message) => void sendCallback
 	val () => void closeCallback
 		
-	new(Pipeline pipeline, String client, String resource, (Message) => void sendCallback, () => void closeCallback) {
+	package new(Pipeline pipeline, String client, String resource, (Message) => void sendCallback, () => void closeCallback) {
 		this.pipeline = pipeline
 
 		this.client = client
