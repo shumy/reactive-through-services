@@ -31,6 +31,10 @@ class ServiceProcessor extends AbstractClassProcessor {
 		
 		clazz.extendedClass = IComponent.newTypeReference
 		
+		clazz.addField('ctx')[
+			type = PipeContext.newTypeReference
+		]
+		
 		clazz.addMethod('getName')[
 			returnType = String.newTypeReference
 			body = '''
@@ -42,6 +46,8 @@ class ServiceProcessor extends AbstractClassProcessor {
 			addParameter('ctx', PipeContext.newTypeReference)
 			
 			body = '''
+				this.ctx = ctx; 
+				
 				final «Message» msg = ctx.getMessage();
 				«List»<Object> args = null;
 				Object ret = null;
@@ -86,11 +92,12 @@ class ServiceProcessor extends AbstractClassProcessor {
 	def addCase(MutableMethodDeclaration meth) {
 		val retType = meth.returnType.simpleName
 
-		//TODO: add support for non native types
 		var i = 0
 		return '''
 			case "«meth.simpleName»":
+				«IF meth.parameters.size != 0»
 				args = msg.args(«FOR param : meth.parameters SEPARATOR ','» «param.type.simpleName.replaceFirst('<.*>', '')».class«ENDFOR» );
+				«ENDIF»
 				«IF retType != 'void'»ret = «ENDIF»«meth.simpleName»(«FOR param : meth.parameters SEPARATOR ','» «param.type.addArgType(i++)»«ENDFOR» );
 				«IF retType != 'void'»
 					ctx.replyOK(ret);
