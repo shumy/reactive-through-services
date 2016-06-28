@@ -36,7 +36,7 @@ class PipeContext {
 					fail('''«ex.class.simpleName»: «ex.message»''')
 				}
 			} else {
-				publish(message)
+				publish(message.path, message)
 			}
 		}
 	}
@@ -58,13 +58,21 @@ class PipeContext {
 		}
 	}
 
-	/** Publish message to address in msg.to
+	/** Publish message to address
 	 * @param msg Should be a new message to publish
 	 */
-	def void publish(Message msg) {
+	def void publish(String address, Message msg) {
 		if(!inFail) {
-			println("PUBLISH(" + msg.path + ")")
-			pipeline.registry.mb.publish(msg.path, msg)
+			pipeline.registry.mb.publish(address, msg)
+		}
+	}
+	
+	/** Send a message to the client resource
+	 * @param msg Should be a new message to send
+	 */
+	def void send(Message msg) {
+		if(!inFail) {
+			resource.send(msg)
 		}
 	}
 
@@ -90,7 +98,7 @@ class PipeContext {
 				client = message.client
 			]
 			
-			resource.reply(reply)
+			resource.send(reply)
 		}
 	}
 	

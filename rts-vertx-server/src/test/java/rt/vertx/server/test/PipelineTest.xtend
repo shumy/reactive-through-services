@@ -15,6 +15,7 @@ import rt.pipeline.pipe.use.ValidatorInterceptor
 import rt.pipeline.IComponent
 import rt.pipeline.pipe.PipeContext
 import rt.vertx.server.VertxMessageBus
+import rt.vertx.server.MessageConverter
 
 @RunWith(VertxUnitRunner)
 class PipelineTest {
@@ -26,7 +27,8 @@ class PipelineTest {
 	
 	@Before
 	def void init(TestContext ctx) {
-		val mb = new VertxMessageBus(rule.vertx.eventBus)
+		val converter = new MessageConverter
+		val mb = new VertxMessageBus(rule.vertx.eventBus, converter)
 		
 		this.gson = new Gson
 		this.registry = new Registry('domain', mb)
@@ -64,6 +66,7 @@ class PipelineTest {
 		]
 		
 		val r = pipeline.createResource('uid', 'r', [ println(it) ], null)
+		r.subscribe('uid')
 		r.process(new Message => [])
 		r.process(new Message => [id=1L])
 		r.process(new Message => [id=1L cmd='ping'])
@@ -90,6 +93,7 @@ class PipelineTest {
 		]
 		
 		val r = pipeline.createResource('uid', 'r', null, null)
+		r.subscribe('uid')
 		r.process(msg)
 	}
 	
@@ -117,6 +121,7 @@ class PipelineTest {
 		]
 		
 		val r = pipeline.createResource('uid', 'r', [ ctx.assertEquals(gson.toJson(it), gson.toJson(reply)) sync.countDown ], null)
+		r.subscribe('uid')
 		r.process(msg)
 	}
 	
@@ -133,12 +138,15 @@ class PipelineTest {
 		]
 		
 		val r1 = pipeline.createResource('uid1', 'r1', [ ctx.assertEquals(gson.toJson(it), gson.toJson(msg)) sync.countDown ], null)
+		r1.subscribe('uid1')
 		r1.subscribe('target')
 		
 		val r2 = pipeline.createResource('uid2', 'r2', [ ctx.assertEquals(gson.toJson(it), gson.toJson(msg)) sync.countDown ], null)
+		r2.subscribe('uid2')
 		r2.subscribe('target')
 		
 		val r3 = pipeline.createResource('uid3', 'r3', null, null)
+		r3.subscribe('uid3')
 		r3.process(msg)
 	}
 	
@@ -154,8 +162,11 @@ class PipelineTest {
 			failHandler = [ ctx.fail(it) ]
 		]
 		
-		pipeline.createResource('uid', 'r1', [ ctx.assertEquals(gson.toJson(it), gson.toJson(msg)) sync.countDown ], null)
+		val r1 = pipeline.createResource('uid', 'r1', [ ctx.assertEquals(gson.toJson(it), gson.toJson(msg)) sync.countDown ], null)
+		r1.subscribe('uid')
+		
 		val r2 = pipeline.createResource('uid', 'r2', [ ctx.assertEquals(gson.toJson(it), gson.toJson(msg)) sync.countDown ], null)
+		r2.subscribe('uid')
 		r2.process(msg)
 	}
 }

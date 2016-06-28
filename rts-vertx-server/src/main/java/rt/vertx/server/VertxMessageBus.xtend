@@ -2,25 +2,27 @@ package rt.vertx.server
 
 import io.vertx.core.eventbus.EventBus
 import io.vertx.core.eventbus.MessageConsumer
-import com.google.gson.Gson
 import rt.pipeline.IMessageBus
 
 class VertxMessageBus implements IMessageBus {
-	val gson = new Gson
 	val EventBus eb
+	val MessageConverter converter
 	
-	new(EventBus eb) {
+	new(EventBus eb, MessageConverter converter) {
 		this.eb = eb
+		this.converter = converter
 	}
 	
 	override publish(String address, Message msg) {
-		val obj = gson.toJson(msg)
-		eb.publish(address, obj)
+		val textMsg = converter.toJson(msg)
+		
+		println('''PUBLISH(«address») «textMsg»''')
+		eb.publish(address, textMsg)
 	}
 	
 	override listener(String address, (Message) => void listener) {
 		val consumer = eb.consumer(address) [
-			val msg = gson.fromJson(body as String, Message)
+			val msg = converter.fromJson(body as String)
 			listener.apply(msg)
 		]
 

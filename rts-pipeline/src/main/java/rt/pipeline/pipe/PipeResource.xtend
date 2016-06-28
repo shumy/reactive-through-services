@@ -6,7 +6,7 @@ import rt.pipeline.IMessageBus.Message
 import rt.pipeline.IMessageBus.IListener
 
 class PipeResource {
-	@Accessors val String session
+	@Accessors val String client
 	@Accessors val String resource
 
 	val Pipeline pipeline
@@ -15,27 +15,21 @@ class PipeResource {
 	val (Message) => void sendCallback
 	val () => void closeCallback
 		
-	new(Pipeline pipeline, String session, String resource, (Message) => void sendCallback, () => void closeCallback) {
-		println('''OPEN( #«session»?«resource» )''')
-		
+	new(Pipeline pipeline, String client, String resource, (Message) => void sendCallback, () => void closeCallback) {
 		this.pipeline = pipeline
 
-		this.session = session
+		this.client = client
 		this.resource = resource
 		
 		this.sendCallback = sendCallback
 		this.closeCallback = closeCallback
-		
-		subscribe(session)
 	}
 	
 	def void process(Message msg) {
-		println('''PROCESS( #«session»?«resource» ) «msg»''')
 		pipeline.process(this, msg)
 	}
 	
-	def void reply(Message msg) {
-		println('''REPLY( #«session»?«resource» ) «msg»''')
+	def void send(Message msg) {
 		sendCallback.apply(msg)
 	}
 
@@ -43,9 +37,8 @@ class PipeResource {
 		if(subscriptions.containsKey(address))
 			return false
 		
-		println('''SUBSCRIBE( #«session»?«resource» ) «address»''')
+		println('''SUBSCRIBE( #«client»?«resource» ) «address»''')
 		val listener = pipeline.registry.mb.listener(address)[ msg |
-			println('''SEND( #«session»?«resource» ) «msg»''')
 			sendCallback.apply(msg)
 		]
 		
@@ -56,13 +49,12 @@ class PipeResource {
 	def void unsubscribe(String address) {
 		val listener = subscriptions.remove(address)
 		if(listener != null) {
-			println('''UNSUBSCRIBE( #«session»?«resource» ) «address»''')
+			println('''UNSUBSCRIBE( #«client»?«resource» ) «address»''')
 			listener.remove
 		}
 	}
 
 	def void release() {
-		println('''CLOSE( #«session»?«resource» )''')
 		subscriptions.values.forEach[ remove ]
 		subscriptions.clear
 	}

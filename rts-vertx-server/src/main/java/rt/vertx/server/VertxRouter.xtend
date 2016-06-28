@@ -1,32 +1,44 @@
 package rt.vertx.server
 
 import io.vertx.core.http.HttpServer
-import java.util.UUID
 import rt.pipeline.Router
+import java.util.HashMap
 
 class VertxRouter extends Router {
 	val HttpServer server
-	val converter = new MessageConverter
+	val MessageConverter converter
 
-	new(HttpServer server) {
+	new(HttpServer server, MessageConverter converter) {
 		this.server = server
+		this.converter = converter
 		
 		server.websocketHandler[ ws |
-			val splits = ws.uri.split('#')
-			val srvPath = splits.get(0)
-			val session = if(splits.length > 1) splits.get(1) else UUID.randomUUID.toString
+			val route = getRoute(ws.uri)
+			val client = getQueryParams(ws.query).get('client')
+			println('ROUTE: ' + route)
+			println('CLIENT: ' + client)
 
-			val pipeline = routes.get(srvPath)
+			val pipeline = routes.get(route)
 			if(pipeline == null) {
-				ws.reject return
+				ws.close return
 			}
 			
 			val sb = new StringBuilder
-			val resource = pipeline.createResource(session, ws.textHandlerID, [ msg | ws.writeFinalTextFrame(converter.toJson(msg)) ], [ ws.close ])
+			val resource = pipeline.createResource(client, ws.textHandlerID, [ msg |
+				val textReply = converter.toJson(msg)
+				ws.writeFinalTextFrame(textReply)
+				println('SENT: ' + textReply)
+			], [ ws.close ])
+			
+			resource.subscribe(client)
+			
 			ws.frameHandler[
 				sb.append(textData)
 				if (isFinal) {
-					val msg = converter.fromJson(sb.toString)
+					val textMsg = sb.toString
+					println('RECEIVED: ' + textMsg)
+					
+					val msg = converter.fromJson(textMsg)
 					sb.length = 0
 					
 					resource.process(msg)
@@ -39,5 +51,21 @@ class VertxRouter extends Router {
 	
 	def void listen(int port) {
 		server.listen(port)
+	}
+	
+	private def getRoute(String uri) {
+		return uri.split('\\?').get(0)
+	}
+	
+	private def getQueryParams(String query) {
+		val params = new HashMap<String, String>
+		
+		val paramsString = query.split('&')
+		paramsString.forEach[
+			val keyValue = split('=')
+			params.put(keyValue.get(0), keyValue.get(1))
+		]
+		
+		return params
 	}
 }

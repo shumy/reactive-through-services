@@ -68,5 +68,6 @@
 		<module>rts-plugin-test</module>
 		<module>rts-plugin-test-loader</module>
 		<module>rts-vertx-server</module>
+		<module>rts-ws-client</module>
 	</modules>
 </project>

@@ -16,6 +16,7 @@ import rt.pipeline.pipe.use.ValidatorInterceptor
 import rt.pipeline.IMessageBus.Message
 import rt.pipeline.IComponent
 import rt.vertx.server.VertxMessageBus
+import rt.vertx.server.MessageConverter
 
 @RunWith(VertxUnitRunner)
 class AnnotatedServiceTest {
@@ -31,6 +32,8 @@ class AnnotatedServiceTest {
 		val home = System.getProperty('user.home')
 		val local = '''«home»«File.separator».m2«File.separator»repository'''
 		
+		val converter = new MessageConverter
+		
 		val repo = new PluginRepository(local) => [
 			plugins += 'rts.core:rts-plugin-test:0.2.0'
 			resolve
@@ -39,10 +42,10 @@ class AnnotatedServiceTest {
 		val plugin = repo.plugins.artifact('rts.core:rts-plugin-test:0.2.0')
 		val srv = plugin.newInstanceFromEntry(IComponent, 'srv', 'rt.plugin.test.srv.AnnotatedService')
 		
-		val mb = new VertxMessageBus(rule.vertx.eventBus)
+		val mb = new VertxMessageBus(rule.vertx.eventBus, converter)
 		
 		this.gson = new Gson
-		this.registry = new Registry("domain", mb)
+		this.registry = new Registry('domain', mb)
 		this.pipeline = registry.createPipeline => [
 			addInterceptor(new ValidatorInterceptor)
 			addService(srv)
@@ -58,7 +61,8 @@ class AnnotatedServiceTest {
 		val msg = new Message => [id=1L cmd='hello' client='source' path='srv:test' args=#['Micael', 'Pedrosa']]
 		val reply = new Message => [id=1L cmd='ok' client='source' result='Hello Micael Pedrosa!']
 		
-		val r = pipeline.createResource("uid", "r", [ ctx.assertEquals(gson.toJson(it), gson.toJson(reply)) sync.countDown ], null)
+		val r = pipeline.createResource('uid', 'r', [ ctx.assertEquals(gson.toJson(it), gson.toJson(reply)) sync.countDown ], null)
+		r.subscribe('uid')
 		r.process(msg)
 	}
 	
@@ -70,7 +74,8 @@ class AnnotatedServiceTest {
 		val msg = new Message => [id=1L cmd='sum' client='source' path='srv:test' args=#[1, 2L, 1.5f, 2.5]]
 		val reply = new Message => [id=1L cmd='ok' client='source' result=7.0]
 		
-		val r = pipeline.createResource("uid", "r", [ ctx.assertEquals(gson.toJson(it), gson.toJson(reply)) sync.countDown ], null)
+		val r = pipeline.createResource('uid', 'r', [ ctx.assertEquals(gson.toJson(it), gson.toJson(reply)) sync.countDown ], null)
+		r.subscribe('uid')
 		r.process(msg)
 	}
 	
@@ -82,7 +87,8 @@ class AnnotatedServiceTest {
 		val msg = new Message => [id=1L cmd='alexBrothers' client='source' path='srv:test' args=#[#{'name'->'Alex', 'age'->35}]]
 		val reply = new Message => [id=1L cmd='ok' client='source' result=#{'name'->'Alex', 'age'->35, 'brothers'->#['Jorge', 'Mary']}]
 		
-		val r = pipeline.createResource("uid", "r", [ ctx.assertEquals(gson.toJson(it), gson.toJson(reply)) sync.countDown ], null)
+		val r = pipeline.createResource('uid', 'r', [ ctx.assertEquals(gson.toJson(it), gson.toJson(reply)) sync.countDown ], null)
+		r.subscribe('uid')
 		r.process(msg)
 	}
 }

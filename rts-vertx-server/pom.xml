@@ -11,11 +11,6 @@
 	<dependencies>
 		<dependency>
 			<groupId>rts.core</groupId>
-			<artifactId>rts-plugin</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>rts.core</groupId>
 			<artifactId>rts-pipeline</artifactId>
 			<version>${project.version}</version>
 		</dependency>
@@ -44,6 +39,12 @@
 			<groupId>io.vertx</groupId>
 			<artifactId>vertx-unit</artifactId>
 			<version>3.2.0</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>rts.core</groupId>
+			<artifactId>rts-plugin</artifactId>
+			<version>${project.version}</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

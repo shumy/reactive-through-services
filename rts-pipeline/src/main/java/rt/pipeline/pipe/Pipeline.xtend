@@ -23,8 +23,8 @@ class Pipeline {
 		this.registry = registry
 	}
 	
-	def createResource(String session, String resource, (Message) => void sendCallback, () => void closeCallback) {
-		return new PipeResource(this, session, resource, sendCallback, closeCallback)
+	def createResource(String client, String resource, (Message) => void sendCallback, () => void closeCallback) {
+		return new PipeResource(this, client, resource, sendCallback, closeCallback)
 	}
 	
 	def fail(String error) {
