@@ -48,10 +48,10 @@ interface IMessageBus {
 		}
 		
 		def void setResult(Object value) { this.res = value }
-		def Object result(Class<?> type) {
+		def <T> T result(Class<T> type) {
 			if (res == null)
 				res = resultConverter.apply(jsonResult, type)
-			return res
+			return res as T
 		}
 	}
 }
