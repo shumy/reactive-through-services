@@ -13,7 +13,7 @@ class ServiceClientTest {
 		val mb = new MessageBus
 		mb.listener('clt:address')[ msg |
 			println('CALL: ' + cnv.toJson(msg))
-			mb.publish(msg.client, new Message => [id=msg.id client=msg.client result='ok'])
+			mb.publish(msg.client, new Message => [id=msg.id client=msg.client cmd='ok'])
 		]
 		
 		val srvClient = new ServiceClient(mb, 'clt:address')

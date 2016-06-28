@@ -6,5 +6,5 @@ abstract class PromiseResult<T> {
 		return new Promise<T>(this)
 	}
 	
-	def void invoke((T) => void resolve, (RuntimeException) => void reject)
+	def void invoke((T) => void resolve, (String) => void reject)
 }

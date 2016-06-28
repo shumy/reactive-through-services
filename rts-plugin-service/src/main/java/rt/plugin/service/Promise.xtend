@@ -8,7 +8,7 @@ class Promise<T> {
 	}
 	
 	def Promise<T> then((T) => void callback) {
-		result.invoke([ callback.apply(it) ], [ it.printStackTrace ])
+		result.invoke([ callback.apply(it) ], [ println(it) ])
 		
 		return this
 	}

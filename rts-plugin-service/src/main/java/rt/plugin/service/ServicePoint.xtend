@@ -18,14 +18,19 @@ class ServicePoint<T> extends PromiseResult<T> {
 		this.retType = retType
 	}
 	
-	override void invoke((T) => void resolve, (RuntimeException) => void reject) {
+	override void invoke((T) => void resolve, (String) => void reject) {
 		parent.msgID++
 		val clientID = '''«parent.uuid»+«parent.msgID»'''
 		val sendMsg = new Message => [id=parent.msgID client=clientID path=srvPath cmd=srvCmd args=srvArgs]
 		
 		parent.bus.listener(clientID)[ replyMsg |
-			println('ServicePoint-Reply')
-			resolve.apply(replyMsg.result(retType))
+			if (replyMsg.cmd == Message.OK) {
+				println('ServicePoint-Reply-OK')
+				resolve.apply(replyMsg.result(retType))
+			} else {
+				println('ServicePoint-Reply-ERROR')
+				reject.apply(replyMsg.result(String))
+			}
 		]
 		
 		//TODO: how to implement timeout?
