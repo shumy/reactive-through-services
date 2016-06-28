@@ -144,7 +144,7 @@ class PipeContext {
 				srv.apply(this)
 			} catch(RuntimeException ex) {
 				ex.printStackTrace
-				fail('''«ex.class.simpleName»: «ex.message»''')
+				fail(ex.message)
 			}
 		} else {
 			println("PUBLISH(" + message.path + ")")

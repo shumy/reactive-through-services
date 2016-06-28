@@ -7,40 +7,43 @@ import rt.pipeline.IMessageBus.Message
 import rt.pipeline.pipe.Pipeline
 import java.util.UUID
 import rt.pipeline.pipe.PipeResource
+import java.util.concurrent.atomic.AtomicBoolean
 
 class ClientRouter {
 	val URI uri
-	val String session
+	val String client
 	val Pipeline pipeline
 	val MessageConverter converter
 	
-	var PipeResource resource = null
-	var WebSocketClient ws = null
+	PipeResource resource = null
+	WebSocketClient ws = null
+	
+	var ready = new AtomicBoolean
 	
 	new(String server, String client, Pipeline pipeline, MessageConverter converter) {
 		uri = new URI(server + '?client=' + client)
-		this.session = client
+		this.client = client
 		this.pipeline = pipeline
 		this.converter = converter
+		
+		bind
 	}
 	
-	def void bind(() => void ready) {
+	def void bind() {
 		val router = this
 		
+		println('TRY-OPEN: ' + uri)
 		ws = new WebSocketClient(uri) {
 			
 			override onOpen(ServerHandshake handshakedata) {
-				println('OPEN on ' + uri)
 				router.onOpen
-				ready.apply
+				ready.set(true)
 			}
 			
 			override onClose(int code, String reason, boolean remote) {
 				router.close
-				
-				//TODO: reopen ?
-				//Thread.sleep(3000)
-				//bind
+				Thread.sleep(3000)
+				router.bind
 			}
 			
 			override onError(Exception ex) {
@@ -58,6 +61,7 @@ class ClientRouter {
 	
 	
 	def void close() {
+		ready.set(false)
 		ws?.close
 		resource?.release
 		
@@ -66,13 +70,21 @@ class ClientRouter {
 	}
 	
 	def void send(Message msg) {
-		val textMsg = converter.toJson(msg)
-		ws.send(textMsg)
+		waitReady[
+			val textMsg = converter.toJson(msg)
+			ws.send(textMsg)
+		]
 	}
 	
-	private def onOpen() {
+	private def void waitReady(() => void readyCallback) {
+		while (!ready.get)
+			Thread.sleep(1000)
+		readyCallback.apply
+	}
+	
+	private def void onOpen() {
 		val uuid = UUID.randomUUID.toString
-		resource = pipeline.createResource(session, uuid, [ msg | this.send(msg) ], [ this.close ])
+		resource = pipeline.createResource(client, uuid, [ msg | this.send(msg) ], [ this.close ])
 	}
 	
 	private def void receive(String textMsg) {
