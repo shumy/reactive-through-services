@@ -33,7 +33,11 @@ class ServiceClient {
 				
 				bus.listener(replyID)[ replyMsg |
 					if (replyMsg.cmd == Message.OK) {
-						resolve.apply(replyMsg.result(srvMeth.returnType))
+						val anPublic = srvMeth.getAnnotation(Public)
+						if (anPublic == null)
+							throw new RuntimeException('@Public annotation with return type is mandatory for a ServiceProxy!')
+						
+						resolve.apply(replyMsg.result(anPublic.retType))
 					} else {
 						reject.apply(replyMsg.result(String))
 					}
@@ -44,7 +48,6 @@ class ServiceClient {
 			] 
 			
 			return result.promise
-			//return new ServiceResult(this, srvPath, srvMeth.name, srvArgs.toList, srvMeth.returnType).promise
 		]
 		
 		return srvProxy as T

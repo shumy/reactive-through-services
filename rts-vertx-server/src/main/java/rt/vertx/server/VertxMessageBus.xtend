@@ -5,10 +5,11 @@ import io.vertx.core.eventbus.MessageConsumer
 import rt.pipeline.IMessageBus
 import org.eclipse.xtend.lib.annotations.Accessors
 import rt.pipeline.IMessageBus.Message
+import rt.pipeline.DefaultMessageConverter
 
 class VertxMessageBus implements IMessageBus {
 	@Accessors String defaultAddress
-	val converter = new MessageConverter
+	val converter = new DefaultMessageConverter
 	
 	val EventBus eb
 	

@@ -7,4 +7,13 @@
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<artifactId>rts-pipeline</artifactId>
+	
+	<dependencies>
+		<dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+			<version>2.6.2</version>
+			<optional>true</optional>
+		</dependency>
+	</dependencies>
 </project>

@@ -4,10 +4,13 @@ import java.util.Iterator
 import org.eclipse.xtend.lib.annotations.Accessors
 import rt.pipeline.IMessageBus.Message
 import rt.pipeline.IComponent
+import rt.pipeline.IMessageBus
 
 class PipeContext {
 	@Accessors val Message message
 	@Accessors val PipeResource resource
+
+	def IMessageBus bus() { return pipeline.mb }
 
 	boolean inFail = false
 	

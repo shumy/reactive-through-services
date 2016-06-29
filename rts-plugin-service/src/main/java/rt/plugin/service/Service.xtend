@@ -44,6 +44,10 @@ class ServiceProcessor extends AbstractClassProcessor {
 			type = PipeContext.newTypeReference
 		]
 		
+		clazz.addField('client')[
+			type = ServiceClient.newTypeReference
+		]
+		
 		clazz.addMethod('getName')[
 			returnType = String.newTypeReference
 			body = '''
@@ -55,7 +59,8 @@ class ServiceProcessor extends AbstractClassProcessor {
 			addParameter('ctx', PipeContext.newTypeReference)
 			
 			body = '''
-				this.ctx = ctx; 
+				this.ctx = ctx;
+				this.client = new ServiceClient(ctx.bus(), ctx.getResource().getClient());
 				
 				final «Message» msg = ctx.getMessage();
 				«List»<Object> args = null;

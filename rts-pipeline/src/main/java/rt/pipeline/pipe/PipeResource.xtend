@@ -16,6 +16,7 @@ class PipeResource {
 	val () => void closeCallback
 		
 	package new(Pipeline pipeline, String client, String resource, (Message) => void sendCallback, () => void closeCallback) {
+		println('''RESOURCE-CREATE(«client», «resource»)''')
 		this.pipeline = pipeline
 
 		this.client = client
@@ -37,10 +38,8 @@ class PipeResource {
 		if(subscriptions.containsKey(address))
 			return false
 		
-		println('''SUBSCRIBE( #«client»?«resource» ) «address»''')
-		val listener = pipeline.mb.listener(address)[ msg |
-			sendCallback.apply(msg)
-		]
+		println('''RESOURCE-SUBSCRIBE(«resource») «address»''')
+		val listener = pipeline.mb.listener(address, sendCallback)
 		
 		subscriptions.put(address, listener)
 		return true
@@ -49,12 +48,13 @@ class PipeResource {
 	def void unsubscribe(String address) {
 		val listener = subscriptions.remove(address)
 		if(listener != null) {
-			println('''UNSUBSCRIBE( #«client»?«resource» ) «address»''')
+			println('''RESOURCE-UNSUBSCRIBE(«resource») «address»''')
 			listener.remove
 		}
 	}
 
 	def void release() {
+		println('''RESOURCE-RELEASE(«resource»)''')
 		subscriptions.values.forEach[ remove ]
 		subscriptions.clear
 	}

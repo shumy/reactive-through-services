@@ -3,9 +3,10 @@ package rt.vertx.server
 import io.vertx.core.http.HttpServer
 import rt.pipeline.Router
 import java.util.HashMap
+import rt.pipeline.DefaultMessageConverter
 
 class VertxRouter extends Router {
-	val converter = new MessageConverter
+	val converter = new DefaultMessageConverter
 	
 	val HttpServer server
 

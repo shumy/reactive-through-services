@@ -1,4 +1,4 @@
-package rt.vertx.server
+package rt.pipeline
 
 import com.google.gson.Gson
 import com.google.gson.JsonDeserializer
@@ -7,7 +7,7 @@ import java.util.LinkedList
 import java.util.List
 import com.google.gson.GsonBuilder
 
-class MessageConverter {
+class DefaultMessageConverter {
 	val (List<String>, Class<?>[]) => List<Object> argsConverter = [ values, types |
 		if (types.size != values.size)
 			throw new RuntimeException('Invalid number of arguments!')

@@ -23,6 +23,12 @@ class ServiceProxyProcessor extends AbstractInterfaceProcessor {
 			inter.addMethod(interMeth.simpleName)[ proxyMeth |
 				interMeth.parameters.forEach[ proxyMeth.addParameter(simpleName, type) ]
 				proxyMeth.returnType = Promise.newTypeReference(interMeth.returnType)
+				
+				val anRef = Public.newAnnotationReference[ ref |
+					ref.setClassValue('retType', interMeth.returnType)
+				]
+				
+				proxyMeth.addAnnotation(anRef)
 			]
 		]
 	}

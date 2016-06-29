@@ -9,11 +9,13 @@ import java.util.UUID
 import rt.pipeline.pipe.PipeResource
 import java.util.concurrent.atomic.AtomicBoolean
 import rt.pipeline.IMessageBus
+import rt.pipeline.DefaultMessageConverter
 
 class ClientRouter {
-	val converter = new MessageConverter
+	val converter = new DefaultMessageConverter
 	
 	val URI uri
+	val String server
 	val String client
 	val Pipeline pipeline
 	
@@ -25,12 +27,14 @@ class ClientRouter {
 	def IMessageBus getBus() { return pipeline.mb }
 	
 	new(String server, String client, Pipeline pipeline) {
-		uri = new URI(server + '?client=' + client)
+		this.uri = new URI(server + '?client=' + client)
+		
+		this.server = server
 		this.client = client
 		this.pipeline = pipeline
-		 
-		pipeline.mb.listener(server)[ send ]
+		
 		pipeline.mb.defaultAddress = server
+		pipeline.mb.listener(server)[ send ]
 		
 		bind
 	}
@@ -43,7 +47,6 @@ class ClientRouter {
 			
 			override onOpen(ServerHandshake handshakedata) {
 				router.onOpen
-				ready.set(true)
 			}
 			
 			override onClose(int code, String reason, boolean remote) {
@@ -90,7 +93,8 @@ class ClientRouter {
 	
 	private def void onOpen() {
 		val uuid = UUID.randomUUID.toString
-		resource = pipeline.createResource(client, uuid, [ msg | this.send(msg) ], [ this.close ])
+		resource = pipeline.createResource(server, uuid, [ send ], [ close ])
+		ready.set(true)
 	}
 	
 	private def void receive(String textMsg) {
