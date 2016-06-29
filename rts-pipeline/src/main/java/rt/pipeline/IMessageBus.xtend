@@ -10,6 +10,8 @@ interface IMessageBus {
 	
 	def void publish(String address, Message msg)
 	
+	def void send(String address, Message msg, (Message) => void replyCallback)
+	
 	def IListener listener(String address, (Message) => void listener)
 	
 	public interface IListener {

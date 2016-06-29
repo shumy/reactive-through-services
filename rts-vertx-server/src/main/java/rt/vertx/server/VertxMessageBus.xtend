@@ -28,6 +28,15 @@ class VertxMessageBus implements IMessageBus {
 		eb.publish(address, textMsg)
 	}
 	
+	override send(String address, Message msg, (Message)=>void replyCallback) {
+		val replyID = '''«msg.clt»+«msg.id»'''
+		
+		this.listener(replyID, replyCallback)
+		
+		//TODO: how to handle timeout?
+		this.publish(address, msg)
+	}
+	
 	override listener(String address, (Message) => void listener) {
 		val consumer = eb.consumer(address) [
 			val msg = converter.fromJson(body as String)

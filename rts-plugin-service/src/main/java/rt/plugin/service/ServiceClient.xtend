@@ -28,10 +28,9 @@ class ServiceClient {
 		val srvProxy = Proxy.newProxyInstance(srvInterface.classLoader, #[srvInterface])[ proxy, srvMeth, srvArgs |
 			val PromiseResult<Object> result = [ resolve, reject |
 				msgID++
-				val replyID = '''«uuid»+«msgID»'''
 				val sendMsg = new Message => [id=msgID clt=uuid path=srvPath cmd=srvMeth.name args=srvArgs]
 				
-				bus.listener(replyID)[ replyMsg |
+				bus.send(address, sendMsg)[ replyMsg |
 					if (replyMsg.cmd == Message.OK) {
 						val anPublic = srvMeth.getAnnotation(Public)
 						if (anPublic == null)
@@ -42,9 +41,6 @@ class ServiceClient {
 						reject.apply(replyMsg.result(String))
 					}
 				]
-				
-				//TODO: how to implement timeout?
-				bus.publish(address, sendMsg)
 			] 
 			
 			return result.promise
@@ -52,6 +48,4 @@ class ServiceClient {
 		
 		return srvProxy as T
 	}
-	
-
 }
