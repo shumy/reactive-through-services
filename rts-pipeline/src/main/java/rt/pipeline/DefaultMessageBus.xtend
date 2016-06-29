@@ -1,26 +1,42 @@
 package rt.pipeline
 
 import java.util.HashMap
+import java.util.Set
+import java.util.HashSet
+import org.eclipse.xtend.lib.annotations.Accessors
+import rt.pipeline.IMessageBus.Message
 
 class DefaultMessageBus implements IMessageBus {
-	val listeners = new HashMap<String, DefaultListener>
+	@Accessors String defaultAddress
+	val listeners = new HashMap<String, Set<DefaultListener>>
 	
-	override publish(String address, Message msg) {
-		listeners.get(address)?.send(msg)
+	override publish(Message msg) {
+		publish(defaultAddress, msg)
 	}
 	
-	override listener(String address, (Message)=>void listener) {
+	override publish(String address, Message msg) {
+		listeners.get(address)?.forEach[ send(msg) ]
+	}
+	
+	override listener(String address, (Message) => void listener) {
+		var holder = listeners.get(address)
+		if (holder == null) {
+			holder = new HashSet
+			listeners.put(address, holder)
+		}
+		
 		val dpfListener = new DefaultListener(this, address, listener)
-		listeners.put(address, dpfListener)
+		holder.add(dpfListener)
+		
 		return dpfListener
 	}
 	
 	static class DefaultListener implements IListener {
 		val DefaultMessageBus parent
 		val String address
-		val (Message)=>void  callback
+		val (Message) => void  callback
 		
-		package new(DefaultMessageBus parent, String address, (Message)=>void callback) {
+		package new(DefaultMessageBus parent, String address, (Message) => void callback) {
 			this.parent = parent
 			this.address = address
 			this.callback = callback
@@ -31,7 +47,8 @@ class DefaultMessageBus implements IMessageBus {
 		}
 		
 		override remove() {
-			parent.listeners.remove(address)
+			val holder = parent.listeners.get(address)
+			holder?.remove(address)
 		}
 	}
 }

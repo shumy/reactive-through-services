@@ -133,7 +133,7 @@ class PipeContext {
 	}
 	
 	private def void publish(String address) {
-		pipeline.registry.mb.publish(address, message)
+		pipeline.mb.publish(address, message)
 	}
 	
 	private def void deliverRequest() {

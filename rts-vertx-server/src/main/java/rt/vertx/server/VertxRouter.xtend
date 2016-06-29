@@ -5,12 +5,12 @@ import rt.pipeline.Router
 import java.util.HashMap
 
 class VertxRouter extends Router {
+	val converter = new MessageConverter
+	
 	val HttpServer server
-	val MessageConverter converter
 
-	new(HttpServer server, MessageConverter converter) {
+	new(HttpServer server) {
 		this.server = server
-		this.converter = converter
 		
 		server.websocketHandler[ ws |
 			val route = getRoute(ws.uri)

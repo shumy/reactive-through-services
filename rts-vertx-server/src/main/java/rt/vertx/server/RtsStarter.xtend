@@ -6,10 +6,11 @@ import io.vertx.core.AbstractVerticle
 import io.vertx.core.http.HttpServerOptions
 
 import static io.vertx.core.Vertx.*
-import rt.pipeline.Registry
 import rt.pipeline.IComponent
 import rt.pipeline.pipe.PipeContext
 import rt.pipeline.IMessageBus.Message
+import rt.pipeline.pipe.Pipeline
+import rt.pipeline.DefaultMessageBus
 
 class RtsStarter extends AbstractVerticle {
 	def static void main(String[] args) {
@@ -43,8 +44,6 @@ class RtsStarter extends AbstractVerticle {
 	}
 	
 	override def start() {
-		val converter = new MessageConverter
-		
 		val server = vertx.createHttpServer(new HttpServerOptions => [
 			tcpKeepAlive = true
 		])
@@ -58,14 +57,14 @@ class RtsStarter extends AbstractVerticle {
 			}
 		}
 		
-		val registry = new Registry(domain, new VertxMessageBus(vertx.eventBus, converter))
+		val bus = new DefaultMessageBus
 		
-		val pipeline = registry.createPipeline => [
+		val pipeline = new Pipeline(bus) => [
 			addService(ping)
 			failHandler = [ println('PIPELINE-FAIL: ' + it) ]
 		]
 		
-		val router = new VertxRouter(server, converter) => [
+		val router = new VertxRouter(server) => [
 			route('/ws', pipeline)
 		]
 		

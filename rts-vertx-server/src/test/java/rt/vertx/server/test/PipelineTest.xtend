@@ -6,33 +6,21 @@ import io.vertx.ext.unit.junit.VertxUnitRunner
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.junit.Before
 import org.junit.Assert
 import com.google.gson.Gson
-import rt.pipeline.Registry
 import rt.pipeline.IMessageBus.Message
 import rt.pipeline.pipe.use.ValidatorInterceptor
 import rt.pipeline.IComponent
 import rt.pipeline.pipe.PipeContext
-import rt.vertx.server.VertxMessageBus
-import rt.vertx.server.MessageConverter
+import rt.pipeline.DefaultMessageBus
+import rt.pipeline.pipe.Pipeline
 
 @RunWith(VertxUnitRunner)
 class PipelineTest {
-	Gson gson
-	Registry registry
+	val Gson gson = new Gson
 	
 	@Rule
 	public val rule = new RunTestOnContext
-	
-	@Before
-	def void init(TestContext ctx) {
-		val converter = new MessageConverter
-		val mb = new VertxMessageBus(rule.vertx.eventBus, converter)
-		
-		this.gson = new Gson
-		this.registry = new Registry('domain', mb)
-	}
 	
 	@Test
 	def compareMessages() {
@@ -46,7 +34,7 @@ class PipelineTest {
 		val sync = ctx.async(4)
 
 		println('validateMandatoryFields')
-		val pipeline = registry.createPipeline => [
+		val pipeline = new Pipeline(new DefaultMessageBus) => [
 			addInterceptor(new ValidatorInterceptor)
 			failHandler = [
 				sync.countDown
@@ -86,7 +74,7 @@ class PipelineTest {
 			}
 		}
 		
-		val pipeline = registry.createPipeline => [
+		val pipeline = new Pipeline(new DefaultMessageBus) => [
 			addInterceptor(new ValidatorInterceptor)
 			addService(srv)
 			failHandler = [ ctx.fail(it) ]
@@ -114,7 +102,7 @@ class PipelineTest {
 			}
 		}
 		
-		val pipeline = registry.createPipeline => [
+		val pipeline = new Pipeline(new DefaultMessageBus) => [
 			addInterceptor(new ValidatorInterceptor)
 			addService(srv)
 			failHandler = [ ctx.fail(it) ]
@@ -132,7 +120,7 @@ class PipelineTest {
 		println('deliverMessageToSubscriptors')
 		val msg = new Message => [id=1L cmd='ping' clt='source' path='target']
 		
-		val pipeline = registry.createPipeline => [
+		val pipeline = new Pipeline(new DefaultMessageBus) => [
 			addInterceptor(new ValidatorInterceptor)
 			failHandler = [ ctx.fail(it) ]
 		]
@@ -157,7 +145,7 @@ class PipelineTest {
 		println('deliverMessageToMultipleConnectionsOfSameSession')
 		val msg = new Message => [id=1L cmd='ping' clt='source' path='uid']
 		
-		val pipeline = registry.createPipeline => [
+		val pipeline = new Pipeline(new DefaultMessageBus) => [
 			addInterceptor(new ValidatorInterceptor)
 			failHandler = [ ctx.fail(it) ]
 		]

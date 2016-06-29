@@ -3,19 +3,19 @@ package rt.pipeline.pipe
 import java.util.ArrayList
 import org.eclipse.xtend.lib.annotations.Accessors
 import java.util.HashMap
-import rt.pipeline.Registry
 import rt.pipeline.IComponent
 import rt.pipeline.IMessageBus.Message
+import rt.pipeline.IMessageBus
 
 class Pipeline {
-	@Accessors val Registry registry
+	@Accessors val IMessageBus mb
 	@Accessors(PUBLIC_SETTER) (String) => void failHandler = null
 	
 	val interceptors = new ArrayList<IComponent>
 	val services = new HashMap<String, IComponent>
 	
-	new(Registry registry) {
-		this.registry = registry
+	new(IMessageBus mb) {
+		this.mb = mb
 	}
 	
 	def void process(PipeResource resource, Message msg) {

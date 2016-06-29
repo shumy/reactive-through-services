@@ -38,7 +38,7 @@ class PipeResource {
 			return false
 		
 		println('''SUBSCRIBE( #«client»?«resource» ) «address»''')
-		val listener = pipeline.registry.mb.listener(address)[ msg |
+		val listener = pipeline.mb.listener(address)[ msg |
 			sendCallback.apply(msg)
 		]
 		

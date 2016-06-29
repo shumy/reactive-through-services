@@ -10,18 +10,15 @@ import org.junit.Test
 import java.io.File
 import com.google.gson.Gson
 import rt.plugin.PluginRepository
-import rt.pipeline.Registry
 import rt.pipeline.pipe.Pipeline
 import rt.pipeline.pipe.use.ValidatorInterceptor
 import rt.pipeline.IMessageBus.Message
 import rt.pipeline.IComponent
-import rt.vertx.server.VertxMessageBus
-import rt.vertx.server.MessageConverter
+import rt.pipeline.DefaultMessageBus
 
 @RunWith(VertxUnitRunner)
 class AnnotatedServiceTest {
-	Gson gson
-	Registry registry
+	val Gson gson = new Gson
 	Pipeline pipeline
 	
 	@Rule
@@ -32,8 +29,6 @@ class AnnotatedServiceTest {
 		val home = System.getProperty('user.home')
 		val local = '''«home»«File.separator».m2«File.separator»repository'''
 		
-		val converter = new MessageConverter
-		
 		val repo = new PluginRepository(local) => [
 			plugins += 'rts.core:rts-plugin-test:0.2.0'
 			resolve
@@ -42,11 +37,9 @@ class AnnotatedServiceTest {
 		val plugin = repo.plugins.artifact('rts.core:rts-plugin-test:0.2.0')
 		val srv = plugin.newInstanceFromEntry(IComponent, 'srv', 'rt.plugin.test.srv.AnnotatedService')
 		
-		val mb = new VertxMessageBus(rule.vertx.eventBus, converter)
+		val bus = new DefaultMessageBus
 		
-		this.gson = new Gson
-		this.registry = new Registry('domain', mb)
-		this.pipeline = registry.createPipeline => [
+		pipeline = new Pipeline(bus) => [
 			addInterceptor(new ValidatorInterceptor)
 			addService(srv)
 			failHandler = [ ctx.fail(it) ]

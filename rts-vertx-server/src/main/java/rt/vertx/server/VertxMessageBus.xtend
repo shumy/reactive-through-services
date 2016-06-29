@@ -3,14 +3,21 @@ package rt.vertx.server
 import io.vertx.core.eventbus.EventBus
 import io.vertx.core.eventbus.MessageConsumer
 import rt.pipeline.IMessageBus
+import org.eclipse.xtend.lib.annotations.Accessors
+import rt.pipeline.IMessageBus.Message
 
 class VertxMessageBus implements IMessageBus {
-	val EventBus eb
-	val MessageConverter converter
+	@Accessors String defaultAddress
+	val converter = new MessageConverter
 	
-	new(EventBus eb, MessageConverter converter) {
+	val EventBus eb
+	
+	new(EventBus eb) {
 		this.eb = eb
-		this.converter = converter
+	}
+	
+	override publish(Message msg) {
+		publish(defaultAddress, msg)
 	}
 	
 	override publish(String address, Message msg) {

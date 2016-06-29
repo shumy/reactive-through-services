@@ -19,6 +19,10 @@ class ServiceClient {
 		this.uuid = UUID.randomUUID.toString
 	}
 	
+	new(IMessageBus bus) {
+		this(bus, bus.defaultAddress)
+	}
+	
 	def <T> T create(String srvName, Class<T> srvInterface) {
 		val srvPath = 'srv:' + srvName
 		val srvProxy = Proxy.newProxyInstance(srvInterface.classLoader, #[srvInterface])[ proxy, srvMeth, srvArgs |

@@ -8,23 +8,29 @@ import rt.pipeline.pipe.Pipeline
 import java.util.UUID
 import rt.pipeline.pipe.PipeResource
 import java.util.concurrent.atomic.AtomicBoolean
+import rt.pipeline.IMessageBus
 
 class ClientRouter {
+	val converter = new MessageConverter
+	
 	val URI uri
 	val String client
 	val Pipeline pipeline
-	val MessageConverter converter
 	
 	PipeResource resource = null
 	WebSocketClient ws = null
 	
 	var ready = new AtomicBoolean
 	
-	new(String server, String client, Pipeline pipeline, MessageConverter converter) {
+	def IMessageBus getBus() { return pipeline.mb }
+	
+	new(String server, String client, Pipeline pipeline) {
 		uri = new URI(server + '?client=' + client)
 		this.client = client
 		this.pipeline = pipeline
-		this.converter = converter
+		 
+		pipeline.mb.listener(server)[ send ]
+		pipeline.mb.defaultAddress = server
 		
 		bind
 	}
@@ -69,7 +75,7 @@ class ClientRouter {
 		resource = null
 	}
 	
-	def void send(Message msg) {
+	private def void send(Message msg) {
 		waitReady[
 			val textMsg = converter.toJson(msg)
 			ws.send(textMsg)
