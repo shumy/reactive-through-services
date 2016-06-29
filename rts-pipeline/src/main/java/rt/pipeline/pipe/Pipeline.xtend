@@ -6,6 +6,7 @@ import java.util.HashMap
 import rt.pipeline.IComponent
 import rt.pipeline.IMessageBus.Message
 import rt.pipeline.IMessageBus
+import rt.pipeline.DefaultMessageBus
 
 class Pipeline {
 	@Accessors val IMessageBus mb
@@ -14,6 +15,7 @@ class Pipeline {
 	val interceptors = new ArrayList<IComponent>
 	val services = new HashMap<String, IComponent>
 	
+	new() { this(new DefaultMessageBus) }
 	new(IMessageBus mb) {
 		this.mb = mb
 	}

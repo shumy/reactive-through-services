@@ -75,7 +75,7 @@ class ServiceProcessor extends AbstractClassProcessor {
 		]
 	}
 	
-	override doGenerateCode(ClassDeclaration clazz, @Extension CodeGenerationContext context) {
+	override doGenerateCode(ClassDeclaration clazz, extension CodeGenerationContext context) {
 		val anno = clazz.findAnnotation(Service.findTypeGlobally)
 		val serviceName = anno.getStringValue('value')
 		
@@ -96,6 +96,10 @@ class ServiceProcessor extends AbstractClassProcessor {
 		
 		// write plugin-config.xml
 		file.contents = factory.transform(config)
+	}
+	
+	def void generateService() {
+		
 	}
 	
 	def addCase(MutableMethodDeclaration meth) {
