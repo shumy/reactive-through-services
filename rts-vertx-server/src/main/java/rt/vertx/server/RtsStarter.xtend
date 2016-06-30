@@ -64,7 +64,7 @@ class RtsStarter extends AbstractVerticle {
 			failHandler = [ println('PIPELINE-FAIL: ' + it) ]
 		]
 		
-		val router = new VertxRouter(server) => [
+		val router = new WsRouter(server) => [
 			route('/ws', pipeline)
 		]
 		

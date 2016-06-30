@@ -2,10 +2,10 @@ package rt.vertx.server
 
 import io.vertx.core.http.HttpServer
 import rt.pipeline.Router
-import java.util.HashMap
 import rt.pipeline.DefaultMessageConverter
+import static extension rt.vertx.server.URIParserHelper.*
 
-class VertxRouter extends Router {
+class WsRouter extends Router {
 	val converter = new DefaultMessageConverter
 	
 	val HttpServer server
@@ -14,8 +14,8 @@ class VertxRouter extends Router {
 		this.server = server
 		
 		server.websocketHandler[ ws |
-			val route = getRoute(ws.uri)
-			val client = getQueryParams(ws.query).get('client')
+			val route = ws.uri.route
+			val client = ws.query.queryParams.get('client')
 			println('ROUTE: ' + route)
 			println('CLIENT: ' + client)
 
@@ -52,21 +52,5 @@ class VertxRouter extends Router {
 	
 	def void listen(int port) {
 		server.listen(port)
-	}
-	
-	private def getRoute(String uri) {
-		return uri.split('\\?').get(0)
-	}
-	
-	private def getQueryParams(String query) {
-		val params = new HashMap<String, String>
-		
-		val paramsString = query.split('&')
-		paramsString.forEach[
-			val keyValue = split('=')
-			params.put(keyValue.get(0), keyValue.get(1))
-		]
-		
-		return params
 	}
 }
