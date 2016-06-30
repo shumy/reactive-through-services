@@ -7,7 +7,6 @@ import rt.pipeline.IMessageBus.IListener
 
 class PipeResource {
 	@Accessors val String client
-	@Accessors val String resource
 
 	val Pipeline pipeline
 	val subscriptions = new HashMap<String, IListener>
@@ -15,12 +14,11 @@ class PipeResource {
 	val (Message) => void sendCallback
 	val () => void closeCallback
 		
-	package new(Pipeline pipeline, String client, String resource, (Message) => void sendCallback, () => void closeCallback) {
-		println('''RESOURCE-CREATE(«client», «resource»)''')
+	package new(Pipeline pipeline, String client, (Message) => void sendCallback, () => void closeCallback) {
+		println('''RESOURCE-CREATE «client»''')
 		this.pipeline = pipeline
-
+		
 		this.client = client
-		this.resource = resource
 		
 		this.sendCallback = sendCallback
 		this.closeCallback = closeCallback
@@ -38,7 +36,7 @@ class PipeResource {
 		if(subscriptions.containsKey(address))
 			return false
 		
-		println('''RESOURCE-SUBSCRIBE(«resource») «address»''')
+		println('''RESOURCE-SUBSCRIBE «address»''')
 		val listener = pipeline.mb.listener(address, sendCallback)
 		
 		subscriptions.put(address, listener)
@@ -48,13 +46,13 @@ class PipeResource {
 	def void unsubscribe(String address) {
 		val listener = subscriptions.remove(address)
 		if(listener != null) {
-			println('''RESOURCE-UNSUBSCRIBE(«resource») «address»''')
+			println('''RESOURCE-UNSUBSCRIBE «address»''')
 			listener.remove
 		}
 	}
 
 	def void release() {
-		println('''RESOURCE-RELEASE(«resource»)''')
+		println('''RESOURCE-RELEASE «client»''')
 		subscriptions.values.forEach[ remove ]
 		subscriptions.clear
 	}

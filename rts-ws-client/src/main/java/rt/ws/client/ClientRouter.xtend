@@ -5,7 +5,6 @@ import java.net.URI
 import org.java_websocket.handshake.ServerHandshake
 import rt.pipeline.IMessageBus.Message
 import rt.pipeline.pipe.Pipeline
-import java.util.UUID
 import rt.pipeline.pipe.PipeResource
 import java.util.concurrent.atomic.AtomicBoolean
 import rt.pipeline.IMessageBus
@@ -92,8 +91,7 @@ class ClientRouter {
 	}
 	
 	private def void onOpen() {
-		val uuid = UUID.randomUUID.toString
-		resource = pipeline.createResource(server, uuid, [ send ], [ close ])
+		resource = pipeline.createResource(server, [ send ], [ close ])
 		ready.set(true)
 	}
 	

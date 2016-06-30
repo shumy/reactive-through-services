@@ -28,7 +28,7 @@ class WsRouter extends Router {
 			}
 			
 			val sb = new StringBuilder
-			val resource = pipeline.createResource(client, ws.textHandlerID, [ msg |
+			val resource = pipeline.createResource(client, [ msg |
 				val textReply = converter.toJson(msg)
 				ws.writeFinalTextFrame(textReply)
 				logger.debug('SENT {}', textReply)

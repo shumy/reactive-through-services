@@ -25,8 +25,8 @@ class Pipeline {
 		ctx.next
 	}
 	
-	def createResource(String client, String resource, (Message) => void sendCallback, () => void closeCallback) {
-		return new PipeResource(this, client, resource, sendCallback, closeCallback)
+	def createResource(String client, (Message) => void sendCallback, () => void closeCallback) {
+		return new PipeResource(this, client, sendCallback, closeCallback)
 	}
 	
 	def fail(String error) {

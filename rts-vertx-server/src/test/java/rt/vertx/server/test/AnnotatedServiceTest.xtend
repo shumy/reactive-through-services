@@ -54,7 +54,7 @@ class AnnotatedServiceTest {
 		val msg = new Message => [id=1L cmd='hello' clt='source' path='srv:test' args=#['Micael', 'Pedrosa']]
 		val reply = new Message => [id=1L cmd='ok' clt='source' result='Hello Micael Pedrosa!']
 		
-		val r = pipeline.createResource('uid', 'r', [ ctx.assertEquals(gson.toJson(it), gson.toJson(reply)) sync.countDown ], null)
+		val r = pipeline.createResource('uid', [ ctx.assertEquals(gson.toJson(it), gson.toJson(reply)) sync.countDown ], null)
 		r.subscribe('uid')
 		r.process(msg)
 	}
@@ -67,7 +67,7 @@ class AnnotatedServiceTest {
 		val msg = new Message => [id=1L cmd='sum' clt='source' path='srv:test' args=#[1, 2L, 1.5f, 2.5]]
 		val reply = new Message => [id=1L cmd='ok' clt='source' result=7.0]
 		
-		val r = pipeline.createResource('uid', 'r', [ ctx.assertEquals(gson.toJson(it), gson.toJson(reply)) sync.countDown ], null)
+		val r = pipeline.createResource('uid', [ ctx.assertEquals(gson.toJson(it), gson.toJson(reply)) sync.countDown ], null)
 		r.subscribe('uid')
 		r.process(msg)
 	}
@@ -80,7 +80,7 @@ class AnnotatedServiceTest {
 		val msg = new Message => [id=1L cmd='alexBrothers' clt='source' path='srv:test' args=#[#{'name'->'Alex', 'age'->35}]]
 		val reply = new Message => [id=1L cmd='ok' clt='source' result=#{'name'->'Alex', 'age'->35, 'brothers'->#['Jorge', 'Mary']}]
 		
-		val r = pipeline.createResource('uid', 'r', [ ctx.assertEquals(gson.toJson(it), gson.toJson(reply)) sync.countDown ], null)
+		val r = pipeline.createResource('uid', [ ctx.assertEquals(gson.toJson(it), gson.toJson(reply)) sync.countDown ], null)
 		r.subscribe('uid')
 		r.process(msg)
 	}
