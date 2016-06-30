@@ -19,7 +19,6 @@ class WebFileHandler {
 				return
 			}
 			
-			
 			val file = if (req.path.equals('/')) {
 				'/index.html'
 			} else {
@@ -27,7 +26,12 @@ class WebFileHandler {
 			}
 			
 			logger.debug(file)
-			req.response.sendFile(folder + file)
+			req.response.sendFile(folder + file, 0, Long.MAX_VALUE)[
+				if (!succeeded) {
+					req.response.statusCode = 404
+					req.response.end = 'Not found!'
+				}
+			]
 		]
 	}
 }
