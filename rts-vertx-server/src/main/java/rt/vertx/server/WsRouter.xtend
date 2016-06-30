@@ -3,9 +3,12 @@ package rt.vertx.server
 import io.vertx.core.http.HttpServer
 import rt.pipeline.Router
 import rt.pipeline.DefaultMessageConverter
+import org.slf4j.LoggerFactory
 import static extension rt.vertx.server.URIParserHelper.*
 
 class WsRouter extends Router {
+	static val logger = LoggerFactory.getLogger('WS-ROUTER')
+	
 	val converter = new DefaultMessageConverter
 	
 	val HttpServer server
@@ -16,8 +19,8 @@ class WsRouter extends Router {
 		server.websocketHandler[ ws |
 			val route = ws.uri.route
 			val client = ws.query.queryParams.get('client')
-			println('ROUTE: ' + route)
-			println('CLIENT: ' + client)
+			logger.debug('ROUTE {}', route)
+			logger.debug('CLIENT {}', client)
 
 			val pipeline = routes.get(route)
 			if(pipeline == null) {
@@ -28,7 +31,7 @@ class WsRouter extends Router {
 			val resource = pipeline.createResource(client, ws.textHandlerID, [ msg |
 				val textReply = converter.toJson(msg)
 				ws.writeFinalTextFrame(textReply)
-				println('SENT: ' + textReply)
+				logger.debug('SENT {}', textReply)
 			], [ ws.close ])
 			
 			resource.subscribe(client)
@@ -37,7 +40,7 @@ class WsRouter extends Router {
 				sb.append(textData)
 				if (isFinal) {
 					val textMsg = sb.toString
-					println('RECEIVED: ' + textMsg)
+					logger.debug('RECEIVED {}', textMsg)
 					
 					val msg = converter.fromJson(textMsg)
 					sb.length = 0

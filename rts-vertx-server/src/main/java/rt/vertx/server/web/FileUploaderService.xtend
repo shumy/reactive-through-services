@@ -7,6 +7,7 @@ import java.io.File
 import org.eclipse.xtend.lib.annotations.Accessors
 import rt.plugin.service.Service
 import rt.plugin.service.Public
+import static extension rt.vertx.server.URIParserHelper.*
 
 @Service('http-uploader')
 class FileUploaderService {
@@ -27,9 +28,9 @@ class FileUploaderService {
 				logger.info('UPLOADING {}', upload.filename)
 				
 				//protect against filesystem attacks
-				if (upload.filename.contains('..')) {
-					logger.info('ERROR {}', 'Filename not accepted!')
-					req.response.statusCode = 500
+				if (!upload.filename.validPath) {
+					logger.error('Filename not accepted: {}', upload.filename)
+					req.response.statusCode = 403
 					req.response.end = 'Filename not accepted!'
 					return
 				}
@@ -56,8 +57,9 @@ class FileUploaderService {
 	
 	@Public
 	def list(String inPath) {
-		if (path.contains('..'))
-			throw new RuntimeException('Path not accepted!')
+		//protect against filesystem attacks
+		if (!path.validPath)
+			throw new RuntimeException('Path not accepted: ' + inPath)
 		
 		val folder = new File(path + inPath)
 		return folder.list.toList

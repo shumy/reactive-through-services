@@ -26,4 +26,8 @@ class URIParserHelper {
 		
 		return params
 	}
+	
+	static def isValidPath(String path) {
+		return !(path.contains('..') || path.contains('~'))
+	}
 }
