@@ -20,10 +20,14 @@ class WebFileHandler {
 			}
 			
 			
-			val file = if (req.path.equals('/')) 'index.html' else req.path
+			val file = if (req.path.equals('/')) {
+				'/index.html'
+			} else {
+				if (!req.path.startsWith('/')) '/' + req.path else req.path 
+			}
 			
 			logger.debug(file)
-			req.response.sendFile(folder + '/' + file)
+			req.response.sendFile(folder + file)
 		]
 	}
 }
