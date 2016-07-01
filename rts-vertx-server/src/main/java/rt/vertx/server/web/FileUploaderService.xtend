@@ -1,57 +1,54 @@
 package rt.vertx.server.web
 
-import io.vertx.core.Handler
 import io.vertx.core.http.HttpServerRequest
 import org.slf4j.LoggerFactory
 import java.io.File
-import org.eclipse.xtend.lib.annotations.Accessors
-import rt.plugin.service.Service
-import rt.plugin.service.Public
+import rt.plugin.service.an.Service
+import rt.plugin.service.an.Public
 import static extension rt.vertx.server.URIParserHelper.*
 
-@Service('http-uploader')
+@Service
 class FileUploaderService {
-	static val logger = LoggerFactory.getLogger('HTTP-UPLOADER')
+	static val logger = LoggerFactory.getLogger('HTTP-FILE-UPLOADER')
 	
-	@Accessors val String path
-	@Accessors val Handler<HttpServerRequest> handler
+	val String path
 	
 	new(String path) {
 		this.path = path
 		
 		val folder = new File(path)
 		if (!folder.exists) folder.mkdirs
-		
-		handler = [ req | 
-			req.expectMultipart = true
-			req.uploadHandler[upload |
-				logger.info('UPLOADING {}', upload.filename)
-				
-				//protect against filesystem attacks
-				if (!upload.filename.validPath) {
-					logger.error('Filename not accepted: {}', upload.filename)
-					req.response.statusCode = 403
-					req.response.end = 'Filename not accepted!'
-					return
-				}
-				
-				val filePath = path + '/' + upload.filename
-				req.response.chunked = true
-				
-				upload.exceptionHandler[
-					logger.info('ERROR {}', message)
-					
-					req.response.statusCode = 500
-					req.response.end = 'Failed: ' + message
-				]
-				
-				upload.endHandler[
-					logger.info('SAVED {}', filePath)
-					req.response.end ='Success'
-				]
-				
-				upload.streamToFileSystem(filePath)
+	}
+	
+	@Public(notif = true)
+	def void get(HttpServerRequest req) {
+		req.expectMultipart = true
+		req.uploadHandler[upload |
+			logger.debug('UPLOADING {}', upload.filename)
+			
+			//protect against filesystem attacks
+			if (!upload.filename.validPath) {
+				logger.error('Filename not accepted: {}', upload.filename)
+				req.response.statusCode = 403
+				req.response.end = 'Filename not accepted!'
+				return
+			}
+			
+			val filePath = path + '/' + upload.filename
+			req.response.chunked = true
+			
+			upload.exceptionHandler[
+				logger.error('ERROR {}', message)
+				req.response.statusCode = 500
+				req.response.end = 'Failed: ' + message
 			]
+			
+			upload.endHandler[
+				logger.info('SAVED {}', filePath)
+				req.response.end = 'Success'
+			]
+			
+			upload.streamToFileSystem(filePath)
 		]
 	}
 	

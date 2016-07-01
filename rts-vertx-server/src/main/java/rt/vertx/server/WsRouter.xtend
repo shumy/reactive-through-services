@@ -1,30 +1,31 @@
 package rt.vertx.server
 
 import io.vertx.core.http.HttpServer
-import rt.pipeline.Router
 import rt.pipeline.DefaultMessageConverter
 import org.slf4j.LoggerFactory
 import rt.plugin.service.IServiceClientFactory
 import static extension rt.vertx.server.URIParserHelper.*
+import rt.pipeline.pipe.Pipeline
 
-class WsRouter extends Router {
+class WsRouter {
 	static val logger = LoggerFactory.getLogger('WS-ROUTER')
 	
 	val converter = new DefaultMessageConverter
 	
+	val String route
 	val HttpServer server
+	val Pipeline pipeline
 
-	new(HttpServer server) {
+	new(String route, HttpServer server, Pipeline pipeline) {
+		this.route = route
 		this.server = server
+		this.pipeline = pipeline
 		
 		server.websocketHandler[ ws |
-			val route = ws.uri.route
 			val client = ws.query.queryParams.get('client')
-			logger.debug('ROUTE {}', route)
 			logger.debug('CLIENT {}', client)
-
-			val pipeline = routes.get(route)
-			if(pipeline == null) {
+			
+			if (ws.uri.route != route) {
 				ws.close return
 			}
 			
@@ -55,9 +56,5 @@ class WsRouter extends Router {
 			
 			ws.closeHandler[ resource.release ]
 		]
-	}
-	
-	def void listen(int port) {
-		server.listen(port)
 	}
 }

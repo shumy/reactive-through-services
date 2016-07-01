@@ -11,7 +11,6 @@ import com.google.gson.Gson
 import rt.pipeline.IMessageBus.Message
 import rt.pipeline.pipe.use.ValidatorInterceptor
 import rt.pipeline.IComponent
-import rt.pipeline.pipe.PipeContext
 import rt.pipeline.DefaultMessageBus
 import rt.pipeline.pipe.Pipeline
 
@@ -66,17 +65,13 @@ class PipelineTest {
 		println('deliverMessageToService')
 		val msg = new Message => [id=1L cmd='ping' clt='source' path='srv:test']
 
-		val srv = new IComponent {
-			override getName() { return 'srv:test' }
-			
-			override apply(PipeContext pctx) {
-				ctx.assertEquals(gson.toJson(pctx.message), gson.toJson(msg))
-			}
-		}
+		val IComponent srv = [ pctx |
+			ctx.assertEquals(gson.toJson(pctx.message), gson.toJson(msg))
+		]
 		
 		val pipeline = new Pipeline(new DefaultMessageBus) => [
 			addInterceptor(new ValidatorInterceptor)
-			addService(srv)
+			addService('test', srv)
 			failHandler = [ ctx.fail(it) ]
 		]
 		
@@ -93,18 +88,14 @@ class PipelineTest {
 		val msg = new Message => [id=1L cmd='ping' clt='source' path='srv:test']
 		val reply = new Message => [id=1L cmd='ok' clt='source']
 
-		val srv = new IComponent {
-			override getName() { return 'srv:test' }
-			
-			override apply(PipeContext pctx) {
-				ctx.assertEquals(gson.toJson(pctx.message), gson.toJson(msg))
-				pctx.replyOK
-			}
-		}
+		val IComponent srv = [ pctx |
+			ctx.assertEquals(gson.toJson(pctx.message), gson.toJson(msg))
+			pctx.replyOK
+		]
 		
 		val pipeline = new Pipeline(new DefaultMessageBus) => [
 			addInterceptor(new ValidatorInterceptor)
-			addService(srv)
+			addService('test', srv)
 			failHandler = [ ctx.fail(it) ]
 		]
 		

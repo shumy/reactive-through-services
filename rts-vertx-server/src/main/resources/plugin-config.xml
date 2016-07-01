@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <config>
     <entries>
-        <entry type="srv" ref="rt.vertx.server.web.FileUploaderService">
-            <name>http-uploader</name>
-        </entry>
+        <entry type="srv" ref="rt.vertx.server.web.FileUploaderService"/>
+        <entry type="srv" ref="rt.vertx.server.web.WebFileHandler"/>
+        <entry type="srv" ref="rt.vertx.server.web.WebFileService"/>
     </entries>
 </config>

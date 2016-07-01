@@ -36,9 +36,9 @@ class PluginLoaderTest {
 	}
 	
 	@Test
-	def void isServiceNameCorrect() {
+	def void isServiceInstance() {
 		val srv = plugin.newInstanceFromEntry(IComponent, 'srv', 'rt.plugin.test.srv.AnnotatedService')
-		Assert.assertEquals(srv.name, 'srv:test')
+		Assert.assertNotNull(srv)
 	}
 	
 	@Test

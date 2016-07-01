@@ -1,4 +1,4 @@
-package rt.plugin.service
+package rt.plugin.service.an
 
 import java.lang.annotation.Target
 import java.lang.annotation.Retention
@@ -7,4 +7,5 @@ import java.lang.annotation.Retention
 @Retention(RUNTIME)
 annotation Public {
 	Class<?> retType = Void
+	boolean notif = false
 }

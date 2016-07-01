@@ -1,4 +1,4 @@
-package rt.plugin.service
+package rt.plugin.service.an
 
 import java.lang.annotation.Target
 import org.eclipse.xtend.lib.macro.Active
@@ -17,12 +17,12 @@ import rt.pipeline.IComponent
 import rt.pipeline.pipe.PipeContext
 import rt.pipeline.IMessageBus.Message
 import org.eclipse.xtend.lib.macro.ValidationContext
+import rt.plugin.service.IServiceClientFactory
+import rt.plugin.service.ServiceClient
 
 @Target(TYPE)
 @Active(ServiceProcessor)
-annotation Service {
-	String value
-}
+annotation Service {}
 
 class ServiceProcessor extends AbstractClassProcessor {
 	
@@ -35,22 +35,12 @@ class ServiceProcessor extends AbstractClassProcessor {
 	}
 	
 	override doTransform(MutableClassDeclaration clazz, extension TransformationContext ctx) {
-		val anno = clazz.findAnnotation(Service.findTypeGlobally)
-		val name = anno.getStringValue('value')
-		
 		clazz.extendedClass = IComponent.newTypeReference
 		
 		//new implicit fields...
 		clazz.addField('ctx')[ type = PipeContext.newTypeReference ]
 		clazz.addField('clientFactory')[ type = IServiceClientFactory.newTypeReference ]
 		clazz.addField('client')[ type = ServiceClient.newTypeReference ]
-		
-		clazz.addMethod('getName')[
-			returnType = String.newTypeReference
-			body = '''
-				return "srv:«name»";
-			'''
-		]
 		
 		clazz.addMethod('apply')[
 			addParameter('ctx', PipeContext.newTypeReference)
@@ -69,7 +59,7 @@ class ServiceProcessor extends AbstractClassProcessor {
 				switch(msg.cmd) {
 					«FOR meth : clazz.declaredMethods»
 						«IF meth.findAnnotation(Public.findTypeGlobally) != null»
-							«meth.addCase»
+							«meth.addCase(ctx)»
 						«ENDIF»
 					«ENDFOR»
 					default:
@@ -81,9 +71,6 @@ class ServiceProcessor extends AbstractClassProcessor {
 	}
 	
 	override doGenerateCode(ClassDeclaration clazz, extension CodeGenerationContext context) {
-		val anno = clazz.findAnnotation(Service.findTypeGlobally)
-		val serviceName = anno.getStringValue('value')
-		
 		val filePath = clazz.compilationUnit.filePath
 		val file = filePath.projectFolder.append('/src/main/resources/plugin-config.xml')
 		val factory = new PluginConfigFactory
@@ -96,19 +83,16 @@ class ServiceProcessor extends AbstractClassProcessor {
 		config.addEntry(new PluginEntry => [
 			type = 'srv'
 			ref = clazz.qualifiedName
-			name = serviceName
 		])
 		
 		// write plugin-config.xml
 		file.contents = factory.transform(config)
 	}
 	
-	def void generateService() {
-		
-	}
-	
-	def addCase(MutableMethodDeclaration meth) {
+	def addCase(MutableMethodDeclaration meth, extension TransformationContext ctx) {
 		val retType = meth.returnType.simpleName
+		val anoRef = meth.findAnnotation(Public.findTypeGlobally)
+		val isNotification = anoRef.getBooleanValue('notif')
 
 		var i = 0
 		return '''
@@ -117,10 +101,12 @@ class ServiceProcessor extends AbstractClassProcessor {
 				args = msg.args(«FOR param : meth.parameters SEPARATOR ','» «param.type.simpleName.replaceFirst('<.*>', '')».class«ENDFOR» );
 				«ENDIF»
 				«IF retType != 'void'»ret = «ENDIF»«meth.simpleName»(«FOR param : meth.parameters SEPARATOR ','» «param.type.addArgType(i++)»«ENDFOR» );
-				«IF retType != 'void'»
-					ctx.replyOK(ret);
-				«ELSE»
-					ctx.replyOK();
+				«IF !isNotification»
+					«IF retType != 'void'»
+						ctx.replyOK(ret);
+					«ELSE»
+						ctx.replyOK();
+					«ENDIF»
 				«ENDIF»
 				break;
 		'''

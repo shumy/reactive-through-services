@@ -1,10 +1,11 @@
-package rt.plugin.service
+package rt.plugin.service.an
 
 import java.lang.annotation.Target
 import org.eclipse.xtend.lib.macro.Active
 import org.eclipse.xtend.lib.macro.AbstractInterfaceProcessor
 import org.eclipse.xtend.lib.macro.declaration.MutableInterfaceDeclaration
 import org.eclipse.xtend.lib.macro.TransformationContext
+import rt.plugin.service.Promise
 
 @Target(TYPE)
 @Active(ServiceProxyProcessor)

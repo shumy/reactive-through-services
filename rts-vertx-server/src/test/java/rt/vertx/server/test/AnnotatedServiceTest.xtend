@@ -41,7 +41,7 @@ class AnnotatedServiceTest {
 		
 		pipeline = new Pipeline(bus) => [
 			addInterceptor(new ValidatorInterceptor)
-			addService(srv)
+			addService('test', srv)
 			failHandler = [ ctx.fail(it) ]
 		]
 	}

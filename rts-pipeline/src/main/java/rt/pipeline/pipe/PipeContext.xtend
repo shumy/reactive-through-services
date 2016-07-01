@@ -6,8 +6,11 @@ import rt.pipeline.IMessageBus.Message
 import rt.pipeline.IComponent
 import rt.pipeline.IMessageBus
 import java.util.HashMap
+import org.slf4j.LoggerFactory
 
 class PipeContext {
+	static val logger = LoggerFactory.getLogger('PIPELINE')
+	
 	@Accessors val Message message
 	@Accessors val PipeResource resource
 	
@@ -145,9 +148,9 @@ class PipeContext {
 	}
 	
 	private def void deliverRequest() {
-		val srv = pipeline.getService(message.path)
+		val srv = pipeline.getServiceFromPath(message.path)
 		if(srv != null) {
-			println('DELIVER(' + message.path + ')')
+			logger.debug('DELIVER {}', message.path)
 			try {
 				srv.apply(this)
 			} catch(RuntimeException ex) {
@@ -155,14 +158,14 @@ class PipeContext {
 				fail(ex.message)
 			}
 		} else {
-			println('PUBLISH(' + message.path + ')')
+			logger.debug('PUBLISH {}', message.path)
 			publish(message.path)
 		}
 	}
 	
 	private def void deliverReply() {
 		val address = message.clt + '+' + message.id
-		println("REPLY(" + address + ")")
+		logger.debug('DELIVER-REPLY {}', address)
 		publish(address)
 	}
 }

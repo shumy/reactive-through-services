@@ -4,6 +4,7 @@ import rt.pipeline.IMessageBus
 import java.lang.reflect.Proxy
 import rt.pipeline.IMessageBus.Message
 import java.util.concurrent.atomic.AtomicLong
+import rt.plugin.service.an.Public
 
 class ServiceClient {
 	private static val clientSeq = new AtomicLong(0L)

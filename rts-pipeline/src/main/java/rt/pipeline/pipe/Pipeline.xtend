@@ -20,6 +20,14 @@ class Pipeline {
 		this.mb = mb
 	}
 	
+	def createResource(String client) {
+		return new PipeResource(this, client, null, null)
+	}
+	
+	def createResource(String client, (Message) => void sendCallback, () => void closeCallback) {
+		return new PipeResource(this, client, sendCallback, closeCallback)
+	}
+	
 	package def void process(PipeResource resource, Message msg) {
 		val ctx = new PipeContext(this, resource, msg, interceptors.iterator)
 		ctx.next
@@ -31,10 +39,6 @@ class Pipeline {
 		ctx.next
 	}
 	
-	def createResource(String client, (Message) => void sendCallback, () => void closeCallback) {
-		return new PipeResource(this, client, sendCallback, closeCallback)
-	}
-	
 	def fail(String error) {
 		failHandler?.apply(error)
 	}
@@ -43,15 +47,19 @@ class Pipeline {
 		interceptors.add(interceptor)
 	}
 	
-	def getService(String name) {
-		return services.get(name)
-	}
-		
-	def void addService(IComponent service) {
-		services.put(service.name, service)
+	def getServiceFromPath(String path) {
+		return services.get(path)
 	}
 	
-	def void removeService(IComponent service) {
-		services.remove(service.name)
+	def getService(String address) {
+		return services.get('srv:' + address)
+	}
+		
+	def void addService(String address, IComponent service) {
+		services.put('srv:' + address, service)
+	}
+	
+	def void removeService(String address) {
+		services.remove('srv:' + address)
 	}
 }

@@ -1,11 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <config>
     <entries>
-        <entry type="srv" ref="rt.plugin.test.srv.OtherService">
-            <name>other</name>
-        </entry>
-        <entry type="srv" ref="rt.plugin.test.srv.AnnotatedService">
-            <name>test</name>
-        </entry>
+        <entry type="srv" ref="rt.plugin.test.srv.OtherService"/>
+        <entry type="srv" ref="rt.plugin.test.srv.AnnotatedService"/>
     </entries>
 </config>

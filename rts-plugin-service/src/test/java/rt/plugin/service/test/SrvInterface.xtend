@@ -1,7 +1,7 @@
 package rt.plugin.service.test
 
 import rt.plugin.service.Promise
-import rt.plugin.service.Public
+import rt.plugin.service.an.Public
 
 interface SrvInterface {
 	

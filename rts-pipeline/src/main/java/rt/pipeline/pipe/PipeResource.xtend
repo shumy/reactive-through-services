@@ -4,8 +4,11 @@ import org.eclipse.xtend.lib.annotations.Accessors
 import java.util.HashMap
 import rt.pipeline.IMessageBus.Message
 import rt.pipeline.IMessageBus.IListener
+import org.slf4j.LoggerFactory
 
 class PipeResource {
+	static val logger = LoggerFactory.getLogger('RESOURCE')
+	
 	@Accessors val String client
 
 	val Pipeline pipeline
@@ -15,7 +18,7 @@ class PipeResource {
 	val () => void closeCallback
 		
 	package new(Pipeline pipeline, String client, (Message) => void sendCallback, () => void closeCallback) {
-		println('''RESOURCE-CREATE «client»''')
+		logger.debug('CREATE {}', client)
 		this.pipeline = pipeline
 		
 		this.client = client
@@ -33,14 +36,14 @@ class PipeResource {
 	}
 	
 	def void send(Message msg) {
-		sendCallback.apply(msg)
+		sendCallback?.apply(msg)
 	}
 
 	def subscribe(String address) {
 		if(subscriptions.containsKey(address))
 			return false
 		
-		println('''RESOURCE-SUBSCRIBE «address»''')
+		logger.debug('SUBSCRIBE {}', address)
 		val listener = pipeline.mb.listener(address, sendCallback)
 		
 		subscriptions.put(address, listener)
@@ -50,18 +53,18 @@ class PipeResource {
 	def void unsubscribe(String address) {
 		val listener = subscriptions.remove(address)
 		if(listener != null) {
-			println('''RESOURCE-UNSUBSCRIBE «address»''')
+			logger.debug('UNSUBSCRIBE {}', address)
 			listener.remove
 		}
 	}
 
 	def void release() {
-		println('''RESOURCE-RELEASE «client»''')
+		logger.debug('RELEASE {}', client)
 		subscriptions.values.forEach[ remove ]
 		subscriptions.clear
 	}
 	
 	def void disconnect() {
-		closeCallback.apply
+		closeCallback?.apply
 	}
 }

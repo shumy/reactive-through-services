@@ -1,10 +1,10 @@
 package rt.plugin.test.srv
 
 import java.util.Map
-import rt.plugin.service.Service
-import rt.plugin.service.Public
+import rt.plugin.service.an.Service
+import rt.plugin.service.an.Public
 
-@Service('test')
+@Service
 class AnnotatedService {
 	
 	@Public

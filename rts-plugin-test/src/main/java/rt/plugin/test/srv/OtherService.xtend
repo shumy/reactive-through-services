@@ -1,9 +1,9 @@
 package rt.plugin.test.srv
 
-import rt.plugin.service.Service
-import rt.plugin.service.Public
+import rt.plugin.service.an.Service
+import rt.plugin.service.an.Public
 
-@Service('other')
+@Service
 class OtherService {
 	@Public
 	def otherServiceHello() { return 'Hello' }

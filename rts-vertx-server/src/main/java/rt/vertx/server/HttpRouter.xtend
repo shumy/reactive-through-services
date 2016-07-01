@@ -2,49 +2,63 @@ package rt.vertx.server
 
 import io.vertx.core.http.HttpServer
 import java.util.HashMap
-import io.vertx.core.Handler
-import io.vertx.core.http.HttpServerRequest
 import org.slf4j.LoggerFactory
 import java.util.Stack
 import java.util.ArrayList
 import java.util.List
 import static extension rt.vertx.server.URIParserHelper.*
+import rt.pipeline.pipe.Pipeline
+import rt.pipeline.IMessageBus.Message
 
 class HttpRouter {
 	static val logger = LoggerFactory.getLogger('HTTP-ROUTER')
 	
 	val HttpServer server
-	val routes = new HashMap<String, Handler<HttpServerRequest>>
+	val Pipeline pipeline
+	val routes = new HashMap<String, String>
 	
-	new(HttpServer server) {
+	new(HttpServer server, Pipeline pipeline) {
 		this.server = server
-		server.requestHandler[
-			val route = uri.route
+		this.pipeline = pipeline
+		
+		server.requestHandler[ req |
+			logger.debug('REQUEST {}', req.uri)
+			val route = req.uri.route
 			logger.debug(route)
 			
-			val handler = route.search
-			if (handler == null) {
-				response.statusCode = 404
-				response.end
+			val address = route.search
+			if (address == null) {
+				req.response.statusCode = 404
+				req.response.end
 				return
 			}
 			
-			handler.handle(it)
+			//TODO: optimize resource creation
+			val resource = pipeline.createResource(req.uri)
+			resource.process(new Message => [ id=1L cmd='get' path='srv:' + address args=#[req]])
 		]
 	}
 	
-	def route(String uri, Handler<HttpServerRequest> handler) {
-		routes.put(uri, handler)
+	/** Add redirect of HttpServerRequest to the service address, public methods 'get, post, put, patch, delete'
+	 * @param uri Http request path (accepts paths that end with /*)
+	 * @param address Of the service registered in the pipeline
+	 */
+	def void route(String uri, String address) {
+		routes.put(uri, address)
 	}
 	
-	def route(List<String> uris, Handler<HttpServerRequest> handler) {
-		uris.forEach[ routes.put(it, handler) ]
+	/** Add redirects of HttpServerRequest to the service address, public method 'get, post, put, patch, delete'
+	 * @param uris Http request paths (accepts paths that end with /*)
+	 * @param address Of the service registered in the pipeline
+	 */
+	def void routes(List<String> uris, String address) {
+		uris.forEach[ routes.put(it, address) ]
 	}
 	
 	private def search(String route) {
-		logger.debug('SEARCH {}', route)
-		var handler = routes.get(route)
-		if (handler == null) {
+		logger.trace('SEARCH {}', route)
+		var address = routes.get(route)
+		if (address == null) {
 			val splits = new ArrayList<String>(route.split('/'))
 			if (splits.size > 1) {
 				splits.remove(0)
@@ -61,14 +75,13 @@ class HttpRouter {
 				path.push(newRoute + '/*')
 			]
 			
-			while(handler == null && !path.isEmpty) {
+			while(address == null && !path.isEmpty) {
 				val newPath = path.pop
-				logger.debug('SEARCH {}', newPath)
-				handler = routes.get(newPath)
+				logger.trace('SEARCH {}', newPath)
+				address = routes.get(newPath)
 			}
 		}
 		
-		return handler
+		return address
 	}
-	
 }
