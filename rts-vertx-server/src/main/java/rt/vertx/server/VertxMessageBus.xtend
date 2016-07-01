@@ -6,6 +6,7 @@ import rt.pipeline.IMessageBus
 import rt.pipeline.IMessageBus.Message
 import rt.pipeline.DefaultMessageConverter
 
+//TODO: not working
 class VertxMessageBus implements IMessageBus {
 	val converter = new DefaultMessageConverter
 	

@@ -1,4 +1,4 @@
-package rt.vertx.server
+package rt.vertx.server.router
 
 import io.vertx.core.http.HttpServer
 import java.util.HashMap

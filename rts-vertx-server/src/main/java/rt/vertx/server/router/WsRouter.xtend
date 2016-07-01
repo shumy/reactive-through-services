@@ -1,4 +1,4 @@
-package rt.vertx.server
+package rt.vertx.server.router
 
 import io.vertx.core.http.HttpServer
 import rt.pipeline.DefaultMessageConverter
@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory
 import rt.plugin.service.IServiceClientFactory
 import static extension rt.vertx.server.URIParserHelper.*
 import rt.pipeline.pipe.Pipeline
+import rt.vertx.server.ServiceClientFactory
 
 class WsRouter {
 	static val logger = LoggerFactory.getLogger('WS-ROUTER')
