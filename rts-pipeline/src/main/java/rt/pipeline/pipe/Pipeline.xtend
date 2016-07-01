@@ -20,8 +20,14 @@ class Pipeline {
 		this.mb = mb
 	}
 	
-	def void process(PipeResource resource, Message msg) {
+	package def void process(PipeResource resource, Message msg) {
 		val ctx = new PipeContext(this, resource, msg, interceptors.iterator)
+		ctx.next
+	}
+	
+	package def void process(PipeResource resource, Message msg, (PipeContext) => void onContextCreated) {
+		val ctx = new PipeContext(this, resource, msg, interceptors.iterator)
+		onContextCreated.apply(ctx)
 		ctx.next
 	}
 	
@@ -30,8 +36,7 @@ class Pipeline {
 	}
 	
 	def fail(String error) {
-		if(failHandler != null)
-			failHandler.apply(error)
+		failHandler?.apply(error)
 	}
 	
 	def void addInterceptor(IComponent interceptor) {

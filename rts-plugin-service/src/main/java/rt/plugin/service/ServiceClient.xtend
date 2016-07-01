@@ -1,26 +1,24 @@
 package rt.plugin.service
 
 import rt.pipeline.IMessageBus
-import java.util.UUID
 import java.lang.reflect.Proxy
 import rt.pipeline.IMessageBus.Message
+import java.util.concurrent.atomic.AtomicLong
 
 class ServiceClient {
-	package val IMessageBus bus
-	package val String address
+	private static val clientSeq = new AtomicLong(0L)
 	
-	package val String uuid 		//just a random reply point
+	package val IMessageBus bus
+	package val String server
+	
+	package val String uuid
 	package var long msgID = 0		//increment for every new message
 	
-	new(IMessageBus bus, String address) {
+	new(IMessageBus bus, String server, String client) {
 		this.bus = bus
-		this.address = address
+		this.server = server
 		
-		this.uuid = UUID.randomUUID.toString
-	}
-	
-	new(IMessageBus bus) {
-		this(bus, bus.defaultAddress)
+		this.uuid = ServiceClient.clientSeq.addAndGet(1) + ':' + client
 	}
 	
 	def <T> T create(String srvName, Class<T> srvInterface) {
@@ -30,7 +28,7 @@ class ServiceClient {
 				msgID++
 				val sendMsg = new Message => [id=msgID clt=uuid path=srvPath cmd=srvMeth.name args=srvArgs]
 				
-				bus.send(address, sendMsg)[ replyMsg |
+				bus.send(server, sendMsg)[ replyMsg |
 					if (replyMsg.cmd == Message.OK) {
 						val anPublic = srvMeth.getAnnotation(Public)
 						if (anPublic == null)

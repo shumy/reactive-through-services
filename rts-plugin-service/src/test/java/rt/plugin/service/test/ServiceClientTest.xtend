@@ -20,7 +20,7 @@ class ServiceClientTest {
 			mb.publish(reply.clt + '+' + reply.id, reply)
 		]
 		
-		val srvClient = new ServiceClient(mb, 'clt:address')
+		val srvClient = new ServiceClient(mb, 'srv:address', 'clt:address')
 		val srvProxy = srvClient.create('test', SrvInterface)
 		
 		srvProxy.hello('Alex').then[

@@ -4,6 +4,7 @@ import io.vertx.core.http.HttpServer
 import rt.pipeline.Router
 import rt.pipeline.DefaultMessageConverter
 import org.slf4j.LoggerFactory
+import rt.plugin.service.IServiceClientFactory
 import static extension rt.vertx.server.URIParserHelper.*
 
 class WsRouter extends Router {
@@ -34,6 +35,7 @@ class WsRouter extends Router {
 				logger.debug('SENT {}', textReply)
 			], [ ws.close ])
 			
+			val srvClientFactory = new ServiceClientFactory(pipeline.mb, client, ws.textHandlerID)
 			resource.subscribe(client)
 			
 			ws.frameHandler[
@@ -45,7 +47,9 @@ class WsRouter extends Router {
 					val msg = converter.fromJson(textMsg)
 					sb.length = 0
 					
-					resource.process(msg)
+					resource.process(msg)[
+						object(IServiceClientFactory, srvClientFactory)
+					]
 				}
 			]
 			

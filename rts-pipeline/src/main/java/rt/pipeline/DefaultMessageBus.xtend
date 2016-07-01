@@ -3,20 +3,14 @@ package rt.pipeline
 import java.util.HashMap
 import java.util.Set
 import java.util.HashSet
-import org.eclipse.xtend.lib.annotations.Accessors
 import rt.pipeline.IMessageBus.Message
 import java.util.Timer
 import java.util.concurrent.ConcurrentHashMap
 
 class DefaultMessageBus implements IMessageBus {
-	@Accessors String defaultAddress
-	
 	val listeners = new HashMap<String, Set<DefaultListener>>
 	val replyListeners = new ConcurrentHashMap<String, (Message) => void>
 	
-	override publish(Message msg) {
-		publish(defaultAddress, msg)
-	}
 	
 	override publish(String address, Message msg) {
 		if(msg.cmd == Message.OK || msg.cmd == Message.ERROR) {
@@ -46,10 +40,10 @@ class DefaultMessageBus implements IMessageBus {
 			listeners.put(address, holder)
 		}
 		
-		val dpfListener = new DefaultListener(this, address, listener)
-		holder.add(dpfListener)
+		val rtsListener = new DefaultListener(this, address, listener)
+		holder.add(rtsListener)
 		
-		return dpfListener
+		return rtsListener
 	}
 	
 	static class DefaultListener implements IListener {
@@ -69,7 +63,7 @@ class DefaultMessageBus implements IMessageBus {
 		
 		override remove() {
 			val holder = parent.listeners.get(address)
-			holder?.remove(address)
+			holder?.remove(this)
 		}
 	}
 }

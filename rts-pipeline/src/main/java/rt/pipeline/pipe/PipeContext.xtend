@@ -5,17 +5,22 @@ import org.eclipse.xtend.lib.annotations.Accessors
 import rt.pipeline.IMessageBus.Message
 import rt.pipeline.IComponent
 import rt.pipeline.IMessageBus
+import java.util.HashMap
 
 class PipeContext {
 	@Accessors val Message message
 	@Accessors val PipeResource resource
-
-	def IMessageBus bus() { return pipeline.mb }
-
+	
 	boolean inFail = false
 	
 	val Pipeline pipeline
 	val Iterator<IComponent> iter
+	val objects = new HashMap<Class<?>, Object>
+
+	def IMessageBus bus() { return pipeline.mb }
+	
+	def object(Class<?> type, Object instance) { objects.put(type, instance) }
+	def <T> T object(Class<T> type) { return objects.get(type) as T }
 	
 	package new(Pipeline pipeline, PipeResource resource, Message message, Iterator<IComponent> iter) {
 		this.pipeline = pipeline
@@ -45,7 +50,7 @@ class PipeContext {
 					iter.next.apply(this)
 				} catch(RuntimeException ex) {
 					ex.printStackTrace
-					fail('''«ex.class.simpleName»: «ex.message»''')
+					fail(ex.message)
 				}
 			} else {
 				deliver
@@ -142,7 +147,7 @@ class PipeContext {
 	private def void deliverRequest() {
 		val srv = pipeline.getService(message.path)
 		if(srv != null) {
-			println("DELIVER(" + message.path + ")")
+			println('DELIVER(' + message.path + ')')
 			try {
 				srv.apply(this)
 			} catch(RuntimeException ex) {
@@ -150,7 +155,7 @@ class PipeContext {
 				fail(ex.message)
 			}
 		} else {
-			println("PUBLISH(" + message.path + ")")
+			println('PUBLISH(' + message.path + ')')
 			publish(message.path)
 		}
 	}

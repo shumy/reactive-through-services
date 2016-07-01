@@ -3,12 +3,10 @@ package rt.vertx.server
 import io.vertx.core.eventbus.EventBus
 import io.vertx.core.eventbus.MessageConsumer
 import rt.pipeline.IMessageBus
-import org.eclipse.xtend.lib.annotations.Accessors
 import rt.pipeline.IMessageBus.Message
 import rt.pipeline.DefaultMessageConverter
 
 class VertxMessageBus implements IMessageBus {
-	@Accessors String defaultAddress
 	val converter = new DefaultMessageConverter
 	
 	val EventBus eb
@@ -17,9 +15,6 @@ class VertxMessageBus implements IMessageBus {
 		this.eb = eb
 	}
 	
-	override publish(Message msg) {
-		publish(defaultAddress, msg)
-	}
 	
 	override publish(String address, Message msg) {
 		val textMsg = converter.toJson(msg)

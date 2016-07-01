@@ -3,10 +3,6 @@ package rt.pipeline
 import java.util.List
 
 interface IMessageBus {
-	def String getDefaultAddress()
-	def void setDefaultAddress(String address)
-	
-	def void publish(Message msg)
 	
 	def void publish(String address, Message msg)
 	

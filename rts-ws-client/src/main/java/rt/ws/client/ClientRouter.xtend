@@ -9,8 +9,10 @@ import rt.pipeline.pipe.PipeResource
 import java.util.concurrent.atomic.AtomicBoolean
 import rt.pipeline.IMessageBus
 import rt.pipeline.DefaultMessageConverter
+import rt.plugin.service.ServiceClient
+import rt.plugin.service.IServiceClientFactory
 
-class ClientRouter {
+class ClientRouter implements IServiceClientFactory {
 	val converter = new DefaultMessageConverter
 	
 	val URI uri
@@ -25,6 +27,10 @@ class ClientRouter {
 	
 	def IMessageBus getBus() { return pipeline.mb }
 	
+	new(String server, String client) {
+		this(server, client, new Pipeline)
+	}
+
 	new(String server, String client, Pipeline pipeline) {
 		this.uri = new URI(server + '?client=' + client)
 		
@@ -32,13 +38,16 @@ class ClientRouter {
 		this.client = client
 		this.pipeline = pipeline
 		
-		pipeline.mb.defaultAddress = server
 		pipeline.mb.listener(server)[ send ]
 		
-		bind
+		connect
 	}
 	
-	def void bind() {
+	override createServiceClient() {
+		return new ServiceClient(bus, server, client)
+	}
+	
+	def void connect() {
 		val router = this
 		
 		println('TRY-OPEN: ' + uri)
@@ -51,7 +60,7 @@ class ClientRouter {
 			override onClose(int code, String reason, boolean remote) {
 				router.close
 				Thread.sleep(3000)
-				router.bind
+				router.connect
 			}
 			
 			override onError(Exception ex) {
@@ -97,6 +106,8 @@ class ClientRouter {
 	
 	private def void receive(String textMsg) {
 		val msg = converter.fromJson(textMsg)
-		resource.process(msg)
+		resource.process(msg)[
+			object(IServiceClientFactory, this)
+		]
 	}
 }

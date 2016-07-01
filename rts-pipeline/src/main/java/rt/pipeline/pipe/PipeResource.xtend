@@ -28,6 +28,10 @@ class PipeResource {
 		pipeline.process(this, msg)
 	}
 	
+	def void process(Message msg, (PipeContext) => void onContextCreated) {
+		pipeline.process(this, msg, onContextCreated)
+	}
+	
 	def void send(Message msg) {
 		sendCallback.apply(msg)
 	}

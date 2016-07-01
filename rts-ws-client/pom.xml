@@ -21,7 +21,7 @@
 		</dependency>
 		<dependency>
 			<groupId>rts.core</groupId>
-			<artifactId>rts-pipeline</artifactId>
+			<artifactId>rts-plugin-service</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 	</dependencies>

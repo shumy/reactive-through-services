@@ -40,13 +40,10 @@ class ServiceProcessor extends AbstractClassProcessor {
 		
 		clazz.extendedClass = IComponent.newTypeReference
 		
-		clazz.addField('ctx')[
-			type = PipeContext.newTypeReference
-		]
-		
-		clazz.addField('client')[
-			type = ServiceClient.newTypeReference
-		]
+		//new implicit fields...
+		clazz.addField('ctx')[ type = PipeContext.newTypeReference ]
+		clazz.addField('clientFactory')[ type = IServiceClientFactory.newTypeReference ]
+		clazz.addField('client')[ type = ServiceClient.newTypeReference ]
 		
 		clazz.addMethod('getName')[
 			returnType = String.newTypeReference
@@ -60,7 +57,10 @@ class ServiceProcessor extends AbstractClassProcessor {
 			
 			body = '''
 				this.ctx = ctx;
-				this.client = new ServiceClient(ctx.bus(), ctx.getResource().getClient());
+				this.clientFactory = ctx.object(IServiceClientFactory.class);
+				if (this.clientFactory != null) {
+					this.client = this.clientFactory.createServiceClient();
+				}
 				
 				final «Message» msg = ctx.getMessage();
 				«List»<Object> args = null;
