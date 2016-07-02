@@ -11,14 +11,16 @@ import rt.pipeline.IMessageBus
 import rt.pipeline.DefaultMessageConverter
 import rt.plugin.service.ServiceClient
 import rt.plugin.service.IServiceClientFactory
+import org.eclipse.xtend.lib.annotations.Accessors
 
 class ClientRouter implements IServiceClientFactory {
-	val converter = new DefaultMessageConverter
+	@Accessors val String server
+	@Accessors val String client
+	@Accessors val Pipeline pipeline
+	@Accessors val ServiceClient serviceClient
 	
+	val converter = new DefaultMessageConverter
 	val URI uri
-	val String server
-	val String client
-	val Pipeline pipeline
 	
 	PipeResource resource = null
 	WebSocketClient ws = null
@@ -37,14 +39,11 @@ class ClientRouter implements IServiceClientFactory {
 		this.server = server
 		this.client = client
 		this.pipeline = pipeline
+		this.serviceClient = new ServiceClient(bus, server, client)
 		
 		pipeline.mb.listener(server)[ send ]
 		
 		connect
-	}
-	
-	override createServiceClient() {
-		return new ServiceClient(bus, server, client)
 	}
 	
 	def void connect() {

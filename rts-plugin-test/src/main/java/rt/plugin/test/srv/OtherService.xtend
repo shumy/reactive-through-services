@@ -6,7 +6,7 @@ import rt.plugin.service.an.Public
 @Service
 class OtherService {
 	@Public
-	def otherServiceHello() { return 'Hello' }
+	def String otherServiceHello() { return 'Hello' }
 	
 	@Public
 	def void empty(String emptyArgs) { }

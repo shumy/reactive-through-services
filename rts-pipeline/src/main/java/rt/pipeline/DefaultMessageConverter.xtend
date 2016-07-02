@@ -6,21 +6,18 @@ import rt.pipeline.IMessageBus.Message
 import java.util.LinkedList
 import java.util.List
 import com.google.gson.GsonBuilder
+import java.util.ArrayList
 
 class DefaultMessageConverter {
 	val (List<String>, Class<?>[]) => List<Object> argsConverter = [ values, types |
-		if (types.size != values.size)
+		if (types.length != values.size)
 			throw new RuntimeException('Invalid number of arguments!')
 		
-		val args = new LinkedList<Object>
+		val args = new ArrayList<Object>(types.length)
 		
-		var index = 0
-		for (type: types) {
-			val value = values.get(index)
-			 
-			args.add(gson.fromJson(value, type))
-			index++
-		}
+		val valuesIter = values.iterator
+		for (type: types)
+			args.add(gson.fromJson(valuesIter.next, type))
 		
 		return args
 	]
@@ -37,11 +34,11 @@ class DefaultMessageConverter {
 		
 		val args = obj.get('args')?.asJsonArray
 		args?.forEach[
-			jsonArgs.add(it.toString)
+			jsonArgs.add(toString)
 		]
 		
 		return new Message(jsonArgs, argsConverter, jsonResult, resultConverter) => [
-			id = obj.get('id')?.asLong
+			id = obj.get('id').asLong
 			cmd = obj.get('cmd')?.asString
 			clt = obj.get('clt')?.asString
 			path = obj.get('path')?.asString

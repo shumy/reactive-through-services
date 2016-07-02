@@ -3,8 +3,11 @@ package rt.vertx.server
 import rt.plugin.service.IServiceClientFactory
 import rt.plugin.service.ServiceClient
 import rt.pipeline.IMessageBus
+import org.eclipse.xtend.lib.annotations.Accessors
 
 class ServiceClientFactory implements IServiceClientFactory {
+	@Accessors val ServiceClient serviceClient
+	
 	val IMessageBus bus
 	val String server
 	val String client
@@ -13,9 +16,7 @@ class ServiceClientFactory implements IServiceClientFactory {
 		this.bus = bus
 		this.server = server
 		this.client = client
-	}
-	
-	override createServiceClient() {
-		return new ServiceClient(bus, server, client)
+		
+		this.serviceClient = new ServiceClient(bus, server, client)
 	}
 }

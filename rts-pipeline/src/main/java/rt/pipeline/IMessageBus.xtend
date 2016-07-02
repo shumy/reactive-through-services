@@ -19,7 +19,7 @@ interface IMessageBus {
 		public static val String ERROR = 'error'
 		
 		// from all
-		public Long id
+		public long id
 		public String cmd
 		public String clt
 		public String path

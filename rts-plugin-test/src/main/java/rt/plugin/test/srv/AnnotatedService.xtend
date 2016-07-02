@@ -8,17 +8,17 @@ import rt.plugin.service.an.Public
 class AnnotatedService {
 	
 	@Public
-	def hello(String firstName, String lastName) {
+	def String hello(String firstName, String lastName) {
 		return '''Hello «firstName» «lastName»!'''
 	}
 	
 	@Public
-	def sum(int first, long second, float third, double fourth) {
+	def double sum(int first, long second, float third, double fourth) {
 		return first + second + third + fourth
 	}
 	
 	@Public
-	def alexBrothers(Map<String, Object> data) {
+	def Map<String, Object> alexBrothers(Map<String, Object> data) {
 		return #{
 			'name' -> data.get('name'),
 			'age' -> data.get('age'),

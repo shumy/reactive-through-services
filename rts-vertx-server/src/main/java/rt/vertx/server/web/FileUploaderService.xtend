@@ -6,6 +6,7 @@ import java.io.File
 import rt.plugin.service.an.Service
 import rt.plugin.service.an.Public
 import static extension rt.vertx.server.URIParserHelper.*
+import java.util.List
 
 @Service
 class FileUploaderService {
@@ -53,7 +54,7 @@ class FileUploaderService {
 	}
 	
 	@Public
-	def list(String inPath) {
+	def List<String> list(String inPath) {
 		//protect against filesystem attacks
 		if (!path.validPath)
 			throw new RuntimeException('Path not accepted: ' + inPath)

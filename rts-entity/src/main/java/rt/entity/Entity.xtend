@@ -52,31 +52,31 @@ class EntityProcessor extends AbstractClassProcessor {
 		
 		clazz.addMethod('getFields') [
 			returnType = List.newTypeReference(string)
-			body = ['''
+			body = '''
 				final List<String> fields = new «ArrayList.name»<>(«allFields.size»);
 				«FOR field: allFields»
 					fields.add("«field.simpleName»");
 				«ENDFOR»
 				return fields;
-			''']
+			'''
 		]
 		
 		clazz.addMethod('getValue') [
 			returnType = object
 			addParameter('field', string)
-			body = ['''
+			body = '''
 				«FOR field: allFields»
 					if (field.equals("«field.simpleName»")) return this.«field.simpleName»;
 				«ENDFOR»
 
 				throw new RuntimeException("No field '" + field + "' for «clazz.qualifiedName»");
-			''']
+			'''
 		]
 		
 		clazz.addMethod('setValue') [
 			addParameter('field', string)
 			addParameter('value', object)
-			body = ['''
+			body = '''
 				if(value == null)
 					throw new RuntimeException("Trying to set null value on field '" + field + "' in «clazz.qualifiedName»");
 
@@ -85,19 +85,20 @@ class EntityProcessor extends AbstractClassProcessor {
 				«ENDFOR»
 
 				throw new RuntimeException("No field '" + field + "' for «clazz.qualifiedName»");
-			''']
+			'''
 		]
 		
 		for(field: allFields) {
+			field.markAsRead
 			val fType = typeConversions.get(field.type.simpleName)
 			val fTypeRef = fType?.newTypeReference ?: field.type
 			
 			val getType = if (fType == Boolean) 'is' else 'get'			
 			clazz.addMethod(getType + field.simpleName.toFirstUpper)[
 				returnType = fTypeRef
-				body = ['''
+				body = '''
 					return this.«field.simpleName»;
-				''']
+				'''
 			]
 			
 			if (List.newTypeReference.isAssignableFrom(fTypeRef)) {
@@ -113,7 +114,7 @@ class EntityProcessor extends AbstractClassProcessor {
 			
 			clazz.addMethod('set' + field.simpleName.toFirstUpper)[
 				addParameter('value', fTypeRef)
-				body = ['''
+				body = '''
 					«IF field.findAnnotation(Ignore.findTypeGlobally) == null»
 						«IF IObservable.newTypeReference.isAssignableFrom(fTypeRef)»
 							unobserve("«field.simpleName»", («IObservable.name»)this.«field.simpleName»);
@@ -124,7 +125,7 @@ class EntityProcessor extends AbstractClassProcessor {
 						publish(change);
 					«ENDIF»
 					this.«field.simpleName» = value;
-				''']
+				'''
 			]
 		}
 	}

@@ -6,7 +6,6 @@ import org.eclipse.xtend.lib.macro.AbstractClassProcessor
 import org.eclipse.xtend.lib.macro.declaration.MutableClassDeclaration
 import org.eclipse.xtend.lib.macro.TransformationContext
 import org.eclipse.xtend.lib.macro.declaration.MutableMethodDeclaration
-import org.eclipse.xtend.lib.macro.declaration.TypeReference
 import org.eclipse.xtend.lib.macro.declaration.ClassDeclaration
 import org.eclipse.xtend.lib.macro.CodeGenerationContext
 import rt.plugin.config.PluginConfig
@@ -19,19 +18,27 @@ import rt.pipeline.IMessageBus.Message
 import org.eclipse.xtend.lib.macro.ValidationContext
 import rt.plugin.service.IServiceClientFactory
 import rt.plugin.service.ServiceClient
+import java.util.LinkedList
+import org.eclipse.xtend.lib.macro.declaration.AnnotationReference
+import org.eclipse.xtend.lib.macro.declaration.MutableParameterDeclaration
 
 @Target(TYPE)
 @Active(ServiceProcessor)
-annotation Service {}
+annotation Service {
+	Class<?> value = Service
+}
 
 class ServiceProcessor extends AbstractClassProcessor {
 	
 	override doValidate(ClassDeclaration clazz, extension ValidationContext ctx) {
-		val reserved = #[Message.OK, Message.ERROR]	
+		val reserved = #[Message.OK, Message.ERROR]
 		clazz.declaredMethods.forEach[
 			if (reserved.contains(simpleName))
 				addError('Reserved method name!')
 		]
+		
+		//TODO: verify if methods have return types, inferred not working!
+		//TODO: verify interface methods
 	}
 	
 	override doTransform(MutableClassDeclaration clazz, extension TransformationContext ctx) {
@@ -39,28 +46,59 @@ class ServiceProcessor extends AbstractClassProcessor {
 		
 		//new implicit fields...
 		clazz.addField('ctx')[ type = PipeContext.newTypeReference ]
-		clazz.addField('clientFactory')[ type = IServiceClientFactory.newTypeReference ]
-		clazz.addField('client')[ type = ServiceClient.newTypeReference ]
+		
+		val switchCases = new LinkedList<String>
+		for (MutableMethodDeclaration meth: clazz.declaredMethods) {
+			val annoPublicRef = meth.findAnnotation(Public.findTypeGlobally)
+			if (annoPublicRef != null) {
+				val isNotification = annoPublicRef.getBooleanValue('notif')
+				
+				//make a copy because the parameters will be changed
+				val methParameters = meth.parameters.map[it as MutableParameterDeclaration].toList
+				
+				val ctxArgs = meth.getContextArgs(ctx)
+				ctxArgs.forEach[
+					meth.addParameter(getStringValue('name'), getClassValue('proxy'))
+				]
+				
+				val retType = meth.returnType.simpleName
+				val hasIntervalSimbol = methParameters.size != 0 && ctxArgs.size != 0
+				switchCases.add('''
+					case "«meth.simpleName»":
+						«IF methParameters.size != 0»
+						args = msg.args(«FOR param: methParameters SEPARATOR ','» «param.type.simpleName.replaceFirst('<.*>', '')».class«ENDFOR» );
+						«ENDIF»
+						«IF retType != 'void'»ret = «ENDIF»«meth.simpleName»(«methParameters.addMessageArgs»«IF hasIntervalSimbol»,«ENDIF»«meth.addContextArgs(ctx, ctxArgs)»);
+						«IF !isNotification»
+							«IF retType != 'void'»
+								ctx.replyOK(ret);
+							«ELSE»
+								ctx.replyOK();
+							«ENDIF»
+						«ENDIF»
+						break;
+				''')
+			}
+		}
 		
 		clazz.addMethod('apply')[
 			addParameter('ctx', PipeContext.newTypeReference)
 			
 			body = '''
 				this.ctx = ctx;
-				this.clientFactory = ctx.object(IServiceClientFactory.class);
-				if (this.clientFactory != null) {
-					this.client = this.clientFactory.createServiceClient();
-				}
+				«ServiceClient» client = null;
+				
+				final IServiceClientFactory clientFactory = ctx.object(«IServiceClientFactory».class);
+				if (clientFactory != null)
+					client = clientFactory.getServiceClient();
 				
 				final «Message» msg = ctx.getMessage();
 				«List»<Object> args = null;
 				Object ret = null;
 				
 				switch(msg.cmd) {
-					«FOR meth : clazz.declaredMethods»
-						«IF meth.findAnnotation(Public.findTypeGlobally) != null»
-							«meth.addCase(ctx)»
-						«ENDIF»
+					«FOR cas: switchCases»
+						«cas»
 					«ENDFOR»
 					default:
 						ctx.replyError("No public method: " + msg.cmd);
@@ -89,30 +127,27 @@ class ServiceProcessor extends AbstractClassProcessor {
 		file.contents = factory.transform(config)
 	}
 	
-	def addCase(MutableMethodDeclaration meth, extension TransformationContext ctx) {
-		val retType = meth.returnType.simpleName
-		val anoRef = meth.findAnnotation(Public.findTypeGlobally)
-		val isNotification = anoRef.getBooleanValue('notif')
-
-		var i = 0
-		return '''
-			case "«meth.simpleName»":
-				«IF meth.parameters.size != 0»
-				args = msg.args(«FOR param : meth.parameters SEPARATOR ','» «param.type.simpleName.replaceFirst('<.*>', '')».class«ENDFOR» );
-				«ENDIF»
-				«IF retType != 'void'»ret = «ENDIF»«meth.simpleName»(«FOR param : meth.parameters SEPARATOR ','» «param.type.addArgType(i++)»«ENDFOR» );
-				«IF !isNotification»
-					«IF retType != 'void'»
-						ctx.replyOK(ret);
-					«ELSE»
-						ctx.replyOK();
-					«ENDIF»
-				«ENDIF»
-				break;
-		'''
+	def getContextArgs(MutableMethodDeclaration meth, extension TransformationContext ctx) {
+		val ctxArgs = new LinkedList<AnnotationReference>
+		
+		val annoProxyRef = meth.findAnnotation(Proxy.findTypeGlobally)
+		if (annoProxyRef != null)
+			ctxArgs.add(annoProxyRef)
+		
+		val annoProxysRef = meth.findAnnotation(Proxies.findTypeGlobally)
+		if (annoProxysRef != null) {
+			val proxies = annoProxysRef.getAnnotationArrayValue('value')
+			ctxArgs.addAll(proxies)
+		}
+		
+		return ctxArgs
 	}
 	
-	def addArgType(TypeReference type, int index) {
-		return '''(«type»)args.get(«index»)'''
+	def addContextArgs(MutableMethodDeclaration meth, extension TransformationContext ctx, List<AnnotationReference> ctxArgs)
+		'''«FOR annoRef: ctxArgs SEPARATOR ','» client.create("«annoRef.getStringValue('name')»", «annoRef.getClassValue('proxy')».class)«ENDFOR» '''
+	
+	def addMessageArgs(List<MutableParameterDeclaration> parameters) {
+		var index = 0
+		'''«FOR param: parameters SEPARATOR ','» («param.type»)args.get(«index++»)«ENDFOR» '''
 	}
 }
