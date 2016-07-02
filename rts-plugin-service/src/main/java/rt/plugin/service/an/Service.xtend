@@ -21,31 +21,47 @@ import rt.plugin.service.ServiceClient
 import java.util.LinkedList
 import org.eclipse.xtend.lib.macro.declaration.AnnotationReference
 import org.eclipse.xtend.lib.macro.declaration.MutableParameterDeclaration
+import org.eclipse.xtend.lib.macro.declaration.MethodDeclaration
 
 @Target(TYPE)
 @Active(ServiceProcessor)
 annotation Service {
-	Class<?> value = Service
+	Class<?> value = Void
 }
 
 class ServiceProcessor extends AbstractClassProcessor {
 	
 	override doValidate(ClassDeclaration clazz, extension ValidationContext ctx) {
 		val reserved = #[Message.OK, Message.ERROR]
-		clazz.declaredMethods.forEach[
+		
+		val srvPublicMethods = clazz.declaredMethods.filter[ findAnnotation(Public.findTypeGlobally) != null ]
+		srvPublicMethods.forEach[
 			if (reserved.contains(simpleName))
-				addError('Reserved method name!')
+				addError('Reserved public method name!')
 		]
 		
 		//TODO: verify if methods have return types, inferred not working!
-		//TODO: verify interface methods
+	}
+	
+	def methSignature(MethodDeclaration meth) {
+		'''«meth.returnType» «meth.simpleName»(«FOR param: meth.parameters SEPARATOR ','»«param.type»«ENDFOR»)'''.toString
 	}
 	
 	override doTransform(MutableClassDeclaration clazz, extension TransformationContext ctx) {
 		clazz.extendedClass = IComponent.newTypeReference
 		
-		//new implicit fields...
-		clazz.addField('ctx')[ type = PipeContext.newTypeReference ]
+		//validate interface implementation before changes...
+		val annoRef = clazz.findAnnotation(Service.findTypeGlobally)
+		val srvInterface = annoRef.getClassValue('value')
+		if (srvInterface != Void.newTypeReference) {
+			val srvInterfaceMethods = srvInterface.declaredResolvedMethods.map[ declaration ]
+			srvInterfaceMethods.forEach[ interMeth |
+				if (!clazz.declaredMethods.exists[ methSignature == interMeth.methSignature ]) {
+					clazz.addError('No implementation for method: ' + interMeth.methSignature)
+				}
+			]
+		}
+		
 		
 		val switchCases = new LinkedList<String>
 		for (MutableMethodDeclaration meth: clazz.declaredMethods) {
@@ -85,7 +101,6 @@ class ServiceProcessor extends AbstractClassProcessor {
 			addParameter('ctx', PipeContext.newTypeReference)
 			
 			body = '''
-				this.ctx = ctx;
 				«ServiceClient» client = null;
 				
 				final IServiceClientFactory clientFactory = ctx.object(«IServiceClientFactory».class);
