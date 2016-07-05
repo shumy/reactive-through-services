@@ -32,14 +32,6 @@ annotation Service {
 class ServiceProcessor extends AbstractClassProcessor {
 	
 	override doValidate(ClassDeclaration clazz, extension ValidationContext ctx) {
-		val reserved = #[Message.OK, Message.ERROR]
-		
-		val srvPublicMethods = clazz.declaredMethods.filter[ findAnnotation(Public.findTypeGlobally) != null ]
-		srvPublicMethods.forEach[
-			if (reserved.contains(simpleName))
-				addError('Reserved public method name!')
-		]
-		
 		//TODO: verify if methods have return types, inferred not working!
 	}
 	
@@ -159,10 +151,16 @@ class ServiceProcessor extends AbstractClassProcessor {
 	}
 	
 	def addContextArgs(MutableMethodDeclaration meth, extension TransformationContext ctx, List<AnnotationReference> ctxArgs)
-		'''«FOR annoRef: ctxArgs SEPARATOR ','» client.create("«annoRef.getStringValue('name')»", «annoRef.getClassValue('proxy')».class)«ENDFOR» '''
+		'''«FOR annoRef: ctxArgs SEPARATOR ','» client.create("«annoRef.getSrvPath»", «annoRef.getClassValue('proxy')».class)«ENDFOR» '''
 	
 	def addMessageArgs(List<MutableParameterDeclaration> parameters) {
 		var index = 0
 		'''«FOR param: parameters SEPARATOR ','» («param.type»)args.get(«index++»)«ENDFOR» '''
+	}
+	
+	def getSrvPath(AnnotationReference annoRef) {
+		val srvName = annoRef.getStringValue('name')
+		return 'srv:' + srvName
+		//return if (srvName.contains(':')) srvName else 'srv:' + srvName
 	}
 }

@@ -5,9 +5,11 @@ import org.eclipse.xtend.lib.macro.Active
 import org.eclipse.xtend.lib.macro.AbstractInterfaceProcessor
 import org.eclipse.xtend.lib.macro.declaration.MutableInterfaceDeclaration
 import org.eclipse.xtend.lib.macro.TransformationContext
-import rt.plugin.service.Promise
+import rt.pipeline.promise.Promise
+import java.lang.annotation.Retention
 
 @Target(TYPE)
+@Retention(RUNTIME)
 @Active(ServiceProxyProcessor)
 annotation ServiceProxy {
 	Class<?> value

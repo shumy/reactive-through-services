@@ -1,4 +1,4 @@
-package rt.plugin.service
+package rt.pipeline.promise
 
 abstract class PromiseResult<T> {
 	

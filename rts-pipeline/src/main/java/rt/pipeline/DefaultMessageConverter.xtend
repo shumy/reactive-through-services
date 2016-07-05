@@ -39,10 +39,10 @@ class DefaultMessageConverter {
 		
 		return new Message(jsonArgs, argsConverter, jsonResult, resultConverter) => [
 			id = obj.get('id').asLong
+			typ = obj.get('typ')?.asString
 			cmd = obj.get('cmd')?.asString
 			clt = obj.get('clt')?.asString
 			path = obj.get('path')?.asString
-			error = obj.get('error')?.asString
 		]
 	]
 	

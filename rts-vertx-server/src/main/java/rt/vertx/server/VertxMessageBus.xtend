@@ -33,6 +33,10 @@ class VertxMessageBus implements IMessageBus {
 		this.publish(address, msg)
 	}
 	
+	override reply(Message msg) {
+		throw new UnsupportedOperationException("TODO: auto-generated method stub")
+	}
+	
 	override listener(String address, (Message) => void listener) {
 		val consumer = eb.consumer(address) [
 			val msg = converter.fromJson(body as String)

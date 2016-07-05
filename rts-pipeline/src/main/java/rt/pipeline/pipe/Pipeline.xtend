@@ -21,11 +21,7 @@ class Pipeline {
 	}
 	
 	def createResource(String client) {
-		return new PipeResource(this, client, null, null)
-	}
-	
-	def createResource(String client, (Message) => void sendCallback, () => void closeCallback) {
-		return new PipeResource(this, client, sendCallback, closeCallback)
+		return new PipeResource(this, client)
 	}
 	
 	package def void process(PipeResource resource, Message msg) {
@@ -45,6 +41,10 @@ class Pipeline {
 	
 	def void addInterceptor(IComponent interceptor) {
 		interceptors.add(interceptor)
+	}
+	
+	def void addChannelService(IComponent chService) {
+		services.put('ch:srv', chService)
 	}
 	
 	def getServiceFromPath(String path) {

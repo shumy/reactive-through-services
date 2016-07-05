@@ -8,6 +8,8 @@ interface IMessageBus {
 	
 	def void send(String address, Message msg, (Message) => void replyCallback)
 	
+	def void reply(Message msg)
+	
 	def IListener listener(String address, (Message) => void listener)
 	
 	public interface IListener {
@@ -15,11 +17,18 @@ interface IMessageBus {
 	}
 	
 	public static class Message {
-		public static val String OK = 'ok'
-		public static val String ERROR = 'error'
+		//message types...
+		public static val String PUBLISH = 'pub'
+		public static val String SEND = 'snd'
+		public static val String REPLY = 'rpl'
+		
+		//reply command types...
+		public static val String CMD_OK = 'ok'
+		public static val String CMD_ERROR = 'err'
 		
 		// from all
 		public long id
+		public String typ
 		public String cmd
 		public String clt
 		public String path
@@ -33,8 +42,6 @@ interface IMessageBus {
 		transient String jsonResult
 		transient (String, Class<?>) => Object resultConverter = null
 		Object res = null
-		
-		public String error
 		
 		new() {}
 		new(List<String> jsonArgs, (List<String>, Class<?>[]) => List<Object> argsConverter, String jsonResult, (String, Class<?>) => Object resultConverter) {

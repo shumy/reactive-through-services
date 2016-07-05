@@ -13,24 +13,27 @@ class DefaultMessageBus implements IMessageBus {
 	
 	
 	override publish(String address, Message msg) {
-		if(msg.cmd == Message.OK || msg.cmd == Message.ERROR) {
-			val replyFun = replyListeners.remove(address)
-			replyFun?.apply(msg)
-		} else {
-			listeners.get(address)?.forEach[ send(msg) ]
-		}
+		if (msg.typ != null) msg.typ = Message.PUBLISH
+		listeners.get(address)?.forEach[ send(msg) ]
 	}
 	
 	override send(String address, Message msg, (Message) => void replyCallback) {
 		val replyID = '''«msg.clt»+«msg.id»'''
 		replyListeners.put(replyID, replyCallback)
-
-		publish(address, msg)
+		
+		msg.typ = Message.SEND
+		listeners.get(address)?.forEach[ send(msg) ]
 		
 		new Timer().schedule([
 			val replyFun = replyListeners.remove(replyID)
-			replyFun?.apply(new Message => [ id=msg.id clt=msg.clt cmd=Message.ERROR result='''Timeout for «msg.path» -> «msg.cmd»'''.toString])
+			replyFun?.apply(new Message => [ id=msg.id clt=msg.clt typ=Message.REPLY cmd=Message.CMD_ERROR result='''Timeout for «msg.path» -> «msg.cmd»'''.toString])
 		], 3000)
+	}
+	
+	override reply(Message msg) {
+		val replyID = '''«msg.clt»+«msg.id»'''
+		val replyFun = replyListeners.remove(replyID)
+		replyFun?.apply(msg)
 	}
 	
 	override listener(String address, (Message) => void listener) {

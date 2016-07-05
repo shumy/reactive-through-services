@@ -1,4 +1,4 @@
-package rt.plugin.service
+package rt.pipeline.promise
 
 class Promise<T> {
 	val PromiseResult<T> result

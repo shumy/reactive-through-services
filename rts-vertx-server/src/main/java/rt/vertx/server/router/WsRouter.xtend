@@ -3,59 +3,68 @@ package rt.vertx.server.router
 import io.vertx.core.http.HttpServer
 import rt.pipeline.DefaultMessageConverter
 import org.slf4j.LoggerFactory
-import rt.plugin.service.IServiceClientFactory
-import static extension rt.vertx.server.URIParserHelper.*
 import rt.pipeline.pipe.Pipeline
-import rt.vertx.server.ServiceClientFactory
+import java.util.HashMap
+import static extension rt.vertx.server.URIParserHelper.*
+import rt.pipeline.pipe.PipeResource
+import rt.pipeline.pipe.IPipeChannel.PipeChannelInfo
+import org.eclipse.xtend.lib.annotations.Accessors
+import rt.pipeline.pipe.IPipeChannelSender
 
 class WsRouter {
 	static val logger = LoggerFactory.getLogger('WS-ROUTER')
 	
-	val converter = new DefaultMessageConverter
+	@Accessors val resources = new HashMap<String, PipeResource>
 	
-	val String route
-	val HttpServer server
-	val Pipeline pipeline
-
+	package val converter = new DefaultMessageConverter
+	package val String route
+	package val HttpServer server
+	package val Pipeline pipeline
+	
+	//channels info...
+	val chRequests = new HashMap<String, PipeChannelInfo>
+	val chRequestsHandlers = new HashMap<String, (IPipeChannelSender) => void>
+	
 	new(String route, HttpServer server, Pipeline pipeline) {
 		this.route = route
 		this.server = server
 		this.pipeline = pipeline
 		
 		server.websocketHandler[ ws |
-			val client = ws.query.queryParams.get('client')
-			logger.debug('CLIENT {}', client)
-			
 			if (ws.uri.route != route) {
 				ws.close return
 			}
 			
-			val sb = new StringBuilder
-			val resource = pipeline.createResource(client, [ msg |
-				val textReply = converter.toJson(msg)
-				ws.writeFinalTextFrame(textReply)
-				logger.debug('SENT {}', textReply)
-			], [ ws.close ])
+			val channelUUID = ws.query.queryParams.get('channel')
 			
-			val srvClientFactory = new ServiceClientFactory(pipeline.mb, client, ws.textHandlerID)
-			resource.subscribe(client)
-			
-			ws.frameHandler[
-				sb.append(textData)
-				if (isFinal) {
-					val textMsg = sb.toString
-					logger.debug('RECEIVED {}', textMsg)
-					
-					val msg = converter.fromJson(textMsg)
-					sb.length = 0
-					
-					resource.process(msg)[
-						object(IServiceClientFactory, srvClientFactory)
-					]
+			if (channelUUID != null) {
+				logger.debug('CHANNEL {}', channelUUID)
+				
+				val chInfo = chRequests.remove(channelUUID)
+				val chBindHandler = chRequestsHandlers.remove(channelUUID)
+				if (chInfo == null || chBindHandler == null) {
+					ws.close return
 				}
-			]
-			
-			ws.closeHandler[ resource.release ]
+				
+				val channel = new WsPipeChannelSender(this, ws, chInfo)
+				chBindHandler.apply(channel)
+				
+			} else {
+				val clientID = ws.query.queryParams.get('client')
+				logger.debug('CLIENT {}', clientID)
+				if (clientID == null) {
+					ws.close return
+				}
+				
+				val wsResource = new WsResource(this, ws, clientID)[ resources.remove(it) ]
+				resources.put(wsResource.uuid, wsResource.resource)
+			}
 		]
 	}
+	
+	package def void waitForChannelBind(PipeChannelInfo info, (IPipeChannelSender) => void onBind) {
+		chRequests.put(info.uuid, info)
+		chRequestsHandlers.put(info.uuid, onBind)
+		//TODO: manage timeouts
+	} 
 }

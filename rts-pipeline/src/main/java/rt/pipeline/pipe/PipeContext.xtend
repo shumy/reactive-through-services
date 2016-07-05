@@ -37,7 +37,7 @@ class PipeContext {
 	 */
 	def void deliver() {
 		if(!inFail) {
-			if (message.cmd == Message.OK || message.cmd == Message.ERROR)
+			if (message.typ == Message.REPLY)
 				deliverReply
 			else
 				deliverRequest
@@ -90,6 +90,7 @@ class PipeContext {
 			reply => [
 				id = message.id
 				clt = message.clt
+				typ = Message.REPLY
 			]
 			
 			resource.send(reply)
@@ -101,7 +102,7 @@ class PipeContext {
 	def void replyOK() {
 		if(!inFail) {
 			val reply = new Message => [
-				cmd = Message.OK
+				cmd = Message.CMD_OK
 			]
 	
 			reply(reply)
@@ -114,7 +115,7 @@ class PipeContext {
 	def void replyOK(Object resultObj) {
 		if(!inFail) {
 			val reply = new Message => [
-				cmd = Message.OK
+				cmd = Message.CMD_OK
 				result = resultObj
 			]
 	
@@ -128,8 +129,8 @@ class PipeContext {
 	def void replyError(String errorMsg) {
 		if(!inFail) {
 			val reply = new Message => [
-				cmd = Message.ERROR
-				error = errorMsg
+				cmd = Message.CMD_ERROR
+				result = errorMsg
 			]
 			
 			reply(reply)
@@ -141,10 +142,6 @@ class PipeContext {
 	 */
 	def void disconnect() {
 		resource.disconnect
-	}
-	
-	private def void publish(String address) {
-		pipeline.mb.publish(address, message)
 	}
 	
 	private def void deliverRequest() {
@@ -159,13 +156,12 @@ class PipeContext {
 			}
 		} else {
 			logger.debug('PUBLISH {}', message.path)
-			publish(message.path)
+			pipeline.mb.publish(message.path, message)
 		}
 	}
 	
 	private def void deliverReply() {
-		val address = message.clt + '+' + message.id
-		logger.debug('DELIVER-REPLY {}', address)
-		publish(address)
+		logger.debug('DELIVER-REPLY {} {}', message.clt, message.id)
+		pipeline.mb.reply(message)
 	}
 }

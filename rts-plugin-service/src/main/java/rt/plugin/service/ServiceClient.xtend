@@ -5,15 +5,18 @@ import java.lang.reflect.Proxy
 import rt.pipeline.IMessageBus.Message
 import java.util.concurrent.atomic.AtomicLong
 import rt.plugin.service.an.Public
+import rt.pipeline.promise.PromiseResult
+import rt.pipeline.pipe.use.ChannelInterface
+import rt.plugin.service.an.ServiceProxy
 
 class ServiceClient {
-	private static val clientSeq = new AtomicLong(0L)
+	static val clientSeq = new AtomicLong(0L)
 	
-	package val IMessageBus bus
-	package val String server
+	val IMessageBus bus
+	val String server
 	
-	package val String uuid
-	package var long msgID = 0		//increment for every new message
+	val String uuid
+	var long msgID = 0		//increment for every new message
 	
 	new(IMessageBus bus, String server, String client) {
 		this.bus = bus
@@ -22,15 +25,20 @@ class ServiceClient {
 		this.uuid = ServiceClient.clientSeq.addAndGet(1) + ':' + client
 	}
 	
-	def <T> T create(String srvName, Class<T> srvInterface) {
-		val srvPath = 'srv:' + srvName
-		val srvProxy = Proxy.newProxyInstance(srvInterface.classLoader, #[srvInterface])[ proxy, srvMeth, srvArgs |
+	def <T> T create(String srvPath, Class<T> srvProxyInterface) {
+		val anProxy = srvProxyInterface.getAnnotation(ServiceProxy)
+		
+		//TODO: need to remove this hack, replace by interface redirects...
+		
+		val address = if (anProxy != null && anProxy.value == ChannelInterface) server + '/ch:req' else server
+		
+		val srvProxy = Proxy.newProxyInstance(srvProxyInterface.classLoader, #[srvProxyInterface])[ proxy, srvMeth, srvArgs |
 			val PromiseResult<Object> result = [ resolve, reject |
 				msgID++
 				val sendMsg = new Message => [id=msgID clt=uuid path=srvPath cmd=srvMeth.name args=srvArgs]
 				
-				bus.send(server, sendMsg)[ replyMsg |
-					if (replyMsg.cmd == Message.OK) {
+				bus.send(address, sendMsg)[ replyMsg |
+					if (replyMsg.cmd == Message.CMD_OK) {
 						val anPublic = srvMeth.getAnnotation(Public)
 						if (anPublic == null)
 							throw new RuntimeException('@Public annotation with return type is mandatory for a ServiceProxy!')

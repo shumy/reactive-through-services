@@ -12,6 +12,8 @@ import rt.pipeline.DefaultMessageConverter
 import rt.plugin.service.ServiceClient
 import rt.plugin.service.IServiceClientFactory
 import org.eclipse.xtend.lib.annotations.Accessors
+import java.nio.ByteBuffer
+import rt.pipeline.pipe.IPipeChannel.PipeChannelInfo
 
 class ClientRouter implements IServiceClientFactory {
 	@Accessors val String server
@@ -20,7 +22,7 @@ class ClientRouter implements IServiceClientFactory {
 	@Accessors val ServiceClient serviceClient
 	
 	val converter = new DefaultMessageConverter
-	val URI uri
+	val URI url
 	
 	PipeResource resource = null
 	WebSocketClient ws = null
@@ -34,7 +36,7 @@ class ClientRouter implements IServiceClientFactory {
 	}
 
 	new(String server, String client, Pipeline pipeline) {
-		this.uri = new URI(server + '?client=' + client)
+		this.url = new URI(server + '?client=' + client)
 		
 		this.server = server
 		this.client = client
@@ -49,8 +51,8 @@ class ClientRouter implements IServiceClientFactory {
 	def void connect() {
 		val router = this
 		
-		println('TRY-OPEN: ' + uri)
-		ws = new WebSocketClient(uri) {
+		println('TRY-OPEN: ' + url)
+		ws = new WebSocketClient(url) {
 			
 			override onOpen(ServerHandshake handshakedata) {
 				router.onOpen
@@ -69,6 +71,10 @@ class ClientRouter implements IServiceClientFactory {
 			override onMessage(String textMsg) {
 				println('RECEIVED: ' + textMsg)
 				router.receive(textMsg)
+			}
+			
+			override onMessage(ByteBuffer byteMsg) {
+				println('RECEIVED-BINARY: ' + byteMsg.asCharBuffer.toString)
 			}
 		}
 		
@@ -99,14 +105,31 @@ class ClientRouter implements IServiceClientFactory {
 	}
 	
 	private def void onOpen() {
-		resource = pipeline.createResource(server, [ send ], [ close ])
+		resource = pipeline.createResource(server) => [
+			sendCallback = [ send ]
+			contextCallback = [ object(IServiceClientFactory, this) ]
+			closeCallback = [ close ]
+			
+			pipeline.mb.listener(server + '/ch:rpl')[ chReqMsg |
+				if (chReqMsg.cmd != Message.CMD_OK) {
+					chReqMsg.typ = Message.REPLY
+					this.send(chReqMsg)
+					return
+				}
+				
+				val chInfo = chReqMsg.result(PipeChannelInfo)
+				println('CH-RPL-INTERCEPTED: ' + chInfo.uuid)
+				
+				val channel = new ClientPipeChannelReceiver(this, chInfo)
+				resource.addChannel(channel)
+				channel.connect
+			]
+		]
 		ready.set(true)
 	}
 	
 	private def void receive(String textMsg) {
 		val msg = converter.fromJson(textMsg)
-		resource.process(msg)[
-			object(IServiceClientFactory, this)
-		]
+		resource.process(msg)
 	}
 }

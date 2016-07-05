@@ -52,11 +52,13 @@ class AnnotatedServiceTest {
 
 		println('serviceHelloCall')
 		val msg = new Message => [id=1L cmd='hello' clt='source' path='srv:test' args=#['Micael', 'Pedrosa']]
-		val reply = new Message => [id=1L cmd='ok' clt='source' result='Hello Micael Pedrosa!']
+		val reply = new Message => [id=1L typ='rpl' cmd='ok' clt='source' result='Hello Micael Pedrosa!']
 		
-		val r = pipeline.createResource('uid', [ ctx.assertEquals(gson.toJson(it), gson.toJson(reply)) sync.countDown ], null)
-		r.subscribe('uid')
-		r.process(msg)
+		pipeline.createResource('uid') => [
+			sendCallback = [ ctx.assertEquals(gson.toJson(it), gson.toJson(reply)) sync.countDown ]
+			subscribe('uid')
+			process(msg)
+		]
 	}
 	
 	@Test(timeout = 1000)
@@ -65,11 +67,13 @@ class AnnotatedServiceTest {
 
 		println('serviceSumCall')
 		val msg = new Message => [id=1L cmd='sum' clt='source' path='srv:test' args=#[1, 2L, 1.5f, 2.5]]
-		val reply = new Message => [id=1L cmd='ok' clt='source' result=7.0]
+		val reply = new Message => [id=1L typ='rpl' cmd='ok' clt='source' result=7.0]
 		
-		val r = pipeline.createResource('uid', [ ctx.assertEquals(gson.toJson(it), gson.toJson(reply)) sync.countDown ], null)
-		r.subscribe('uid')
-		r.process(msg)
+		pipeline.createResource('uid') => [
+			sendCallback = [ ctx.assertEquals(gson.toJson(it), gson.toJson(reply)) sync.countDown ]
+			subscribe('uid')
+			process(msg)
+		]
 	}
 	
 	@Test(timeout = 1000)
@@ -78,10 +82,12 @@ class AnnotatedServiceTest {
 
 		println('serviceAlexBrothersCall')
 		val msg = new Message => [id=1L cmd='alexBrothers' clt='source' path='srv:test' args=#[#{'name'->'Alex', 'age'->35}]]
-		val reply = new Message => [id=1L cmd='ok' clt='source' result=#{'name'->'Alex', 'age'->35, 'brothers'->#['Jorge', 'Mary']}]
+		val reply = new Message => [id=1L typ='rpl' cmd='ok' clt='source' result=#{'name'->'Alex', 'age'->35, 'brothers'->#['Jorge', 'Mary']}]
 		
-		val r = pipeline.createResource('uid', [ ctx.assertEquals(gson.toJson(it), gson.toJson(reply)) sync.countDown ], null)
-		r.subscribe('uid')
-		r.process(msg)
+		pipeline.createResource('uid') => [
+			sendCallback = [ ctx.assertEquals(gson.toJson(it), gson.toJson(reply)) sync.countDown ]
+			subscribe('uid')
+			process(msg)
+		]
 	}
 }
