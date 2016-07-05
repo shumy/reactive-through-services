@@ -35,8 +35,14 @@ class WsRouter {
 				ws.close return
 			}
 			
-			val channelUUID = ws.query.queryParams.get('channel')
+			//TODO: guarantee clientUUID
+			val clientUUID = ws.query.queryParams.get('client')
+			if (clientUUID == null) {
+				ws.close return
+			}
 			
+			logger.debug('CLIENT {}', clientUUID)
+			val channelUUID = ws.query.queryParams.get('channel')
 			if (channelUUID != null) {
 				logger.debug('CHANNEL {}', channelUUID)
 				
@@ -47,18 +53,18 @@ class WsRouter {
 					ws.close return
 				}
 				
-				val channel = new WsPipeChannelSender(this, ws, chInfo)
-				chBindHandler.apply(channel)
-				
-			} else {
-				val clientID = ws.query.queryParams.get('client')
-				logger.debug('CLIENT {}', clientID)
-				if (clientID == null) {
+				val resource = resources.get(clientUUID)
+				if (resource == null) {
+					logger.info('CHANNEL - no resource for client {}', clientUUID)
 					ws.close return
 				}
 				
-				val wsResource = new WsResource(this, ws, clientID)[ resources.remove(it) ]
-				resources.put(wsResource.uuid, wsResource.resource)
+				val channel = new WsPipeChannelSender(resource, chInfo, ws)
+				chBindHandler.apply(channel)
+				
+			} else {
+				val wsResource = new WsResource(this, ws, clientUUID)[ resources.remove(it) ]
+				resources.put(wsResource.client, wsResource.resource)
 			}
 		]
 	}

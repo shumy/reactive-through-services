@@ -3,6 +3,7 @@ package rt.pipeline.pipe
 import java.util.UUID
 
 interface IPipeChannel {
+	def PipeResource getResource()
 	def PipeChannelInfo getInfo()
 	def String getStatus()
 	

@@ -123,7 +123,7 @@ class ClientRouter implements IServiceClientFactory {
 				val chInfo = chReqMsg.result(PipeChannelInfo)
 				println('CH-RPL-INTERCEPTED: ' + chInfo.uuid)
 				
-				val channel = new ClientPipeChannelReceiver(this, chInfo)
+				val channel = new ClientPipeChannelReceiver(resource, chInfo, client)
 				resource.addChannel(channel)
 				channel.connect
 			]
