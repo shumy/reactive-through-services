@@ -6,7 +6,7 @@ import rt.pipeline.IMessageBus
 import rt.pipeline.IMessageBus.Message
 import rt.pipeline.DefaultMessageConverter
 
-//TODO: not working
+//not working
 class VertxMessageBus implements IMessageBus {
 	val converter = new DefaultMessageConverter
 	
@@ -29,7 +29,7 @@ class VertxMessageBus implements IMessageBus {
 		
 		this.listener(replyID, replyCallback)
 		
-		//TODO: how to handle timeout?
+		//how to handle timeout?
 		this.publish(address, msg)
 	}
 	
@@ -44,6 +44,10 @@ class VertxMessageBus implements IMessageBus {
 		]
 
 		return new VertxListener(consumer)
+	}
+	
+	override replyListener(String replyID, (Message)=>void listener) {
+		throw new UnsupportedOperationException("TODO: auto-generated method stub")
 	}
 	
 	static class VertxListener implements IListener {

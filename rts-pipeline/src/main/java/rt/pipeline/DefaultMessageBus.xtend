@@ -18,22 +18,36 @@ class DefaultMessageBus implements IMessageBus {
 	}
 	
 	override send(String address, Message msg, (Message) => void replyCallback) {
-		val replyID = '''«msg.clt»+«msg.id»'''
-		replyListeners.put(replyID, replyCallback)
+		val replyID = msg.replyID
+		replyListener(replyID, replyCallback)
 		
 		msg.typ = Message.SEND
 		listeners.get(address)?.forEach[ send(msg) ]
 		
 		new Timer().schedule([
-			val replyFun = replyListeners.remove(replyID)
-			replyFun?.apply(new Message => [ id=msg.id clt=msg.clt typ=Message.REPLY cmd=Message.CMD_ERROR result='''Timeout for «msg.path» -> «msg.cmd»'''.toString])
+			val replyTimeoutMsg = new Message => [ id=msg.id clt=msg.clt typ=Message.REPLY cmd=Message.CMD_TIMEOUT result='''Timeout for «msg.path» -> «msg.cmd»'''.toString]
+			replyTimeoutMsg.reply
 		], 3000)
 	}
 	
 	override reply(Message msg) {
-		val replyID = '''«msg.clt»+«msg.id»'''
+		val replyID = msg.replyID
+		
 		val replyFun = replyListeners.remove(replyID)
 		replyFun?.apply(msg)
+		
+		//process backward replies. In case of internal components need the information
+		if (msg.cmd == Message.CMD_OK) {
+			val replyOKBackFun = replyListeners.remove(replyID + '/reply-ok')
+			replyOKBackFun?.apply(msg)	
+		} else {
+			val replyERRORBackFun = replyListeners.remove(replyID + '/reply-error')
+			replyERRORBackFun?.apply(msg)
+		}
+	}
+	
+	override replyListener(String replyID, (Message) => void listener) {
+		replyListeners.put(replyID, listener)
 	}
 	
 	override listener(String address, (Message) => void listener) {

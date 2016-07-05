@@ -6,6 +6,7 @@ import rt.pipeline.IMessageBus.Message
 import rt.pipeline.IMessageBus.IListener
 import org.slf4j.LoggerFactory
 import rt.pipeline.pipe.IPipeChannel.PipeChannelInfo
+import rt.pipeline.IMessageBus
 
 class PipeResource {
 	static val logger = LoggerFactory.getLogger('RESOURCE')
@@ -18,7 +19,9 @@ class PipeResource {
 	val Pipeline pipeline
 	val subscriptions = new HashMap<String, IListener>
 	val channels = new HashMap<String, IPipeChannel>
-		
+	
+	def IMessageBus bus() { return pipeline.mb }
+	
 	package new(Pipeline pipeline, String client) {
 		logger.debug('CREATE {}', client)
 		this.pipeline = pipeline

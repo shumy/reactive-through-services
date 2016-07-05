@@ -5,12 +5,11 @@ import java.util.List
 interface IMessageBus {
 	
 	def void publish(String address, Message msg)
-	
 	def void send(String address, Message msg, (Message) => void replyCallback)
-	
 	def void reply(Message msg)
 	
 	def IListener listener(String address, (Message) => void listener)
+	def void replyListener(String replyID, (Message) => void listener)
 	
 	public interface IListener {
 		def void remove()
@@ -25,6 +24,7 @@ interface IMessageBus {
 		//reply command types...
 		public static val String CMD_OK = 'ok'
 		public static val String CMD_ERROR = 'err'
+		public static val String CMD_TIMEOUT = 'tout'
 		
 		// from all
 		public long id
@@ -50,6 +50,8 @@ interface IMessageBus {
 			this.jsonResult = jsonResult
 			this.resultConverter = resultConverter
 		}
+		
+		def replyID() { '''«clt»+«id»'''.toString }
 		
 		def void setArgs(List<Object> args) { this.args = args }
 		def List<Object> args(Class<?> ...types) {

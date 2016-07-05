@@ -43,26 +43,30 @@ class WsResource {
 			
 			subscribe(client)
 			
-			parent.pipeline.mb.listener(client + '/ch:req')[ chReqMsg |
+			//process channel requests..
+			bus.listener(client + '/ch:req')[ chReqMsg |
 				val args = chReqMsg.args(PipeChannelInfo)
 				val chInfo = args.get(0) as PipeChannelInfo
-				println('CH-REQ-INTERCEPTED: ' + chInfo.uuid)
+				logger.debug('CHANNEL-REQ {}', chInfo.uuid)
+				
+				//process backward channel error/reject/timeout
+				bus.replyListener(chReqMsg.replyID + '/reply-error')[
+					logger.error('CHANNEL-BIND-ERROR {} {}', chInfo.uuid, result(String))
+					parent.forgetChannelBind(chInfo)
+				]
 				
 				//wait for channel bind and reply to service
 				parent.waitForChannelBind(chInfo)[ channel |
-					println('CH-BIND-INTERCEPTED: ' + chInfo.uuid)
+					logger.debug('CHANNEL-BIND {}', chInfo.uuid)
 					resource.addChannel(channel)
 					
 					val replyMsg = new Message => [ id=chReqMsg.id clt=chReqMsg.clt cmd=Message.CMD_OK result=channel ]
-					parent.pipeline.mb.reply(replyMsg)
-					
-					//TODO: manage timeout!
+					bus.reply(replyMsg)
 				]
 				
 				//publish request to client
 				chReqMsg.path = 'ch:srv'
 				this.send(chReqMsg)
-				//TODO: manage reject reply!
 			]
 		]
 		

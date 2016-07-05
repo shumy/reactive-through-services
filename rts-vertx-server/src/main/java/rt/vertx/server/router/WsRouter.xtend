@@ -43,6 +43,7 @@ class WsRouter {
 				val chInfo = chRequests.remove(channelUUID)
 				val chBindHandler = chRequestsHandlers.remove(channelUUID)
 				if (chInfo == null || chBindHandler == null) {
+					logger.info('CHANNEL - no request bind for channel {}', channelUUID)
 					ws.close return
 				}
 				
@@ -65,6 +66,10 @@ class WsRouter {
 	package def void waitForChannelBind(PipeChannelInfo info, (IPipeChannelSender) => void onBind) {
 		chRequests.put(info.uuid, info)
 		chRequestsHandlers.put(info.uuid, onBind)
-		//TODO: manage timeouts
-	} 
+	}
+	
+	package def void forgetChannelBind(PipeChannelInfo info) {
+		chRequests.remove(info.uuid)
+		chRequestsHandlers.remove(info.uuid)
+	}  
 }

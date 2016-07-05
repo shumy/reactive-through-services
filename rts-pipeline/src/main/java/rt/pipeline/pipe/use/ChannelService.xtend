@@ -4,8 +4,11 @@ import rt.pipeline.IComponent
 import rt.pipeline.pipe.PipeContext
 import rt.pipeline.pipe.IPipeChannel.PipeChannelInfo
 import rt.pipeline.IMessageBus.Message
+import org.eclipse.xtend.lib.annotations.Accessors
 
-class ChannelService implements IComponent {
+abstract class ChannelService implements IComponent {
+	@Accessors val name = 'ch:srv'
+	
 	override apply(PipeContext ctx) {
 		val chReqMsg = ctx.message
 		
@@ -24,8 +27,5 @@ class ChannelService implements IComponent {
 		ctx.bus.publish(ctx.resource.client + '/ch:rpl', replyMsg)
 	}
 	
-	def void request(PipeChannelInfo chInfo) {
-		//TODO: verify access control
-		//throw exception to reject
-	}
+	abstract def void request(PipeChannelInfo chInfo)
 }
