@@ -6,31 +6,28 @@ import rt.pipeline.IMessageBus.Message
 import java.util.concurrent.atomic.AtomicLong
 import rt.plugin.service.an.Public
 import rt.pipeline.promise.PromiseResult
-import rt.pipeline.pipe.use.ChannelInterface
-import rt.plugin.service.an.ServiceProxy
+import java.util.Map
 
 class ServiceClient {
 	static val clientSeq = new AtomicLong(0L)
 	
 	val IMessageBus bus
 	val String server
+	val Map<String, String> redirects
 	
 	val String uuid
 	var long msgID = 0		//increment for every new message
 	
-	new(IMessageBus bus, String server, String client) {
+	new(IMessageBus bus, String server, String client, Map<String, String> redirects) {
 		this.bus = bus
 		this.server = server
+		this.redirects = redirects
 		
 		this.uuid = ServiceClient.clientSeq.addAndGet(1) + ':' + client
 	}
 	
 	def <T> T create(String srvPath, Class<T> srvProxyInterface) {
-		val anProxy = srvProxyInterface.getAnnotation(ServiceProxy)
-		
-		//TODO: need to remove this hack, replace by interface redirects...
-		
-		val address = if (anProxy != null && anProxy.value == ChannelInterface) server + '/ch:req' else server
+		val address = redirects.get(srvPath) ?: server
 		
 		val srvProxy = Proxy.newProxyInstance(srvProxyInterface.classLoader, #[srvProxyInterface])[ proxy, srvMeth, srvArgs |
 			val PromiseResult<Object> result = [ resolve, reject |

@@ -4,6 +4,7 @@ import org.junit.Test
 import rt.plugin.service.ServiceClient
 import rt.pipeline.IMessageBus.Message
 import rt.pipeline.DefaultMessageBus
+import java.util.Collections
 
 class ServiceClientTest {
 	
@@ -20,7 +21,7 @@ class ServiceClientTest {
 			mb.publish(reply.clt + '+' + reply.id, reply)
 		]
 		
-		val srvClient = new ServiceClient(mb, 'srv:address', 'clt:address')
+		val srvClient = new ServiceClient(mb, 'srv:address', 'clt:address', Collections.EMPTY_MAP)
 		val srvProxy = srvClient.create('test', SrvInterface)
 		
 		srvProxy.hello('Alex').then[

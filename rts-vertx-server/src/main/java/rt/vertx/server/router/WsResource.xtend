@@ -31,7 +31,10 @@ class WsResource {
 		this.onClose = onClose
 		
 		val sb = new StringBuilder
-		val srvClientFactory = new ServiceClientFactory(parent.pipeline.mb, client, ws.textHandlerID)
+		val srvClientFactory = new ServiceClientFactory(parent.pipeline.mb, client, ws.textHandlerID) => [
+			redirects.put('srv:channel', client + '/ch:req')
+		]
+		
 		this.resource  => [
 			
 			sendCallback = [ msg | this.send(msg) ]

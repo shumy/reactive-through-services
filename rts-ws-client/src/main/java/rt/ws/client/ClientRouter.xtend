@@ -14,12 +14,15 @@ import rt.plugin.service.IServiceClientFactory
 import org.eclipse.xtend.lib.annotations.Accessors
 import java.nio.ByteBuffer
 import rt.pipeline.pipe.IPipeChannel.PipeChannelInfo
+import java.util.Map
+import java.util.HashMap
 
 class ClientRouter implements IServiceClientFactory {
 	@Accessors val String server
 	@Accessors val String client
 	@Accessors val Pipeline pipeline
 	@Accessors val ServiceClient serviceClient
+	@Accessors val Map<String, String> redirects = new HashMap
 	
 	val converter = new DefaultMessageConverter
 	val URI url
@@ -41,7 +44,7 @@ class ClientRouter implements IServiceClientFactory {
 		this.server = server
 		this.client = client
 		this.pipeline = pipeline
-		this.serviceClient = new ServiceClient(bus, server, client)
+		this.serviceClient = new ServiceClient(bus, server, client, redirects)
 		
 		pipeline.mb.listener(server)[ send ]
 		
