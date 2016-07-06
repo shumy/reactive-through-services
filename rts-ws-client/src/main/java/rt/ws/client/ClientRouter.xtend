@@ -12,12 +12,14 @@ import rt.pipeline.DefaultMessageConverter
 import rt.plugin.service.ServiceClient
 import rt.plugin.service.IServiceClientFactory
 import org.eclipse.xtend.lib.annotations.Accessors
-import java.nio.ByteBuffer
 import rt.pipeline.pipe.IPipeChannel.PipeChannelInfo
 import java.util.Map
 import java.util.HashMap
+import org.slf4j.LoggerFactory
 
 class ClientRouter implements IServiceClientFactory {
+	static val logger = LoggerFactory.getLogger('CLIENT-ROUTER')
+	
 	@Accessors val String server
 	@Accessors val String client
 	@Accessors val Pipeline pipeline
@@ -54,14 +56,16 @@ class ClientRouter implements IServiceClientFactory {
 	def void connect() {
 		val router = this
 		
-		println('TRY-OPEN: ' + url)
+		logger.info('TRY-OPEN {}', url)
 		ws = new WebSocketClient(url) {
 			
 			override onOpen(ServerHandshake handshakedata) {
+				logger.trace('OPEN')
 				router.onOpen
 			}
 			
 			override onClose(int code, String reason, boolean remote) {
+				logger.trace('CLOSE')
 				router.close
 				Thread.sleep(3000)
 				router.connect
@@ -72,12 +76,8 @@ class ClientRouter implements IServiceClientFactory {
 			}
 			
 			override onMessage(String textMsg) {
-				println('RECEIVED: ' + textMsg)
+				logger.trace('RECEIVED {}', textMsg)
 				router.receive(textMsg)
-			}
-			
-			override onMessage(ByteBuffer byteMsg) {
-				println('RECEIVED-BINARY: ' + byteMsg.asCharBuffer.toString)
 			}
 		}
 		
@@ -113,7 +113,7 @@ class ClientRouter implements IServiceClientFactory {
 			contextCallback = [ object(IServiceClientFactory, this) ]
 			closeCallback = [ close ]
 			
-			pipeline.mb.listener(server + '/ch:rpl')[ chReqMsg |
+			it.bus.listener(server + '/ch:rpl')[ chReqMsg |
 				if (chReqMsg.cmd != Message.CMD_OK) {
 					chReqMsg.typ = Message.REPLY
 					this.send(chReqMsg)
@@ -121,7 +121,7 @@ class ClientRouter implements IServiceClientFactory {
 				}
 				
 				val chInfo = chReqMsg.result(PipeChannelInfo)
-				println('CH-RPL-INTERCEPTED: ' + chInfo.uuid)
+				logger.debug('CHANNEL-BIND {}', chInfo.uuid)
 				
 				val channel = new ClientPipeChannelReceiver(resource, chInfo, client)
 				resource.addChannel(channel)

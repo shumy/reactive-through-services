@@ -36,12 +36,13 @@ class DefaultMessageBus implements IMessageBus {
 		val replyFun = replyListeners.remove(replyID)
 		replyFun?.apply(msg)
 		
+		val replyOKBackFun = replyListeners.remove(replyID + '/reply-ok')
+		val replyERRORBackFun = replyListeners.remove(replyID + '/reply-error')
+		
 		//process backward replies. In case of internal components need the information
 		if (msg.cmd == Message.CMD_OK) {
-			val replyOKBackFun = replyListeners.remove(replyID + '/reply-ok')
 			replyOKBackFun?.apply(msg)	
 		} else {
-			val replyERRORBackFun = replyListeners.remove(replyID + '/reply-error')
 			replyERRORBackFun?.apply(msg)
 		}
 	}

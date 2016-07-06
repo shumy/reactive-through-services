@@ -5,8 +5,11 @@ import org.eclipse.xtend.lib.annotations.Accessors
 import io.vertx.core.buffer.Buffer
 import rt.pipeline.pipe.IPipeChannelSender
 import rt.pipeline.pipe.PipeResource
+import org.slf4j.LoggerFactory
 
 class WsPipeChannelSender implements IPipeChannelSender {
+	static val logger = LoggerFactory.getLogger('WS-CHANNEL-SENDER')
+	
 	@Accessors val PipeResource resource
 	@Accessors val PipeChannelInfo info
 	@Accessors val String status
@@ -20,7 +23,7 @@ class WsPipeChannelSender implements IPipeChannelSender {
 		
 		this.ws = ws
 		ws.closeHandler[
-			println('SERVER-CHANNEL-CLOSE')
+			logger.trace('CLOSE')
 			resource.removeChannel(info.uuid)
 		]
 	}

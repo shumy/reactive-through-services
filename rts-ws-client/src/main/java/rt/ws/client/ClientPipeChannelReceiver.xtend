@@ -7,8 +7,10 @@ import org.java_websocket.handshake.ServerHandshake
 import org.eclipse.xtend.lib.annotations.Accessors
 import rt.pipeline.pipe.IPipeChannelReceiver
 import rt.pipeline.pipe.PipeResource
+import org.slf4j.LoggerFactory
 
 class ClientPipeChannelReceiver implements IPipeChannelReceiver {
+	static val logger = LoggerFactory.getLogger('CLIENT-CHANNEL-RECEIVER')
 	@Accessors val PipeResource resource
 	@Accessors val PipeChannelInfo info
 	@Accessors val String status
@@ -35,15 +37,15 @@ class ClientPipeChannelReceiver implements IPipeChannelReceiver {
 	def connect() {
 		val channel = this
 		
-		println('TRY-CHANNEL-OPEN: ' + url)
+		logger.info('TRY-OPEN {}', url)
 		ws = new WebSocketClient(url) {
 			
 			override onOpen(ServerHandshake handshakedata) {
-				println('CLIENT-CHANNEL-OPEN')
+				logger.trace('OPEN')
 			}
 			
 			override onClose(int code, String reason, boolean remote) {
-				println('CLIENT-CHANNEL-CLOSE')
+				logger.trace('CLOSE')
 				resource.removeChannel(info.uuid)
 			}
 			
