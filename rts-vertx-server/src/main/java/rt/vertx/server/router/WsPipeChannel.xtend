@@ -6,10 +6,10 @@ import io.vertx.core.http.ServerWebSocket
 import org.eclipse.xtend.lib.annotations.Accessors
 import org.slf4j.LoggerFactory
 import rt.pipeline.pipe.PipeResource
+import rt.pipeline.pipe.channel.ChannelPump
 import rt.pipeline.pipe.channel.IChannelBuffer
 import rt.pipeline.pipe.channel.IPipeChannel
 import rt.pipeline.pipe.channel.ReceiveBuffer
-import rt.pipeline.pipe.channel.ReceiveBuffer.ChannelPump
 import rt.pipeline.pipe.channel.SendBuffer
 
 import static rt.pipeline.pipe.channel.IPipeChannel.PipeChannelInfo.Type.*
@@ -19,49 +19,47 @@ class WsPipeChannel implements IPipeChannel {
 	
 	@Accessors val PipeResource resource
 	@Accessors val PipeChannelInfo info
+	@Accessors(PUBLIC_GETTER) var IChannelBuffer buffer
 	@Accessors val String status
-	@Accessors val IChannelBuffer buffer
 	
 	val ServerWebSocket ws
 	
 	package new(PipeResource resource, PipeChannelInfo info, ServerWebSocket ws) {
+		logger.trace('OPEN {}', info.uuid)
+		
 		this.resource = resource
 		this.info = info
 		this.status = 'INIT'
+		
+		val inPump = new ChannelPump
+		val outPump = new ChannelPump => [
+			onSignal = [ ws.writeFinalTextFrame(it) ]
+			onData = [
+				val buffer = Buffer.buffer(Unpooled.copiedBuffer(it))
+				ws.writeBinaryMessage(buffer)
+			]
+		]
 		
 		this.ws = ws
 		ws.closeHandler[
 			logger.trace('CLOSE {}', info.uuid)
 			resource.removeChannel(info.uuid)
+			buffer.close
 		]
 		
-		this.buffer = if (info.type == SENDER) senderSetup else receiverSetup
-	}
-	
-	override close() { ws?.close }
-	
-	
-	private def IChannelBuffer senderSetup() {
-		return new SendBuffer([ ws.writeFinalTextFrame(it) ], [
-			val buffer = Buffer.buffer(Unpooled.copiedBuffer(it))
-			ws.writeBinaryMessage(buffer)
-		])
-	}
-	
-	private def IChannelBuffer receiverSetup() {
-		//TODO: how to use drain and pump
-		val pump = new ChannelPump
-		ws.frameHandler[ msg |
-			if (msg.binary) {
-				val buffer = msg.binaryData.byteBuf.nioBuffer
+		ws.frameHandler[
+			if (binary) {
+				val buffer = binaryData.byteBuf.nioBuffer
 				println('P: ' + buffer.position + ' L: ' + buffer.limit)
 				//TODO: do I need to flip the buffer?
-				pump.pushData(buffer)
+				inPump.pushData(buffer)
 			} else {
-				pump.pushSignal(msg.textData)
+				inPump.pushSignal(textData)
 			}
 		]
 		
-		return new ReceiveBuffer(pump)
+		this.buffer = if (info.type == SENDER) new SendBuffer(outPump, inPump) else new ReceiveBuffer(inPump, outPump)
 	}
+	
+	override close() { ws.close }
 }

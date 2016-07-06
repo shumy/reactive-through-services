@@ -1,15 +1,16 @@
 package rt.pipeline.pipe.channel
 
 import java.nio.ByteBuffer
-import java.nio.file.Paths
 import java.nio.channels.FileChannel
+import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
 import org.slf4j.LoggerFactory
 
 class ReceiveBuffer implements IChannelBuffer {
 	static val logger = LoggerFactory.getLogger(ReceiveBuffer)
 	
-	val ChannelPump pump
+	val ChannelPump inPump
+	val ChannelPump outPump
 	
 	var isSignalBegin = false
 	var String filePath = null
@@ -20,93 +21,84 @@ class ReceiveBuffer implements IChannelBuffer {
 	var (String) => void onError
 	var (ByteBuffer) => void onData
 	
-	new(ChannelPump pump) {
-		this.pump = pump
+	new(ChannelPump inPump, ChannelPump outPump) {
+		this.outPump = outPump
+		this.inPump = inPump
 		
-		pump.onSignal = [ signal |
-			if (signal.startsWith('bng')) {
-				logger.debug('SIGNAL {}', signal)
+		inPump.onSignal = [
+			logger.debug('SIGNAL {}', it)
+			if (startsWith('bng')) {
 				if (isSignalBegin) {
-					val error = 'Signal is already in begin status!'
-					logger.error(error)
-					
-					closeFile
-					onError?.apply(error)
+					error('Signal is already in begin status!')
 					return
 				}
 				
 				isSignalBegin = true
-				val signalName = signal.split(':').get(1)
+				val signalName = split(':').get(1)
 				onBegin?.apply(signalName)
 				if (filePath != null) createFile
-			} else if (signal.startsWith('end')) {
-				logger.debug('SIGNAL {}', signal)
+			} else if (startsWith('end')) {
 				if (!isSignalBegin) {
-					val error = 'Signal is not in begin status!'
-					logger.error(error)
-					
-					closeFile
-					onError?.apply(error)
+					error('Signal is not in begin status!')
 					return
 				}
 				
 				closeFile
 				onEnd?.apply
-			} else {
-				logger.error('SIGNAL {}', signal)
-				val error = signal.split(':').get(1)
-				
-				//process error...
-				closeFile
-				onError?.apply(error)
+			} else if (startsWith('err')) {
+				val error = split(':').get(1)
+				errorNoSignal(error)
 			}
 		]
 		
-		pump.onData = [ buffer |
+		inPump.onData = [
 			if (!isSignalBegin) {
-				val error = 'Can not receive data with signal in end status!'
-				logger.error(error)
-				
-				closeFile
-				onError?.apply(error)
+				error('Can not receive data with signal in end status!')
 				return
 			}
 			
-			if (filePath != null) {
-				buffer.writeToFile
-			} else {
-				onData?.apply(buffer)
-			}
+			if (filePath != null) writeToFile else onData?.apply(it)
 		]
 	}
 	
-	def onBegin((String) => void onBegin) { this.onBegin = onBegin }
-	def onEnd(() => void onEnd) { this.onEnd = onEnd }
-	def onError((String) => void onError) { this.onError = onError }
+	def void onBegin((String) => void onBegin) { this.onBegin = onBegin }
+	def void onEnd(() => void onEnd) { this.onEnd = onEnd }
+	override onError((String) => void onError) { this.onError = onError }
+	
+	override error(String message) {
+		errorNoSignal(message)
+		outPump.pushSignal('''err:«message»''')
+	}
+	
+	override close() {
+		if (isSignalBegin)
+			errorNoSignal('Irregular close!')
+	}
 	
 	def >>((ByteBuffer) => void onData) {
 		this.onData = onData
 	}
 	
 	def void writeToFile(String filePath) {
+		//TODO: secure the filesystem path
 		this.filePath = filePath
 	}
-
+	
 	private def void createFile() {
 		try {
 			val path = Paths.get(filePath)
 			fileChannel = FileChannel.open(path, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)	
 		} catch(Exception ex) {
-			logger.error(ex.message)
-			
-			closeFile
-			//TODO: sen backward error to the SendBuffer!
-			onError?.apply(ex.message)
+			error(ex.message)
 		}
-	} 
+	}
 
 	private def void writeToFile(ByteBuffer buffer) {
-		fileChannel.write(buffer)
+		try {
+			fileChannel.write(buffer)	
+		} catch(Exception ex) {
+			error(ex.message)
+		}
 	}
 	
 	private def void closeFile() {
@@ -117,11 +109,10 @@ class ReceiveBuffer implements IChannelBuffer {
 		fileChannel = null
 	}
 	
-	static class ChannelPump {
-		var (String) => void onSignal
-		var (ByteBuffer) => void onData
+	private def void errorNoSignal(String message) {
+		logger.error('ERROR {}', message)
 		
-		def void pushSignal(String signal) { onSignal.apply(signal) }
-		def void pushData(ByteBuffer buffer) { onData.apply(buffer) }
+		closeFile
+		onError?.apply(message)
 	}
 }
