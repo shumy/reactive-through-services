@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory
 
 class ClientPipeChannelReceiver implements IPipeChannelReceiver {
 	static val logger = LoggerFactory.getLogger('CLIENT-CHANNEL-RECEIVER')
+	
 	@Accessors val PipeResource resource
 	@Accessors val PipeChannelInfo info
 	@Accessors val String status
@@ -58,7 +59,6 @@ class ClientPipeChannelReceiver implements IPipeChannelReceiver {
 			}
 			
 			override onMessage(ByteBuffer byteMsg) {
-				println('CHANNEL-RECEIVED-BINARY')
 				channel.onReceive?.apply(byteMsg.array)
 			}
 		}

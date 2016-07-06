@@ -7,6 +7,7 @@ import rt.pipeline.IComponent
 import rt.pipeline.IMessageBus.Message
 import rt.pipeline.IMessageBus
 import rt.pipeline.DefaultMessageBus
+import rt.pipeline.pipe.use.ChannelService
 
 class Pipeline {
 	@Accessors val IMessageBus mb
@@ -44,7 +45,7 @@ class Pipeline {
 	}
 	
 	def void addChannelService(IComponent chService) {
-		services.put('ch:srv', chService)
+		services.put(ChannelService.name, chService)
 	}
 	
 	def getServiceFromPath(String path) {

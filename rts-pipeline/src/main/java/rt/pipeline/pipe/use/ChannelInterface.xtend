@@ -4,5 +4,5 @@ import rt.pipeline.pipe.IPipeChannel.PipeChannelInfo
 import rt.pipeline.pipe.IPipeChannelSender
 
 interface ChannelInterface {
-	def IPipeChannelSender requestChannel(PipeChannelInfo chInfo)
+	def IPipeChannelSender request(PipeChannelInfo chInfo)
 }

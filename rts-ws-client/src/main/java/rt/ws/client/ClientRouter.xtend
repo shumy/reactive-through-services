@@ -7,7 +7,6 @@ import rt.pipeline.IMessageBus.Message
 import rt.pipeline.pipe.Pipeline
 import rt.pipeline.pipe.PipeResource
 import java.util.concurrent.atomic.AtomicBoolean
-import rt.pipeline.IMessageBus
 import rt.pipeline.DefaultMessageConverter
 import rt.plugin.service.ServiceClient
 import rt.plugin.service.IServiceClientFactory
@@ -16,6 +15,8 @@ import rt.pipeline.pipe.IPipeChannel.PipeChannelInfo
 import java.util.Map
 import java.util.HashMap
 import org.slf4j.LoggerFactory
+import rt.pipeline.pipe.use.ChannelService
+import rt.pipeline.IMessageBus.IListener
 
 class ClientRouter implements IServiceClientFactory {
 	static val logger = LoggerFactory.getLogger('CLIENT-ROUTER')
@@ -31,10 +32,9 @@ class ClientRouter implements IServiceClientFactory {
 	
 	PipeResource resource = null
 	WebSocketClient ws = null
+	IListener chListener = null
 	
 	var ready = new AtomicBoolean
-	
-	def IMessageBus getBus() { return pipeline.mb }
 	
 	new(String server, String client) {
 		this(server, client, new Pipeline)
@@ -46,7 +46,7 @@ class ClientRouter implements IServiceClientFactory {
 		this.server = server
 		this.client = client
 		this.pipeline = pipeline
-		this.serviceClient = new ServiceClient(bus, server, client, redirects)
+		this.serviceClient = new ServiceClient(pipeline.mb, server, client, redirects)
 		
 		pipeline.mb.listener(server)[ send ]
 		
@@ -87,11 +87,14 @@ class ClientRouter implements IServiceClientFactory {
 	
 	def void close() {
 		ready.set(false)
-		ws?.close
-		resource?.release
 		
-		ws = null
+		chListener?.remove
+		resource?.release
+		ws?.close
+		
+		chListener = null
 		resource = null
+		ws = null
 	}
 	
 	private def void send(Message msg) {
@@ -113,7 +116,7 @@ class ClientRouter implements IServiceClientFactory {
 			contextCallback = [ object(IServiceClientFactory, this) ]
 			closeCallback = [ close ]
 			
-			it.bus.listener(server + '/ch:rpl')[ chReqMsg |
+			chListener = bus.listener(server + '/ch:rpl')[ chReqMsg |
 				if (chReqMsg.cmd != Message.CMD_OK) {
 					chReqMsg.typ = Message.REPLY
 					this.send(chReqMsg)
@@ -124,7 +127,9 @@ class ClientRouter implements IServiceClientFactory {
 				logger.debug('CHANNEL-BIND {}', chInfo.uuid)
 				
 				val channel = new ClientPipeChannelReceiver(resource, chInfo, client)
-				resource.addChannel(channel)
+				addChannel(channel)
+				process(new Message => [ path=ChannelService.name cmd='bind' result=channel ])
+				
 				channel.connect
 			]
 		]

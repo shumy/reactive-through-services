@@ -8,6 +8,8 @@ import org.eclipse.xtend.lib.annotations.Accessors
 import rt.pipeline.pipe.PipeResource
 import rt.pipeline.IMessageBus.Message
 import rt.pipeline.pipe.IPipeChannel.PipeChannelInfo
+import rt.pipeline.pipe.use.ChannelService
+import rt.pipeline.IMessageBus.IListener
 
 class WsResource {
 	static val logger = LoggerFactory.getLogger('WS-RESOURCE')
@@ -18,6 +20,8 @@ class WsResource {
 	val WsRouter parent
 	val ServerWebSocket ws
 	val (String) => void onClose
+	
+	IListener chListener
 	
 	package new(WsRouter parent, ServerWebSocket ws, String client, (String) => void onClose) {
 		this.resource = parent.pipeline.createResource(client)
@@ -40,7 +44,7 @@ class WsResource {
 			subscribe(client)
 			
 			//process channel requests..
-			bus.listener(client + '/ch:req')[ chReqMsg |
+			chListener = bus.listener(client + '/ch:req')[ chReqMsg |
 				val args = chReqMsg.args(PipeChannelInfo)
 				val chInfo = args.get(0) as PipeChannelInfo
 				logger.debug('CHANNEL-REQ {}', chInfo.uuid)
@@ -61,7 +65,7 @@ class WsResource {
 				]
 				
 				//publish request to client
-				chReqMsg.path = 'ch:srv'
+				chReqMsg.path = ChannelService.name
 				this.send(chReqMsg)
 			]
 		]
@@ -80,6 +84,7 @@ class WsResource {
 		]
 		
 		ws.closeHandler[
+			chListener.remove
 			resource.release
 			onClose?.apply(client)
 		]
