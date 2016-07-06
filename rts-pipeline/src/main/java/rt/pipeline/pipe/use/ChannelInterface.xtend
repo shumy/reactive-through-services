@@ -1,8 +1,8 @@
 package rt.pipeline.pipe.use
 
-import rt.pipeline.pipe.IPipeChannel.PipeChannelInfo
-import rt.pipeline.pipe.IPipeChannelSender
+import rt.pipeline.pipe.channel.IPipeChannel
+import rt.pipeline.pipe.channel.IPipeChannel.PipeChannelInfo
 
 interface ChannelInterface {
-	def IPipeChannelSender request(PipeChannelInfo chInfo)
+	def IPipeChannel request(PipeChannelInfo chInfo)
 }

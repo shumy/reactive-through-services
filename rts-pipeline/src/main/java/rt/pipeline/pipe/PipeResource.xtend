@@ -5,8 +5,8 @@ import java.util.HashMap
 import rt.pipeline.IMessageBus.Message
 import rt.pipeline.IMessageBus.IListener
 import org.slf4j.LoggerFactory
-import rt.pipeline.pipe.IPipeChannel.PipeChannelInfo
 import rt.pipeline.IMessageBus
+import rt.pipeline.pipe.channel.IPipeChannel
 
 class PipeResource {
 	static val logger = LoggerFactory.getLogger('RESOURCE')

@@ -7,7 +7,7 @@ import rt.plugin.service.IServiceClientFactory
 import org.eclipse.xtend.lib.annotations.Accessors
 import rt.pipeline.pipe.PipeResource
 import rt.pipeline.IMessageBus.Message
-import rt.pipeline.pipe.IPipeChannel.PipeChannelInfo
+import rt.pipeline.pipe.channel.IPipeChannel.PipeChannelInfo
 import rt.pipeline.pipe.use.ChannelService
 import rt.pipeline.IMessageBus.IListener
 

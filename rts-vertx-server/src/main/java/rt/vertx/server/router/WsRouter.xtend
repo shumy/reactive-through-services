@@ -5,11 +5,11 @@ import rt.pipeline.DefaultMessageConverter
 import org.slf4j.LoggerFactory
 import rt.pipeline.pipe.Pipeline
 import java.util.HashMap
-import static extension rt.vertx.server.URIParserHelper.*
 import rt.pipeline.pipe.PipeResource
-import rt.pipeline.pipe.IPipeChannel.PipeChannelInfo
+import rt.pipeline.pipe.channel.IPipeChannel
+import rt.pipeline.pipe.channel.IPipeChannel.PipeChannelInfo
 import org.eclipse.xtend.lib.annotations.Accessors
-import rt.pipeline.pipe.IPipeChannelSender
+import static extension rt.vertx.server.URIParserHelper.*
 
 class WsRouter {
 	static val logger = LoggerFactory.getLogger('WS-ROUTER')
@@ -23,7 +23,7 @@ class WsRouter {
 	
 	//channels info...
 	val chRequests = new HashMap<String, PipeChannelInfo>
-	val chRequestsHandlers = new HashMap<String, (IPipeChannelSender) => void>
+	val chRequestsHandlers = new HashMap<String, (IPipeChannel) => void>
 	
 	new(String route, HttpServer server, Pipeline pipeline) {
 		this.route = route
@@ -59,9 +59,7 @@ class WsRouter {
 					ws.close return
 				}
 				
-				val channel = new WsPipeChannelSender(resource, chInfo, ws)
-				chBindHandler.apply(channel)
-				
+				chBindHandler.apply(new WsPipeChannel(resource, chInfo, ws))
 			} else {
 				val wsResource = new WsResource(this, ws, clientUUID)[ resources.remove(it) ]
 				resources.put(wsResource.client, wsResource.resource)
@@ -69,7 +67,7 @@ class WsRouter {
 		]
 	}
 	
-	package def void waitForChannelBind(PipeChannelInfo info, (IPipeChannelSender) => void onBind) {
+	package def void waitForChannelBind(PipeChannelInfo info, (IPipeChannel) => void onBind) {
 		chRequests.put(info.uuid, info)
 		chRequestsHandlers.put(info.uuid, onBind)
 	}
@@ -77,5 +75,5 @@ class WsRouter {
 	package def void forgetChannelBind(PipeChannelInfo info) {
 		chRequests.remove(info.uuid)
 		chRequestsHandlers.remove(info.uuid)
-	}  
+	}
 }

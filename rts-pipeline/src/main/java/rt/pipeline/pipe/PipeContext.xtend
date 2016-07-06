@@ -1,12 +1,12 @@
 package rt.pipeline.pipe
 
+import java.util.HashMap
 import java.util.Iterator
 import org.eclipse.xtend.lib.annotations.Accessors
-import rt.pipeline.IMessageBus.Message
+import org.slf4j.LoggerFactory
 import rt.pipeline.IComponent
 import rt.pipeline.IMessageBus
-import java.util.HashMap
-import org.slf4j.LoggerFactory
+import rt.pipeline.IMessageBus.Message
 
 class PipeContext {
 	static val logger = LoggerFactory.getLogger('PIPELINE')

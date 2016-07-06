@@ -1,12 +1,12 @@
 package rt.pipeline.pipe
 
 import java.util.ArrayList
-import org.eclipse.xtend.lib.annotations.Accessors
 import java.util.HashMap
-import rt.pipeline.IComponent
-import rt.pipeline.IMessageBus.Message
-import rt.pipeline.IMessageBus
+import org.eclipse.xtend.lib.annotations.Accessors
 import rt.pipeline.DefaultMessageBus
+import rt.pipeline.IComponent
+import rt.pipeline.IMessageBus
+import rt.pipeline.IMessageBus.Message
 import rt.pipeline.pipe.use.ChannelService
 
 class Pipeline {

@@ -5,16 +5,18 @@ import java.net.URI
 import org.java_websocket.client.WebSocketClient
 import org.java_websocket.handshake.ServerHandshake
 import org.eclipse.xtend.lib.annotations.Accessors
-import rt.pipeline.pipe.IPipeChannelReceiver
 import rt.pipeline.pipe.PipeResource
 import org.slf4j.LoggerFactory
+import rt.pipeline.pipe.channel.IPipeChannel
+import rt.pipeline.pipe.channel.IChannelBuffer
 
-class ClientPipeChannelReceiver implements IPipeChannelReceiver {
+class ClientPipeChannelReceiver implements IPipeChannel {
 	static val logger = LoggerFactory.getLogger('CLIENT-CHANNEL-RECEIVER')
 	
 	@Accessors val PipeResource resource
 	@Accessors val PipeChannelInfo info
 	@Accessors val String status
+	@Accessors val IChannelBuffer buffer
 	
 	val URI url
 	
@@ -27,10 +29,8 @@ class ClientPipeChannelReceiver implements IPipeChannelReceiver {
 		this.status = 'INIT'
 		
 		this.url = new URI(resource.client + '?client=' + client + '&channel=' + info.uuid)
-	}
-	
-	override receive((byte[]) => void onReceive) {
-		this.onReceive = onReceive
+		
+		this.buffer = null
 	}
 	
 	override close() { ws?.close }

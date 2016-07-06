@@ -2,10 +2,10 @@ package rt.pipeline.pipe.use
 
 import rt.pipeline.IComponent
 import rt.pipeline.pipe.PipeContext
-import rt.pipeline.pipe.IPipeChannel.PipeChannelInfo
 import rt.pipeline.IMessageBus.Message
 import org.eclipse.xtend.lib.annotations.Accessors
-import rt.pipeline.pipe.IPipeChannelReceiver
+import rt.pipeline.pipe.channel.IPipeChannel.PipeChannelInfo
+import rt.pipeline.pipe.channel.IPipeChannel
 
 abstract class ChannelService implements IComponent {
 	@Accessors static val name = 'ch:srv'
@@ -27,11 +27,11 @@ abstract class ChannelService implements IComponent {
 			
 			ctx.bus.publish(ctx.resource.client + '/ch:rpl', replyMsg)
 		} else if (chMsg.cmd == 'bind') {
-			val channel = chMsg.result(IPipeChannelReceiver)
+			val channel = chMsg.result(IPipeChannel)
 			bind(channel)
 		}
 	}
 	
 	abstract def void request(PipeChannelInfo chInfo)
-	abstract def void bind(IPipeChannelReceiver channel)
+	abstract def void bind(IPipeChannel channel)
 }

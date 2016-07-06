@@ -11,12 +11,12 @@ import rt.pipeline.DefaultMessageConverter
 import rt.plugin.service.ServiceClient
 import rt.plugin.service.IServiceClientFactory
 import org.eclipse.xtend.lib.annotations.Accessors
-import rt.pipeline.pipe.IPipeChannel.PipeChannelInfo
 import java.util.Map
 import java.util.HashMap
 import org.slf4j.LoggerFactory
 import rt.pipeline.pipe.use.ChannelService
 import rt.pipeline.IMessageBus.IListener
+import rt.pipeline.pipe.channel.IPipeChannel.PipeChannelInfo
 
 class ClientRouter implements IServiceClientFactory {
 	static val logger = LoggerFactory.getLogger('CLIENT-ROUTER')
