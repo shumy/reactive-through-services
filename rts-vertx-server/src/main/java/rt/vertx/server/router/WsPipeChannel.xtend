@@ -53,7 +53,10 @@ class WsPipeChannel implements IPipeChannel {
 		val pump = new ChannelPump
 		ws.frameHandler[ msg |
 			if (msg.binary) {
-				pump.pushData(msg.binaryData.byteBuf.nioBuffer)
+				val buffer = msg.binaryData.byteBuf.nioBuffer
+				println('P: ' + buffer.position + ' L: ' + buffer.limit)
+				//TODO: do I need to flip the buffer?
+				pump.pushData(buffer)
 			} else {
 				pump.pushSignal(msg.textData)
 			}

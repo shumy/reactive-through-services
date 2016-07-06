@@ -3,8 +3,11 @@ package rt.pipeline.pipe.channel
 import java.nio.file.Paths
 import java.nio.channels.FileChannel
 import java.nio.ByteBuffer
+import java.nio.file.StandardOpenOption
+import org.slf4j.LoggerFactory
 
 class SendBuffer implements IChannelBuffer {
+	static val logger = LoggerFactory.getLogger(SendBuffer)
 	
 	var isSignalBegin = false
 	val (String) => void sendSignal
@@ -20,14 +23,25 @@ class SendBuffer implements IChannelBuffer {
 			throw new RuntimeException('Signal is already in begin status!')
 			
 		isSignalBegin = true
-		sendSignal.apply('''bng:«name»''')
+		val signal = '''bng:«name»'''
+		logger.debug('SIGNAL {}', signal)
+		sendSignal.apply(signal)
 	}
 	def end() {
 		if (!isSignalBegin)
 			throw new RuntimeException('Signal is not in begin status!')
 		
 		isSignalBegin = false
-		sendSignal.apply('''end''')
+		val signal = 'end'
+		logger.debug('SIGNAL {}', signal)
+		sendSignal.apply(signal)
+	}
+
+	def error(String message) {
+		isSignalBegin = false
+		val signal = '''err:«message»'''
+		logger.error('SIGNAL {}', signal)
+		sendSignal.apply(signal)
 	}
 	
 	def <<(ByteBuffer buffer) {
@@ -37,22 +51,30 @@ class SendBuffer implements IChannelBuffer {
 		sendData.apply(buffer)
 	}
 	
-	def sendFile(String filePath) {
+	def void sendFile(String filePath, int bufferSize) {
 		val path = Paths.get(filePath)
 		
-		val fileChannel = FileChannel.open(path)
+		val fileChannel = FileChannel.open(path, StandardOpenOption.READ)
 		try {
 			begin(filePath)
-				val buffer = ByteBuffer.allocateDirect(1024) //set to 1KB
+				val buffer = ByteBuffer.allocate(bufferSize)
 				var position = fileChannel.read(buffer)
 				while (position > 0) {
+					buffer.flip
 					sendData.apply(buffer)
+					
 					buffer.clear
-					position = fileChannel.read(buffer, position)
+					position = fileChannel.read(buffer)
 				}
-			end	
+			end
+		} catch(Exception ex) {
+			error(ex.message)
 		} finally {
 			fileChannel.close
 		}
+	}
+	
+	def void sendFile(String filePath) {
+		sendFile(filePath, 1024 * 1024)//default size to 1MB
 	}
 }

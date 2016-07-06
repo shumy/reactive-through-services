@@ -3,45 +3,74 @@ package rt.pipeline.pipe.channel
 import java.nio.ByteBuffer
 import java.nio.file.Paths
 import java.nio.channels.FileChannel
+import java.nio.file.StandardOpenOption
+import org.slf4j.LoggerFactory
 
 class ReceiveBuffer implements IChannelBuffer {
+	static val logger = LoggerFactory.getLogger(ReceiveBuffer)
+	
 	val ChannelPump pump
 	
 	var isSignalBegin = false
-	var String signalName = null
-	
 	var String filePath = null
 	var FileChannel fileChannel = null
 	
 	var (String) => void onBegin
 	var () => void onEnd
+	var (String) => void onError
 	var (ByteBuffer) => void onData
 	
 	new(ChannelPump pump) {
 		this.pump = pump
 		
-		pump.onSignal = [ msg |
-			if (msg.startsWith('bng')) {
-				if (isSignalBegin)
-					throw new RuntimeException('Signal is already in begin status!')
+		pump.onSignal = [ signal |
+			if (signal.startsWith('bng')) {
+				logger.debug('SIGNAL {}', signal)
+				if (isSignalBegin) {
+					val error = 'Signal is already in begin status!'
+					logger.error(error)
+					
+					closeFile
+					onError?.apply(error)
+					return
+				}
 				
 				isSignalBegin = true
-				signalName = msg.split(':').get(1)
+				val signalName = signal.split(':').get(1)
 				onBegin?.apply(signalName)
-				if (filePath != null) openFile
-			} else {
-				if (!isSignalBegin)
-					throw new RuntimeException('Signal is not in begin status!')
+				if (filePath != null) createFile
+			} else if (signal.startsWith('end')) {
+				logger.debug('SIGNAL {}', signal)
+				if (!isSignalBegin) {
+					val error = 'Signal is not in begin status!'
+					logger.error(error)
+					
+					closeFile
+					onError?.apply(error)
+					return
+				}
 				
-				isSignalBegin = false
-				if (filePath != null) closeFile
+				closeFile
 				onEnd?.apply
+			} else {
+				logger.error('SIGNAL {}', signal)
+				val error = signal.split(':').get(1)
+				
+				//process error...
+				closeFile
+				onError?.apply(error)
 			}
 		]
 		
 		pump.onData = [ buffer |
-			if (!isSignalBegin)
-				throw new RuntimeException('Can not receive data with signal in end status!')
+			if (!isSignalBegin) {
+				val error = 'Can not receive data with signal in end status!'
+				logger.error(error)
+				
+				closeFile
+				onError?.apply(error)
+				return
+			}
 			
 			if (filePath != null) {
 				buffer.writeToFile
@@ -53,6 +82,7 @@ class ReceiveBuffer implements IChannelBuffer {
 	
 	def onBegin((String) => void onBegin) { this.onBegin = onBegin }
 	def onEnd(() => void onEnd) { this.onEnd = onEnd }
+	def onError((String) => void onError) { this.onError = onError }
 	
 	def >>((ByteBuffer) => void onData) {
 		this.onData = onData
@@ -62,9 +92,17 @@ class ReceiveBuffer implements IChannelBuffer {
 		this.filePath = filePath
 	}
 
-	private def void openFile() {
-		val path = Paths.get(filePath)
-		fileChannel = FileChannel.open(path)
+	private def void createFile() {
+		try {
+			val path = Paths.get(filePath)
+			fileChannel = FileChannel.open(path, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)	
+		} catch(Exception ex) {
+			logger.error(ex.message)
+			
+			closeFile
+			//TODO: sen backward error to the SendBuffer!
+			onError?.apply(ex.message)
+		}
 	} 
 
 	private def void writeToFile(ByteBuffer buffer) {
@@ -72,7 +110,11 @@ class ReceiveBuffer implements IChannelBuffer {
 	}
 	
 	private def void closeFile() {
-		fileChannel.close
+		isSignalBegin = false
+		fileChannel?.close
+		
+		filePath = null
+		fileChannel = null
 	}
 	
 	static class ChannelPump {
