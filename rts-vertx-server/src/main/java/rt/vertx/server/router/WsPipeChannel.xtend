@@ -7,19 +7,19 @@ import org.eclipse.xtend.lib.annotations.Accessors
 import org.slf4j.LoggerFactory
 import rt.pipeline.pipe.PipeResource
 import rt.pipeline.pipe.channel.ChannelPump
-import rt.pipeline.pipe.channel.IChannelBuffer
 import rt.pipeline.pipe.channel.IPipeChannel
 import rt.pipeline.pipe.channel.ReceiveBuffer
 import rt.pipeline.pipe.channel.SendBuffer
 
 import static rt.pipeline.pipe.channel.IPipeChannel.PipeChannelInfo.Type.*
+import rt.pipeline.pipe.channel.ChannelBuffer
 
 class WsPipeChannel implements IPipeChannel {
 	static val logger = LoggerFactory.getLogger('WS-CHANNEL')
 	
 	@Accessors val PipeResource resource
 	@Accessors val PipeChannelInfo info
-	@Accessors(PUBLIC_GETTER) var IChannelBuffer buffer
+	@Accessors(PUBLIC_GETTER) var ChannelBuffer buffer
 	@Accessors val String status
 	
 	val ServerWebSocket ws
@@ -33,16 +33,15 @@ class WsPipeChannel implements IPipeChannel {
 		
 		val inPump = new ChannelPump
 		val outPump = new ChannelPump => [
-			onSignal = [ ws.writeFinalTextFrame(it) ]
 			isReady = [ !ws.writeQueueFull ]
+			onSignal = [
+				if (ws.writeQueueFull) logger.error('Send queue is full!')
+				ws.writeFinalTextFrame(it)
+			]
 			onData = [
+				if (ws.writeQueueFull) logger.error('Send queue is full!')
 				val buffer = Buffer.buffer(Unpooled.copiedBuffer(it))
-				
 				ws.writeFinalBinaryFrame(buffer)
-				if (ws.writeQueueFull) {
-					ws.pause logger.trace('PUMP-PAUSE')
-					ws.drainHandler[ ws.resume logger.trace('PUMP-RESUME') ]
-				}
 			]
 		]
 		

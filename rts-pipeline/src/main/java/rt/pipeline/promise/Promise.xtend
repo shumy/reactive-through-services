@@ -2,18 +2,28 @@ package rt.pipeline.promise
 
 class Promise<T> {
 	val PromiseResult<T> result
+	var isInvoked = false
 	
 	package new(PromiseResult<T> result) {
 		this.result = result
 	}
 	
-	def Promise<T> then((T) => void resultCallback) {
-		result.invoke([ resultCallback.apply(it) ], [ println(it) ])
-		return this
+	def void then((T) => void onResolve) {
+		result.onResolve = onResolve
+		
+		if (!isInvoked) {
+			isInvoked = true
+			result.invoke(result)
+		}
 	}
 	
-	def Promise<T> then((T) => void resultCallback, (String) => void errorCallback) {
-		result.invoke([ resultCallback.apply(it) ], [ errorCallback.apply(it) ])
-		return this
+	def void then((T) => void onResolve, (String) => void onReject) {
+		result.onResolve = onResolve
+		result.onReject = onReject
+		
+		if (!isInvoked) {
+			isInvoked = true
+			result.invoke(result)
+		}
 	}
 }

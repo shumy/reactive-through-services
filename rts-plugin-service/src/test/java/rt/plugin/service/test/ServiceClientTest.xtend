@@ -1,11 +1,11 @@
 package rt.plugin.service.test
 
-import org.junit.Test
-import rt.plugin.service.ServiceClient
-import rt.pipeline.IMessageBus.Message
-import rt.pipeline.DefaultMessageBus
 import java.util.Collections
-import rt.pipeline.AsyncUtils
+import org.junit.Test
+import rt.pipeline.DefaultMessageBus
+import rt.pipeline.IMessageBus.Message
+import rt.pipeline.promise.AsyncUtils
+import rt.plugin.service.ServiceClient
 
 class ServiceClientTest {
 	

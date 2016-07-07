@@ -8,7 +8,7 @@ interface IPipeChannel {
 	def PipeResource getResource()
 	def PipeChannelInfo getInfo()
 	def String getStatus()
-	def IChannelBuffer getBuffer()
+	def ChannelBuffer getBuffer()
 	
 	def void close()
 	

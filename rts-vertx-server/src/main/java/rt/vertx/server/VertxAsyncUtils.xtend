@@ -1,7 +1,7 @@
 package rt.vertx.server
 
-import rt.pipeline.AsyncUtils
 import io.vertx.core.Vertx
+import rt.pipeline.promise.AsyncUtils
 
 class VertxAsyncUtils implements AsyncUtils {
 	val Vertx vertx

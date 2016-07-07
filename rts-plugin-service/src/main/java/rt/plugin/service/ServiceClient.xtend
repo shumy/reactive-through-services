@@ -30,7 +30,7 @@ class ServiceClient {
 		val address = redirects.get(srvPath) ?: server
 		
 		val srvProxy = Proxy.newProxyInstance(srvProxyInterface.classLoader, #[srvProxyInterface])[ proxy, srvMeth, srvArgs |
-			val PromiseResult<Object> result = [ resolve, reject |
+			val PromiseResult<Object> result = [
 				msgID++
 				val sendMsg = new Message => [id=msgID clt=uuid path=srvPath cmd=srvMeth.name args=srvArgs]
 				
@@ -40,9 +40,9 @@ class ServiceClient {
 						if (anPublic == null)
 							throw new RuntimeException('@Public annotation with return type is mandatory for a ServiceProxy!')
 						
-						resolve.apply(replyMsg.result(anPublic.retType))
+						resolve(replyMsg.result(anPublic.retType))
 					} else {
-						reject.apply(replyMsg.result(String))
+						reject(replyMsg.result(String))
 					}
 				]
 			] 

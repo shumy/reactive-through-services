@@ -5,49 +5,38 @@ import java.nio.channels.FileChannel
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
 import org.slf4j.LoggerFactory
+import rt.pipeline.promise.Promise
 
-class ReceiveBuffer implements IChannelBuffer {
+class ReceiveBuffer extends ChannelBuffer {
 	static val logger = LoggerFactory.getLogger('BUFFER-RECEIVE')
 	
-	val ChannelPump inPump
-	val ChannelPump outPump
-	
-	var isSignalBegin = false
-	var String filePath = null
-	var FileChannel fileChannel = null
-	
 	var (String) => void onBegin
-	var () => void onEnd
-	var (String) => void onError
 	var (ByteBuffer) => void onData
 	
 	new(ChannelPump inPump, ChannelPump outPump) {
-		this.outPump = outPump
-		this.inPump = inPump
+		super(inPump, outPump)
 		
 		inPump.onSignal = [
 			logger.debug('SIGNAL {}', it)
-			if (startsWith('bng')) {
+			if (startsWith(SIGNAL_BEGIN)) {
 				if (isSignalBegin) {
 					error('Signal is already in begin status!')
 					return
 				}
 				
 				isSignalBegin = true
-				val signalName = split(':').get(1)
+				val signalName = split(':', 2).get(1)
 				onBegin?.apply(signalName)
-				if (filePath != null) createFile
-			} else if (startsWith('end')) {
+			} else if (startsWith(SIGNAL_END)) {
 				if (!isSignalBegin) {
 					error('Signal is not in begin status!')
 					return
 				}
 				
-				closeFile
-				onEnd?.apply
-			} else if (startsWith('err')) {
-				val error = split(':').get(1)
-				errorNoSignal(error)
+				endOk(SIGNAL_END_CONFIRM)
+			} else if (startsWith(SIGNAL_ERROR)) {
+				val error = split(':', 2).get(1)
+				endError(error, false)
 			}
 		]
 		
@@ -57,62 +46,39 @@ class ReceiveBuffer implements IChannelBuffer {
 			}
 			
 			logger.debug('SIGNAL-DATA {}B', limit)
-			if (filePath != null) writeToFile else onData?.apply(it)
+			if (fileChannel != null) writeBufferToFile else onData?.apply(it)
 		]
 	}
 	
 	def void onBegin((String) => void onBegin) { this.onBegin = onBegin }
 	def void onEnd(() => void onEnd) { this.onEnd = onEnd }
-	override onError((String) => void onError) { this.onError = onError }
-	
-	override error(String message) {
-		errorNoSignal(message)
-		outPump.pushSignal('''err:«message»''')
-	}
-	
-	override close() {
-		if (isSignalBegin)
-			errorNoSignal('Irregular close!')
-	}
 	
 	def >>((ByteBuffer) => void onData) {
 		this.onData = onData
+		outPump.pushSignal(SIGNAL_BEGIN_CONFIRM)
 	}
 	
-	def void writeToFile(String filePath) {
-		//TODO: secure the filesystem path
-		this.filePath = filePath
-	}
-	
-	private def void createFile() {
-		try {
-			val path = Paths.get(filePath)
-			fileChannel = FileChannel.open(path, StandardOpenOption.CREATE, StandardOpenOption.WRITE)	
-		} catch(Exception ex) {
-			error('''«ex.class.simpleName»: «ex.message»''')
-		}
-	}
-
-	private def void writeToFile(ByteBuffer buffer) {
-		try {
-			fileChannel.write(buffer)	
-		} catch(Exception ex) {
-			error('''«ex.class.simpleName»: «ex.message»''')
-		}
-	}
-	
-	private def void closeFile() {
-		isSignalBegin = false
-		fileChannel?.close
+	def Promise<Void> writeToFile(String filePath) {
+		filePromise = [
+			//TODO: secure the filesystem path
+			try {
+				val path = Paths.get(filePath)
+				fileChannel = FileChannel.open(path, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)
+				outPump.pushSignal(SIGNAL_BEGIN_CONFIRM)	
+			} catch(Exception ex) {
+				endError('''«ex.class.simpleName»: «ex.message»''', true)
+				return
+			}
+		]
 		
-		filePath = null
-		fileChannel = null
+		return filePromise.promise
 	}
 	
-	private def void errorNoSignal(String message) {
-		logger.error('ERROR {}', message)
-		
-		closeFile
-		onError?.apply(message)
+	private def void writeBufferToFile(ByteBuffer buffer) {
+		try {
+			fileChannel.write(buffer)
+		} catch(Exception ex) {
+			endError('''«ex.class.simpleName»: «ex.message»''', true)
+		}
 	}
 }

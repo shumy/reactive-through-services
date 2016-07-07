@@ -8,19 +8,19 @@ import org.java_websocket.handshake.ServerHandshake
 import org.slf4j.LoggerFactory
 import rt.pipeline.pipe.PipeResource
 import rt.pipeline.pipe.channel.ChannelPump
-import rt.pipeline.pipe.channel.IChannelBuffer
 import rt.pipeline.pipe.channel.IPipeChannel
 import rt.pipeline.pipe.channel.ReceiveBuffer
 import rt.pipeline.pipe.channel.SendBuffer
 
 import static rt.pipeline.pipe.channel.IPipeChannel.PipeChannelInfo.Type.*
+import rt.pipeline.pipe.channel.ChannelBuffer
 
 class ClientPipeChannel implements IPipeChannel {
 	static val logger = LoggerFactory.getLogger('CLIENT-CHANNEL')
 	
 	@Accessors val PipeResource resource
 	@Accessors val PipeChannelInfo info
-	@Accessors(PUBLIC_GETTER) var IChannelBuffer buffer
+	@Accessors(PUBLIC_GETTER) var ChannelBuffer buffer
 	@Accessors val String status
 	
 	val URI url
@@ -72,7 +72,6 @@ class ClientPipeChannel implements IPipeChannel {
 			}
 			
 			override onMessage(ByteBuffer byteMsg) {
-				println('DATA-IN:' + byteMsg.limit)
 				inPump.pushData(byteMsg)
 			}
 		}

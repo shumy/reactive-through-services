@@ -11,7 +11,7 @@ import org.junit.Test
 import rt.pipeline.pipe.channel.ChannelPump
 import rt.pipeline.pipe.channel.ReceiveBuffer
 import rt.pipeline.pipe.channel.SendBuffer
-import rt.pipeline.AsyncUtils
+import rt.pipeline.promise.AsyncUtils
 
 class ChannelBufferTest {
 	val outPump = new ChannelPump
@@ -22,18 +22,23 @@ class ChannelBufferTest {
 		val text = 'Just a string test!'
 		
 		val sb = new StringBuilder
+		val receiver = new ReceiveBuffer(outPump, inPump)
+		val sender = new SendBuffer(outPump, inPump)
 		
-		new ReceiveBuffer(outPump, inPump) => [
-			onBegin[ sb.append('begin: ' + it + ' ') ]
-				it >> [ sb.append(new String(array)) ]
+		receiver => [
+			onBegin[
+				sb.append('begin: ' + it + ' ')
+				receiver >> [ sb.append(new String(array)) ]
+			]
 			onEnd[ sb.append(' end') ]
 		]
 		
 		val buffer = ByteBuffer.wrap(text.getBytes('UTF-8'))
-		new SendBuffer(outPump, inPump) => [
-			begin('signal')
+		sender => [
+			begin('signal')[
 				it << buffer
-			end
+				end
+			]
 		]
 		
 		Assert.assertEquals(sb.toString, 'begin: signal Just a string test! end')
@@ -43,8 +48,10 @@ class ChannelBufferTest {
 	def void readFileAndTransfer() {
 		AsyncUtils.setDefault
 		val sb = new StringBuilder
+		val receiver = new ReceiveBuffer(outPump, inPump)
+		val sender = new SendBuffer(outPump, inPump)
 		
-		new ReceiveBuffer(outPump, inPump) => [
+		receiver => [
 			onBegin[ sb.append('begin: ' + it + ' ') ]
 				it >> [
 					val textByte = Arrays.copyOf(array, limit)
@@ -53,11 +60,12 @@ class ChannelBufferTest {
 			onEnd[ sb.append(' end') ]
 		]
 		
-		new SendBuffer(outPump, inPump) => [
+		sender => [
 			sendFile('./test.txt', 5).then[ sb.append(' OK') ]
 		]
 		
-		AsyncUtils.timer(500)[
+		AsyncUtils.timer(1500)[
+			println(sb.toString)
 			Assert.assertEquals(sb.toString, 'begin: ./test.txt Just a string test! end OK')
 		]
 	}
@@ -71,8 +79,10 @@ class ChannelBufferTest {
 		file.delete
 		
 		val sb = new StringBuilder
+		val receiver = new ReceiveBuffer(outPump, inPump)
+		val sender = new SendBuffer(outPump, inPump)
 		
-		new ReceiveBuffer(outPump, inPump) => [
+		receiver => [
 			onBegin[ sb.append('begin: ' + it + ' ') ]
 				writeToFile('./result.txt')
 				it >> [ //should not write in here, because of the writeToFile
@@ -82,7 +92,7 @@ class ChannelBufferTest {
 			onEnd[ sb.append(' end') ]
 		]
 		
-		new SendBuffer(outPump, inPump) => [
+		sender => [
 			sendFile('./test.txt', 5).then[ sb.append(' OK')]
 		]
 		
