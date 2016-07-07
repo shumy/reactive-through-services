@@ -19,6 +19,7 @@ class ChannelBufferTest {
 	
 	@Test
 	def void dataTransfer() {
+		AsyncUtils.setDefault
 		val text = 'Just a string test!'
 		
 		val sb = new StringBuilder
@@ -52,11 +53,13 @@ class ChannelBufferTest {
 		val sender = new SendBuffer(outPump, inPump)
 		
 		receiver => [
-			onBegin[ sb.append('begin: ' + it + ' ') ]
-				it >> [
+			onBegin[
+				sb.append('begin: ' + it + ' ')
+				receiver >> [
 					val textByte = Arrays.copyOf(array, limit)
 					sb.append(new String(textByte))
 				]
+			]
 			onEnd[ sb.append(' end') ]
 		]
 		
@@ -64,7 +67,7 @@ class ChannelBufferTest {
 			sendFile('./test.txt', 5).then[ sb.append(' OK') ]
 		]
 		
-		AsyncUtils.timer(1500)[
+		AsyncUtils.timer(500)[
 			println(sb.toString)
 			Assert.assertEquals(sb.toString, 'begin: ./test.txt Just a string test! end OK')
 		]
@@ -83,12 +86,14 @@ class ChannelBufferTest {
 		val sender = new SendBuffer(outPump, inPump)
 		
 		receiver => [
-			onBegin[ sb.append('begin: ' + it + ' ') ]
-				writeToFile('./result.txt')
-				it >> [ //should not write in here, because of the writeToFile
+			onBegin[
+				sb.append('begin: ' + it + ' ')
+				receiver.writeToFile('./result.txt')
+				receiver >> [ //should not write in here, because of the writeToFile
 					val textByte = Arrays.copyOf(array, limit)
 					sb.append(new String(textByte))
 				]
+			]
 			onEnd[ sb.append(' end') ]
 		]
 		

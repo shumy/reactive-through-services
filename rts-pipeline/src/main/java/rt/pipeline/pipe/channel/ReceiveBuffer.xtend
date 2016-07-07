@@ -13,36 +13,40 @@ class ReceiveBuffer extends ChannelBuffer {
 	var (String) => void onBegin
 	var (ByteBuffer) => void onData
 	
+	var needConfirmation = false
+	
 	new(ChannelPump inPump, ChannelPump outPump) {
 		super(inPump, outPump)
 		
 		inPump.onSignal = [
 			logger.debug('SIGNAL {}', it)
 			if (startsWith(SIGNAL_BEGIN)) {
-				if (isSignalBegin) {
-					error('Signal is already in begin status!')
+				if (isLocked) {
+					error('Channel is already locked!')
 					return
 				}
 				
-				isSignalBegin = true
+				needConfirmation = true
+				isLocked = true
 				val signalName = split(':', 2).get(1)
 				onBegin?.apply(signalName)
 			} else if (startsWith(SIGNAL_END)) {
-				if (!isSignalBegin) {
-					error('Signal is not in begin status!')
+				if (!isLocked) {
+					error('Channel is not locked!')
 					return
 				}
 				
 				endOk(SIGNAL_END_CONFIRM)
 			} else if (startsWith(SIGNAL_ERROR)) {
 				val error = split(':', 2).get(1)
-				endError(error, false)
+				endError(error)
 			}
 		]
 		
 		inPump.onData = [
-			if (!isSignalBegin) {
-				error('Can not receive data with signal in end status!')
+			if (!isLocked) {
+				error('Can not receive data with channel in unlocked state!')
+				return
 			}
 			
 			logger.debug('SIGNAL-DATA {}B', limit)
@@ -55,7 +59,7 @@ class ReceiveBuffer extends ChannelBuffer {
 	
 	def >>((ByteBuffer) => void onData) {
 		this.onData = onData
-		outPump.pushSignal(SIGNAL_BEGIN_CONFIRM)
+		if (needConfirmation) { needConfirmation = false outPump.pushSignal(SIGNAL_BEGIN_CONFIRM) }
 	}
 	
 	def Promise<Void> writeToFile(String filePath) {
@@ -63,11 +67,10 @@ class ReceiveBuffer extends ChannelBuffer {
 			//TODO: secure the filesystem path
 			try {
 				val path = Paths.get(filePath)
-				fileChannel = FileChannel.open(path, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)
-				outPump.pushSignal(SIGNAL_BEGIN_CONFIRM)	
+				fileChannel = FileChannel.open(path, StandardOpenOption.CREATE, StandardOpenOption.WRITE)
+				if (needConfirmation) { needConfirmation = false outPump.pushSignal(SIGNAL_BEGIN_CONFIRM) }
 			} catch(Exception ex) {
-				endError('''«ex.class.simpleName»: «ex.message»''', true)
-				return
+				error('''«ex.class.simpleName»: «ex.message»''')
 			}
 		]
 		
@@ -78,7 +81,7 @@ class ReceiveBuffer extends ChannelBuffer {
 		try {
 			fileChannel.write(buffer)
 		} catch(Exception ex) {
-			endError('''«ex.class.simpleName»: «ex.message»''', true)
+			error('''«ex.class.simpleName»: «ex.message»''')
 		}
 	}
 }

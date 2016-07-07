@@ -16,11 +16,11 @@ class VertxAsyncUtils implements AsyncUtils {
 		vertx.setPeriodic(delay)[ callback.apply ]
 	}
 	
-	override setAsyncWhile(() => boolean evaluate, () => void onWhileTrue, () => void onReturn, (Exception) => void onError) {
+	override setAsyncWhile(() => boolean evaluate, () => boolean onWhileTrue, () => void onReturn, (Exception) => void onError) {
 		try {
 			if (evaluate.apply) {
-				onWhileTrue.apply
-				setTimer(0, [ setAsyncWhile(evaluate, onWhileTrue, onReturn, onError) ])
+				if (onWhileTrue.apply)
+					setTimer(0, [ setAsyncWhile(evaluate, onWhileTrue, onReturn, onError) ])
 			} else {
 				onReturn.apply
 			}

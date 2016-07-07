@@ -13,6 +13,8 @@ import static rt.pipeline.promise.AsyncUtils.*
 class SendBuffer extends ChannelBuffer {
 	static val logger = LoggerFactory.getLogger('BUFFER-SEND')
 	
+	var needConfirmation = false
+	
 	new(ChannelPump outPump, ChannelPump inPump) {
 		super(inPump, outPump)
 		
@@ -20,45 +22,55 @@ class SendBuffer extends ChannelBuffer {
 		inPump.onSignal = [
 			logger.debug('BACK-SIGNAL {}', it)
 			if (startsWith(SIGNAL_BEGIN_CONFIRM)) {
-				onReady?.apply
+				if (needConfirmation) {
+					needConfirmation = false
+					onReady?.apply
+				}
 			} else if (startsWith(SIGNAL_END_CONFIRM)) {
-				endOk(null)
+				if (needConfirmation) {
+					needConfirmation = false
+					endOk
+				}
 			} else if (startsWith(SIGNAL_ERROR)) {
+				needConfirmation = false
 				val error = split(':', 2).get(1)
-				endError(error, false)
+				endError(error)
 			}
 		]
 	}
 	
 	def void begin(String name, () => void onReady) {
-		if (isSignalBegin) {
-			endError('Signal is already in begin status!', false)
-			return
-		}
-		
-		isSignalBegin = true
-		val signal = '''«SIGNAL_BEGIN»:«name»'''
-		logger.debug('SIGNAL {}', signal)
-		
-		this.onReady = onReady
-		outPump.pushSignal(signal)
-		/*TODO: process begin reponse timeout?*/
+		//wait for channel unlock
+		waitUntil([ !isLocked ], [
+			isLocked = true
+			val signal = '''«SIGNAL_BEGIN»:«name»'''
+			logger.debug('SIGNAL {}', signal)
+			
+			needConfirmation = true
+			this.onReady = onReady
+			timer(3000)[ if (needConfirmation) { needConfirmation = false endError('Begin confirmation timeout!') }]
+			outPump.pushSignal(signal)
+		])
 	}
 	def void end() {
-		if (!isSignalBegin) {
-			endError('Signal is not in begin status!', false)
+		if (!isLocked) {
+			endError('Channel is not locked!')
 			return
 		}
 		
-		isSignalBegin = false
+		isLocked = false
 		logger.debug('SIGNAL {}', SIGNAL_END)
+		
+		needConfirmation = true
+		timer(3000)[ if (needConfirmation) { needConfirmation = false endError('End confirmation timeout!') }]
 		outPump.pushSignal(SIGNAL_END)
-		/*TODO: process end reponse timeout?*/
 	}
 	
 	def <<(ByteBuffer buffer) {
-		if (!isSignalBegin)
-			throw new RuntimeException('Can not send data with signal in end status!')
+		if (!isLocked) {
+			endError('Can not send data with channel in unlocked state!')
+			return
+		}
 		
 		outPump.pushData(buffer)
 	}
@@ -71,7 +83,7 @@ class SendBuffer extends ChannelBuffer {
 			try {
 				fileChannel = FileChannel.open(path, StandardOpenOption.READ)	
 			} catch(Exception ex) {
-				endError('''«ex.class.simpleName»: «ex.message»''', false)
+				endError('''«ex.class.simpleName»: «ex.message»''')
 				return
 			}
 			
@@ -81,17 +93,18 @@ class SendBuffer extends ChannelBuffer {
 				val pos = new AtomicInteger(fc.read(buffer))
 				
 				asyncWhile([ pos.get > 0 ],[
-					if (!isSignalBegin) throw new RuntimeException('Closed before transfer conclusion!')
+					if (!isLocked) { endError('Unlocked before transfer conclusion!') return false }
 					if (outPump.ready) {
 						buffer.flip
 						outPump.pushData(buffer)
 						
 						buffer.clear
-						pos.set = fc.read(buffer)	
+						pos.set = fc.read(buffer)
 					}
+					return true
 				],
 				[ end ],
-				[ endError('''«class.simpleName»: «message»''', true) ])
+				[ error('''«class.simpleName»: «message»''') ])
 			]
 		]
 		

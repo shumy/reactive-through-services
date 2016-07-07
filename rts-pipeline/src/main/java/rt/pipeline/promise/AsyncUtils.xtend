@@ -17,7 +17,7 @@ interface AsyncUtils {
 		local.get.setPeriodic(delay, callback)
 	}
 	
-	static def void asyncWhile(() => boolean evaluate, () => void onWhileTrue, () => void onReturn, (Exception) => void onError) {
+	static def void asyncWhile(() => boolean evaluate, () => boolean onWhileTrue, () => void onReturn, (Exception) => void onError) {
 		local.get.setAsyncWhile(evaluate, onWhileTrue, onReturn, onError)
 	}
 	
@@ -27,7 +27,7 @@ interface AsyncUtils {
 	
 	def void setTimer(long delay, () => void callback)
 	def void setPeriodic(long delay, () => void callback)
-	def void setAsyncWhile(() => boolean evaluate, () => void onWhileTrue, () => void onReturn, (Exception) => void onError)
+	def void setAsyncWhile(() => boolean evaluate, () => boolean onWhileTrue, () => void onReturn, (Exception) => void onError)
 	def void setWaitUntil(() => boolean evaluate, () => void onReturn)
 	
 	static class DefaultAsyncUtils implements AsyncUtils {
@@ -39,10 +39,9 @@ interface AsyncUtils {
 			throw new UnsupportedOperationException("TODO: auto-generated method stub")
 		}
 		
-		override setAsyncWhile(() => boolean evaluate, () => void onWhileTrue, () => void onReturn, (Exception) => void onError) {
+		override setAsyncWhile(() => boolean evaluate, () => boolean onWhileTrue, () => void onReturn, (Exception) => void onError) {
 			try {
-				while (evaluate.apply)
-					onWhileTrue.apply
+				while (evaluate.apply && onWhileTrue.apply)
 				onReturn.apply
 			} catch(Exception ex) {
 				onError.apply(ex)
@@ -50,7 +49,8 @@ interface AsyncUtils {
 		}
 		
 		override setWaitUntil(() => boolean evaluate, () => void onReturn) {
-			throw new UnsupportedOperationException("TODO: auto-generated method stub")
+			while(!evaluate.apply) {}
+			onReturn.apply
 		}
 	}
 }

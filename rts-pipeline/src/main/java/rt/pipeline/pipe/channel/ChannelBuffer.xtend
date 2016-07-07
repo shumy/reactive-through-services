@@ -18,7 +18,7 @@ abstract class ChannelBuffer {
 	protected val ChannelPump inPump
 	protected val ChannelPump outPump
 	
-	protected var isSignalBegin = false
+	protected var isLocked = false
 	protected var FileChannel fileChannel = null
 	protected var PromiseResult<Void> filePromise = null
 	
@@ -38,9 +38,11 @@ abstract class ChannelBuffer {
 	}
 	
 	def void close() {
-		if (isSignalBegin)
+		if (isLocked)
 			endError('Irregular close!', false)
 	}
+	
+	protected def void endOk() { endOk(null) }
 	
 	protected def void endOk(String signal) {
 		logger.debug('END')
@@ -54,7 +56,9 @@ abstract class ChannelBuffer {
 		if (signal != null) outPump.pushSignal(signal)
 	}
 	
-	protected def void endError(String error, boolean sendSignal) {
+	protected def void endError(String error) { endError(error, false) }
+	
+	private def void endError(String error, boolean sendSignal) {
 		logger.error('END {}', error)
 		endProcess
 		onError?.apply(error)
@@ -67,7 +71,7 @@ abstract class ChannelBuffer {
 	}
 	
 	private def void endProcess() {
-		isSignalBegin = false
+		isLocked = false
 		fileChannel?.close
 		fileChannel = null
 		onReady = null
