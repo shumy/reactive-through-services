@@ -39,7 +39,7 @@ class ClientPipeChannel implements IPipeChannel {
 		val outPump = new ChannelPump => [
 			onSignal = [ ws.send(it) ]
 			onData = [
-				//TODO: buffer array can be aout of limit!
+				//TODO: buffer array can be out of limit!
 				ws.send(array)
 			]
 		]
@@ -72,6 +72,7 @@ class ClientPipeChannel implements IPipeChannel {
 			}
 			
 			override onMessage(ByteBuffer byteMsg) {
+				println('DATA-IN:' + byteMsg.limit)
 				inPump.pushData(byteMsg)
 			}
 		}

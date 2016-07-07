@@ -7,7 +7,7 @@ import java.nio.file.StandardOpenOption
 import org.slf4j.LoggerFactory
 
 class ReceiveBuffer implements IChannelBuffer {
-	static val logger = LoggerFactory.getLogger(ReceiveBuffer)
+	static val logger = LoggerFactory.getLogger('BUFFER-RECEIVE')
 	
 	val ChannelPump inPump
 	val ChannelPump outPump
@@ -54,9 +54,9 @@ class ReceiveBuffer implements IChannelBuffer {
 		inPump.onData = [
 			if (!isSignalBegin) {
 				error('Can not receive data with signal in end status!')
-				return
 			}
 			
+			logger.debug('SIGNAL-DATA {}B', limit)
 			if (filePath != null) writeToFile else onData?.apply(it)
 		]
 	}
@@ -87,9 +87,9 @@ class ReceiveBuffer implements IChannelBuffer {
 	private def void createFile() {
 		try {
 			val path = Paths.get(filePath)
-			fileChannel = FileChannel.open(path, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)	
+			fileChannel = FileChannel.open(path, StandardOpenOption.CREATE, StandardOpenOption.WRITE)	
 		} catch(Exception ex) {
-			error(ex.message)
+			error('''«ex.class.simpleName»: «ex.message»''')
 		}
 	}
 
@@ -97,7 +97,7 @@ class ReceiveBuffer implements IChannelBuffer {
 		try {
 			fileChannel.write(buffer)	
 		} catch(Exception ex) {
-			error(ex.message)
+			error('''«ex.class.simpleName»: «ex.message»''')
 		}
 	}
 	

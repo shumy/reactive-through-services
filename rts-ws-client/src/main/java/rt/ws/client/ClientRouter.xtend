@@ -123,14 +123,14 @@ class ClientRouter implements IServiceClientFactory {
 					return
 				}
 				
-				val chInfo = chReqMsg.result(PipeChannelInfo)
-				logger.debug('CHANNEL-BIND {}', chInfo.uuid)
+				val chInfo = chReqMsg.result(PipeChannelInfo).invertType
 				
 				val channel = new ClientPipeChannel(resource, chInfo, client)
 				addChannel(channel)
 				process(new Message => [ path=ChannelService.name cmd='bind' result=channel ])
 				
 				channel.connect
+				logger.debug('CHANNEL-BIND {}', chInfo.uuid)
 			]
 		]
 		ready.set(true)

@@ -11,6 +11,7 @@ import org.junit.Test
 import rt.pipeline.pipe.channel.ChannelPump
 import rt.pipeline.pipe.channel.ReceiveBuffer
 import rt.pipeline.pipe.channel.SendBuffer
+import rt.pipeline.AsyncUtils
 
 class ChannelBufferTest {
 	val outPump = new ChannelPump
@@ -40,6 +41,7 @@ class ChannelBufferTest {
 	
 	@Test
 	def void readFileAndTransfer() {
+		AsyncUtils.setDefault
 		val sb = new StringBuilder
 		
 		new ReceiveBuffer(outPump, inPump) => [
@@ -52,14 +54,17 @@ class ChannelBufferTest {
 		]
 		
 		new SendBuffer(outPump, inPump) => [
-			sendFile('./test.txt', 5)
+			sendFile('./test.txt', 5).then[ sb.append(' OK') ]
 		]
 		
-		Assert.assertEquals(sb.toString, 'begin: ./test.txt Just a string test! end')
+		AsyncUtils.timer(500)[
+			Assert.assertEquals(sb.toString, 'begin: ./test.txt Just a string test! end OK')
+		]
 	}
 	
 	@Test
 	def void readFileTransferAndWrite() {
+		AsyncUtils.setDefault
 		val text = 'Just a string test!'
 		
 		val file = new File('./result.txt')
@@ -78,17 +83,19 @@ class ChannelBufferTest {
 		]
 		
 		new SendBuffer(outPump, inPump) => [
-			sendFile('./test.txt', 5)
+			sendFile('./test.txt', 5).then[ sb.append(' OK')]
 		]
 		
-		Assert.assertEquals(sb.toString, 'begin: ./test.txt  end')
-		
-		//assert that file content is ok
-		val fileBuffer = ByteBuffer.allocate(19)
-		val fileChannel = FileChannel.open(Paths.get('./result.txt'), StandardOpenOption.READ)
-		fileChannel.read(fileBuffer)
-		Assert.assertEquals(new String(fileBuffer.array), text)
-		
-		file.delete
+		AsyncUtils.timer(500)[
+			Assert.assertEquals(sb.toString, 'begin: ./test.txt  end OK')
+			
+			//assert that file content is ok
+			val fileBuffer = ByteBuffer.allocate(19)
+			val fileChannel = FileChannel.open(Paths.get('./result.txt'), StandardOpenOption.READ)
+			fileChannel.read(fileBuffer)
+			Assert.assertEquals(new String(fileBuffer.array), text)
+			
+			file.delete
+		]
 	}
 }

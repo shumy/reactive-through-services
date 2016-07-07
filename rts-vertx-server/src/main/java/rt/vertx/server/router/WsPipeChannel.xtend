@@ -34,9 +34,15 @@ class WsPipeChannel implements IPipeChannel {
 		val inPump = new ChannelPump
 		val outPump = new ChannelPump => [
 			onSignal = [ ws.writeFinalTextFrame(it) ]
+			isReady = [ !ws.writeQueueFull ]
 			onData = [
 				val buffer = Buffer.buffer(Unpooled.copiedBuffer(it))
-				ws.writeBinaryMessage(buffer)
+				
+				ws.writeFinalBinaryFrame(buffer)
+				if (ws.writeQueueFull) {
+					ws.pause logger.trace('PUMP-PAUSE')
+					ws.drainHandler[ ws.resume logger.trace('PUMP-RESUME') ]
+				}
 			]
 		]
 		
@@ -50,8 +56,6 @@ class WsPipeChannel implements IPipeChannel {
 		ws.frameHandler[
 			if (binary) {
 				val buffer = binaryData.byteBuf.nioBuffer
-				println('P: ' + buffer.position + ' L: ' + buffer.limit)
-				//TODO: do I need to flip the buffer?
 				inPump.pushData(buffer)
 			} else {
 				inPump.pushSignal(textData)

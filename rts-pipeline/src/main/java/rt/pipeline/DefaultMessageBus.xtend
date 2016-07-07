@@ -4,7 +4,6 @@ import java.util.HashMap
 import java.util.Set
 import java.util.HashSet
 import rt.pipeline.IMessageBus.Message
-import java.util.Timer
 import java.util.concurrent.ConcurrentHashMap
 
 class DefaultMessageBus implements IMessageBus {
@@ -24,17 +23,14 @@ class DefaultMessageBus implements IMessageBus {
 		msg.typ = Message.SEND
 		listeners.get(address)?.forEach[ send(msg) ]
 		
-		new Timer().schedule([
+		AsyncUtils.timer(3000)[
 			val replyTimeoutMsg = new Message => [ id=msg.id clt=msg.clt typ=Message.REPLY cmd=Message.CMD_TIMEOUT result='''Timeout for «msg.path» -> «msg.cmd»'''.toString]
 			replyTimeoutMsg.reply
-		], 3000)
+		]
 	}
 	
 	override reply(Message msg) {
 		val replyID = msg.replyID
-		
-		val replyFun = replyListeners.remove(replyID)
-		replyFun?.apply(msg)
 		
 		val replyOKBackFun = replyListeners.remove(replyID + '/reply-ok')
 		val replyERRORBackFun = replyListeners.remove(replyID + '/reply-error')
@@ -45,6 +41,9 @@ class DefaultMessageBus implements IMessageBus {
 		} else {
 			replyERRORBackFun?.apply(msg)
 		}
+		
+		val replyFun = replyListeners.remove(replyID)
+		replyFun?.apply(msg)
 	}
 	
 	override replyListener(String replyID, (Message) => void listener) {

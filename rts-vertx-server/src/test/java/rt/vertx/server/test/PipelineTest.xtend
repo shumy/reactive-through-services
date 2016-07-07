@@ -22,7 +22,7 @@ class PipelineTest {
 	public val rule = new RunTestOnContext
 	
 	@Test
-	def compareMessages() {
+	def void compareMessages() {
 		val msg1 = new Message => [id=1L cmd='ping' clt='source']
 		val msg2 = new Message => [id=1L cmd='ping' clt='source']
 		Assert.assertEquals(gson.toJson(msg1), gson.toJson(msg2))

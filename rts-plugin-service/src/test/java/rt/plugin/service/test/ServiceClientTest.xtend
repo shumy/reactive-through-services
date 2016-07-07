@@ -5,11 +5,14 @@ import rt.plugin.service.ServiceClient
 import rt.pipeline.IMessageBus.Message
 import rt.pipeline.DefaultMessageBus
 import java.util.Collections
+import rt.pipeline.AsyncUtils
 
 class ServiceClientTest {
 	
 	@Test
 	def void verifyCall() {
+		AsyncUtils.setDefault
+		
 		val mb = new DefaultMessageBus
 		mb.listener('clt:address')[ msg |
 			val reply = switch msg.cmd {

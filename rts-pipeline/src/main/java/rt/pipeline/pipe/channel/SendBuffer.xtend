@@ -4,10 +4,15 @@ import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
+import java.util.concurrent.atomic.AtomicInteger
 import org.slf4j.LoggerFactory
 
+import static rt.pipeline.AsyncUtils.*
+import rt.pipeline.promise.Promise
+import rt.pipeline.promise.PromiseResult
+
 class SendBuffer implements IChannelBuffer {
-	static val logger = LoggerFactory.getLogger(SendBuffer)
+	static val logger = LoggerFactory.getLogger('BUFFER-SEND')
 	
 	val ChannelPump outPump
 	val ChannelPump inPump
@@ -74,32 +79,52 @@ class SendBuffer implements IChannelBuffer {
 		outPump.pushData(buffer)
 	}
 	
-	def void sendFile(String filePath, int bufferSize) {
-		//TODO: secure the filesystem path
-		val path = Paths.get(filePath)
-		
-		val fileChannel = FileChannel.open(path, StandardOpenOption.READ)
-		try {
+	def Promise<Void> sendFile(String filePath, int bufferSize) {
+		val PromiseResult<Void> result = [ resolve, reject |
+			//TODO: secure the filesystem path
+			val path = Paths.get(filePath)
+			
+			var FileChannel fileChannel = null
+			try {
+				fileChannel = FileChannel.open(path, StandardOpenOption.READ)	
+			} catch(Exception ex) {
+				val errorMsg = '''«ex.class.simpleName»: «ex.message»'''
+				errorNoSignal(errorMsg)
+				reject.apply(errorMsg)
+				return
+			}
+			
 			begin(filePath)
+				val fc = fileChannel
 				val buffer = ByteBuffer.allocate(bufferSize)
-				var position = fileChannel.read(buffer)
-				while (position > 0) {
-					buffer.flip
-					outPump.pushData(buffer)
-					
-					buffer.clear
-					position = fileChannel.read(buffer)
-				}
-			end
-		} catch(Exception ex) {
-			error(ex.message)
-		} finally {
-			fileChannel.close
-		}
+				val pos = new AtomicInteger(fc.read(buffer))
+				
+				//TODO: detect async errors...
+				asyncWhile([ pos.get > 0 ],[
+					if (outPump.ready) {
+						buffer.flip
+						outPump.pushData(buffer)
+						
+						buffer.clear
+						pos.set = fc.read(buffer)	
+					}
+				],
+			[ fc.close end resolve.apply(null) ],
+			[
+				//on while error
+				printStackTrace
+				val errorMsg = '''«class.simpleName»: «message»'''
+				fc.close
+				error(errorMsg)
+				reject.apply(errorMsg)
+			])
+		]
+		
+		return result.promise
 	}
 	
-	def void sendFile(String filePath) {
-		sendFile(filePath, 1024 * 1024)//default size to 1MB
+	def sendFile(String filePath) {
+		return sendFile(filePath, 1024 * 1024)//default size to 1MB
 	}
 	
 	private def void errorNoSignal(String message) {
