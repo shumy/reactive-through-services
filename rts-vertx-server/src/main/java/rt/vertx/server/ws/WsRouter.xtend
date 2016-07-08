@@ -5,6 +5,7 @@ import java.util.HashMap
 import org.eclipse.xtend.lib.annotations.Accessors
 import org.slf4j.LoggerFactory
 import rt.pipeline.DefaultMessageConverter
+import rt.pipeline.IServerRouter
 import rt.pipeline.pipe.PipeResource
 import rt.pipeline.pipe.Pipeline
 import rt.pipeline.pipe.channel.IPipeChannel
@@ -12,7 +13,7 @@ import rt.pipeline.pipe.channel.IPipeChannel.PipeChannelInfo
 
 import static extension rt.vertx.server.web.URIParserHelper.*
 
-class WsRouter {
+class WsRouter implements IServerRouter {
 	static val logger = LoggerFactory.getLogger('WS-ROUTER')
 	
 	@Accessors val resources = new HashMap<String, PipeResource>
@@ -21,6 +22,9 @@ class WsRouter {
 	package val String route
 	package val HttpServer server
 	package val Pipeline pipeline
+	
+	var (PipeResource) => void onOpen = null
+	var (String) => void onClose = null
 	
 	//channels info...
 	val chRequests = new HashMap<String, PipeChannelInfo>
@@ -33,12 +37,13 @@ class WsRouter {
 		
 		server.websocketHandler[ ws |
 			if (ws.uri.route != route) {
+				logger.error('Invalid route for uri: {}', ws.uri)
 				ws.close return
 			}
 			
-			//TODO: guarantee clientUUID
 			val clientUUID = ws.query.queryParams.get('client')
 			if (clientUUID == null) {
+				logger.error('Invalid client UUID: NULL')
 				ws.close return
 			}
 			
@@ -50,23 +55,31 @@ class WsRouter {
 				val chInfo = chRequests.remove(channelUUID)
 				val chBindHandler = chRequestsHandlers.remove(channelUUID)
 				if (chInfo == null || chBindHandler == null) {
-					logger.info('CHANNEL - no request bind for channel {}', channelUUID)
+					logger.error('CHANNEL - No request bind for channel: {}', channelUUID)
 					ws.close return
 				}
 				
 				val resource = resources.get(clientUUID)
 				if (resource == null) {
-					logger.info('CHANNEL - no resource for client {}', clientUUID)
+					logger.error('CHANNEL - No resource for client: {}', clientUUID)
 					ws.close return
 				}
 				
 				chBindHandler.apply(new WsPipeChannel(resource, chInfo, ws))
 			} else {
-				val wsResource = new WsResource(this, ws, clientUUID)[ resources.remove(it) ]
-				resources.put(wsResource.client, wsResource.resource)
+				if (resources.get(clientUUID) != null) {
+					logger.error('Invalid client UUID: Already exists - {}', clientUUID)
+					ws.close return
+				}
+				
+				val wsResource = new WsResource(this, ws, clientUUID)[ removeResource ]
+				addResource(wsResource.resource)
 			}
 		]
 	}
+	
+	override onResourceOpen((PipeResource) => void callback) { onOpen = callback }
+	override onResourceClose((String) => void callback) { onClose = callback }
 	
 	package def void waitForChannelBind(PipeChannelInfo info, (IPipeChannel) => void onBind) {
 		chRequests.put(info.uuid, info)
@@ -76,5 +89,15 @@ class WsRouter {
 	package def void forgetChannelBind(PipeChannelInfo info) {
 		chRequests.remove(info.uuid)
 		chRequestsHandlers.remove(info.uuid)
+	}
+	
+	private def void addResource(PipeResource resource) {
+		resources.put(resource.client, resource)
+		onOpen?.apply(resource)
+	}
+	
+	private def void removeResource(String clientUUID) {
+		resources.remove(clientUUID)
+		onClose?.apply(clientUUID)
 	}
 }

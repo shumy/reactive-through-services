@@ -12,7 +12,7 @@ class DefaultVertxServer {
 	@Accessors val HttpServer server
 	@Accessors val Pipeline pipeline
 	@Accessors val WsRouter wsRouter
-	@Accessors val WebRouter httpRouter
+	@Accessors val WebRouter webRouter
 	
 	new(Vertx vertx, String wsUri) {
 		this.server = vertx.createHttpServer(new HttpServerOptions => [
@@ -21,7 +21,7 @@ class DefaultVertxServer {
 		
 		this.pipeline = new Pipeline
 		this.wsRouter = new WsRouter(wsUri, server, pipeline)
-		this.httpRouter = new WebRouter(server, pipeline)
+		this.webRouter = new WebRouter(server, pipeline)
 	}
 	
 	def void listen(int port) { server.listen(port) }
