@@ -6,35 +6,43 @@ import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
 import java.util.concurrent.atomic.AtomicInteger
 import org.slf4j.LoggerFactory
-import rt.pipeline.promise.Promise
 
 import static rt.pipeline.promise.AsyncUtils.*
+import rt.pipeline.PathValidator
 
 class SendBuffer extends ChannelBuffer {
 	static val logger = LoggerFactory.getLogger('BUFFER-SEND')
+	override getLogger() { return logger }
 	
-	var needConfirmation = false
+	var () => void onReady = null
 	
 	new(ChannelPump outPump, ChannelPump inPump) {
 		super(inPump, outPump)
 		
 		//process backward signal...
-		inPump.onSignal = [
-			logger.debug('BACK-SIGNAL {}', it)
-			if (startsWith(SIGNAL_BEGIN_CONFIRM)) {
+		inPump.onSignal = [ signal |
+			logger.debug('BACK-SIGNAL {}', signal)
+			if (signal == null) {
+				error('Received incorrect signal!')
+				return
+			}
+			
+			if (signal.name != signalName) {
+				endError('''Signal confirmation '«signal.name»' != '«signalName»' ''')
+				return
+			}
+			
+			if (signal.flag == Signal.SIGNAL_BEGIN_CONFIRM) {
 				if (needConfirmation) {
 					needConfirmation = false
 					onReady?.apply
 				}
-			} else if (startsWith(SIGNAL_END_CONFIRM)) {
+			} else if (signal.flag == Signal.SIGNAL_END_CONFIRM) {
 				if (needConfirmation) {
-					needConfirmation = false
 					endOk
 				}
-			} else if (startsWith(SIGNAL_ERROR)) {
-				needConfirmation = false
-				val error = split(':', 2).get(1)
-				endError(error)
+			} else if (signal.flag == Signal.SIGNAL_ERROR) {
+				endError(signal.message)
 			}
 		]
 	}
@@ -43,13 +51,13 @@ class SendBuffer extends ChannelBuffer {
 		//wait for channel unlock
 		waitUntil([ !isLocked ], [
 			isLocked = true
-			val signal = '''«SIGNAL_BEGIN»:«name»'''
-			logger.debug('SIGNAL {}', signal)
-			
 			needConfirmation = true
+			signalName = name
+			
 			this.onReady = onReady
-			timer(3000)[ if (needConfirmation) { needConfirmation = false endError('Begin confirmation timeout!') }]
-			outPump.pushSignal(signal)
+			timeout[ if (needConfirmation) { needConfirmation = false endError('Begin confirmation timeout!') }]
+			
+			Signal.begin(signalName).push
 		])
 	}
 	def void end() {
@@ -58,12 +66,10 @@ class SendBuffer extends ChannelBuffer {
 			return
 		}
 		
-		isLocked = false
-		logger.debug('SIGNAL {}', SIGNAL_END)
-		
 		needConfirmation = true
-		timer(3000)[ if (needConfirmation) { needConfirmation = false endError('End confirmation timeout!') }]
-		outPump.pushSignal(SIGNAL_END)
+		timeout[ if (needConfirmation) { needConfirmation = false endError('End confirmation timeout!') }]
+		
+		Signal.end(signalName).push
 	}
 	
 	def <<(ByteBuffer buffer) {
@@ -75,43 +81,58 @@ class SendBuffer extends ChannelBuffer {
 		outPump.pushData(buffer)
 	}
 	
-	def Promise<Void> sendFile(String filePath, int bufferSize) {
-		filePromise = [ promise |
-			//TODO: secure the filesystem path
-			val path = Paths.get(filePath)
+	def void sendFile(String filePath, int bufferSize, () => void onFinal) {
+		begin(filePath)[
+			logger.info('FILE-BEGIN ' + filePath)
+			if (onFinal != null) onEnd(onFinal)
 			
 			try {
+				if (!PathValidator.isValid(filePath)) {
+					endError('''Invalid path «filePath»''')
+					return
+				}
+				
+				val path = Paths.get(filePath)
 				fileChannel = FileChannel.open(path, StandardOpenOption.READ)	
 			} catch(Exception ex) {
 				endError('''«ex.class.simpleName»: «ex.message»''')
 				return
 			}
 			
-			begin(filePath)[
-				val fc = fileChannel
-				val buffer = ByteBuffer.allocate(bufferSize)
-				val pos = new AtomicInteger(fc.read(buffer))
-				
-				asyncWhile([ pos.get > 0 ],[
-					if (!isLocked) { endError('Unlocked before transfer conclusion!') return false }
-					if (outPump.ready) {
-						buffer.flip
-						outPump.pushData(buffer)
-						
-						buffer.clear
-						pos.set = fc.read(buffer)
-					}
-					return true
-				],
-				[ end ],
-				[ error('''«class.simpleName»: «message»''') ])
-			]
+			val fc = fileChannel
+			val buffer = ByteBuffer.allocate(bufferSize)
+			val pos = new AtomicInteger(fc.read(buffer)) //TODO: remove AtomicInteger?
+			
+			asyncWhile([ pos.get > 0 ],[
+				if (!isLocked) { endError('Unlocked before transfer conclusion!') return false }
+				if (outPump.ready) {
+					buffer.flip
+					outPump.pushData(buffer)
+					
+					buffer.clear
+					pos.set = fc.read(buffer)
+				}
+				return true
+			],
+			[ end logger.info('FILE-END ' + filePath) ],
+			[ error('''«class.simpleName»: «message»''') ])
 		]
-		
-		return filePromise.promise
 	}
 	
 	def sendFile(String filePath) {
-		return sendFile(filePath, 1024 * 1024)//default size to 1MB
+		sendFile(filePath, 1024 * 1024, null)//default size to 1MB
+	}
+	
+	def sendFile(String filePath, int bufferSize) {
+		sendFile(filePath, bufferSize, null)
+	}
+	
+	def sendFile(String filePath, () => void onEnd) {
+		sendFile(filePath, 1024 * 1024, onEnd)//default size to 1MB
+	}
+	
+	private def void push(Signal signal) {
+		logger.debug('SIGNAL {}', signal)
+		outPump.pushSignal(signal)
 	}
 }

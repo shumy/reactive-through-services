@@ -1,12 +1,12 @@
 package rt.vertx.server.web
 
 import io.vertx.core.http.HttpServerRequest
-import org.slf4j.LoggerFactory
 import java.io.File
-import rt.plugin.service.an.Service
-import rt.plugin.service.an.Public
-import static extension rt.vertx.server.URIParserHelper.*
 import java.util.List
+import org.slf4j.LoggerFactory
+import rt.pipeline.PathValidator
+import rt.plugin.service.an.Public
+import rt.plugin.service.an.Service
 
 @Service
 class FileUploaderService {
@@ -28,7 +28,7 @@ class FileUploaderService {
 			logger.debug('UPLOADING {}', upload.filename)
 			
 			//protect against filesystem attacks
-			if (!upload.filename.validPath) {
+			if (!PathValidator.isValid(upload.filename)) {
 				logger.error('Filename not accepted: {}', upload.filename)
 				req.response.statusCode = 403
 				req.response.end = 'Filename not accepted!'
@@ -56,7 +56,7 @@ class FileUploaderService {
 	@Public
 	def List<String> list(String inPath) {
 		//protect against filesystem attacks
-		if (!path.validPath)
+		if (!PathValidator.isValid(path))
 			throw new RuntimeException('Path not accepted: ' + inPath)
 		
 		val folder = new File(path + inPath)

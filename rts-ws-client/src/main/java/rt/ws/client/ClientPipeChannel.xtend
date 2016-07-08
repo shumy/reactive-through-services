@@ -7,13 +7,14 @@ import org.java_websocket.client.WebSocketClient
 import org.java_websocket.handshake.ServerHandshake
 import org.slf4j.LoggerFactory
 import rt.pipeline.pipe.PipeResource
+import rt.pipeline.pipe.channel.ChannelBuffer
+import rt.pipeline.pipe.channel.ChannelBuffer.Signal
 import rt.pipeline.pipe.channel.ChannelPump
 import rt.pipeline.pipe.channel.IPipeChannel
 import rt.pipeline.pipe.channel.ReceiveBuffer
 import rt.pipeline.pipe.channel.SendBuffer
 
 import static rt.pipeline.pipe.channel.IPipeChannel.PipeChannelInfo.Type.*
-import rt.pipeline.pipe.channel.ChannelBuffer
 
 class ClientPipeChannel implements IPipeChannel {
 	static val logger = LoggerFactory.getLogger('CLIENT-CHANNEL')
@@ -37,7 +38,7 @@ class ClientPipeChannel implements IPipeChannel {
 		
 		inPump = new ChannelPump
 		val outPump = new ChannelPump => [
-			onSignal = [ ws.send(it) ]
+			onSignal = [ ws.send(toString) ]
 			onData = [
 				//TODO: buffer array can be out of limit!
 				ws.send(array)
@@ -67,8 +68,8 @@ class ClientPipeChannel implements IPipeChannel {
 				ex.printStackTrace
 			}
 			
-			override onMessage(String signal) {
-				inPump.pushSignal(signal)
+			override onMessage(String signalMsg) {
+				inPump.pushSignal(Signal.process(signalMsg))
 			}
 			
 			override onMessage(ByteBuffer byteMsg) {

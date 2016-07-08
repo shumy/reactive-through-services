@@ -3,7 +3,7 @@ package rt.vertx.server
 import io.vertx.core.Vertx
 import rt.pipeline.promise.AsyncUtils
 
-class VertxAsyncUtils implements AsyncUtils {
+class VertxAsyncUtils extends AsyncUtils {
 	val Vertx vertx
 	new(Vertx vertx) { this.vertx = vertx }
 	

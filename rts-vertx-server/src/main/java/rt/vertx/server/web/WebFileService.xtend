@@ -2,9 +2,9 @@ package rt.vertx.server.web
 
 import io.vertx.core.http.HttpServerRequest
 import org.slf4j.LoggerFactory
-import rt.plugin.service.an.Service
+import rt.pipeline.PathValidator
 import rt.plugin.service.an.Public
-import static extension rt.vertx.server.URIParserHelper.*
+import rt.plugin.service.an.Service
 
 @Service
 class WebFileService {
@@ -19,7 +19,7 @@ class WebFileService {
 	@Public(notif = true)
 	def void get(HttpServerRequest req) {
 		//protect against filesystem attacks
-		if (!req.path.validPath) {
+		if (!PathValidator.isValid(req.path)) {
 			logger.error('Request path not accepted: {}', req.path)
 			
 			req.response.statusCode = 403

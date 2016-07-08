@@ -2,44 +2,62 @@ package rt.pipeline.pipe.channel
 
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
+import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
 import org.slf4j.LoggerFactory
-import rt.pipeline.promise.Promise
+import rt.pipeline.PathValidator
 
 class ReceiveBuffer extends ChannelBuffer {
 	static val logger = LoggerFactory.getLogger('BUFFER-RECEIVE')
+	override getLogger() { return logger }
 	
-	var (String) => void onBegin
-	var (ByteBuffer) => void onData
+	var (String) => void onBegin = null
+	var (ByteBuffer) => void onData = null
 	
-	var needConfirmation = false
+	def void onBegin((String) => void onBegin) { this.onBegin = onBegin }
+	def void onData((ByteBuffer) => void onData) { this.onData = onData }
 	
 	new(ChannelPump inPump, ChannelPump outPump) {
 		super(inPump, outPump)
 		
-		inPump.onSignal = [
-			logger.debug('SIGNAL {}', it)
-			if (startsWith(SIGNAL_BEGIN)) {
+		inPump.onSignal = [ signal |
+			logger.debug('SIGNAL {}', signal)
+			if (signal == null) {
+				error('Received incorrect signal!')
+				return
+			}
+			
+			if (signal.flag == Signal.SIGNAL_BEGIN) {
 				if (isLocked) {
 					error('Channel is already locked!')
 					return
 				}
 				
-				needConfirmation = true
 				isLocked = true
-				val signalName = split(':', 2).get(1)
+				needConfirmation = true
+				signalName = signal.name
+				
 				onBegin?.apply(signalName)
-			} else if (startsWith(SIGNAL_END)) {
+			} else if (signal.flag == Signal.SIGNAL_END) {
 				if (!isLocked) {
 					error('Channel is not locked!')
 					return
 				}
 				
-				endOk(SIGNAL_END_CONFIRM)
-			} else if (startsWith(SIGNAL_ERROR)) {
-				val error = split(':', 2).get(1)
-				endError(error)
+				if (signal.name != signalName) {
+					error('''Signal value != signalName: «signal.name» != «signalName»''')
+					return
+				}
+				
+				endOk(Signal.endConfirm(signalName))
+			} else if (signal.flag == Signal.SIGNAL_ERROR) {
+				if (signal.name != signalName) {
+					error('''Signal value != signalName: «signal.name» != «signalName»''')
+					return
+				}
+				
+				endError(signal.message)
 			}
 		]
 		
@@ -54,27 +72,41 @@ class ReceiveBuffer extends ChannelBuffer {
 		]
 	}
 	
-	def void onBegin((String) => void onBegin) { this.onBegin = onBegin }
-	def void onEnd(() => void onEnd) { this.onEnd = onEnd }
-	
 	def >>((ByteBuffer) => void onData) {
+		if (!isLocked) {
+			error('Channel is not locked!')
+			return
+		}
+		
 		this.onData = onData
-		if (needConfirmation) { needConfirmation = false outPump.pushSignal(SIGNAL_BEGIN_CONFIRM) }
+		confirm
 	}
 	
-	def Promise<Void> writeToFile(String filePath) {
-		filePromise = [
-			//TODO: secure the filesystem path
-			try {
-				val path = Paths.get(filePath)
-				fileChannel = FileChannel.open(path, StandardOpenOption.CREATE, StandardOpenOption.WRITE)
-				if (needConfirmation) { needConfirmation = false outPump.pushSignal(SIGNAL_BEGIN_CONFIRM) }
-			} catch(Exception ex) {
-				error('''«ex.class.simpleName»: «ex.message»''')
-			}
-		]
+	def void writeToFile(String filePath, () => void onFinal) {
+		if (!isLocked) {
+			error('Channel is not locked!')
+			return
+		}
 		
-		return filePromise.promise
+		if (onFinal != null) onEnd(onFinal)
+		
+		try {
+			if (!PathValidator.isValid(filePath)) {
+				error('''Invalid path «filePath»''')
+				return
+			}
+			
+			val path = Paths.get(filePath)
+			Files.createDirectories(path.parent)
+			fileChannel = FileChannel.open(path, StandardOpenOption.CREATE, StandardOpenOption.WRITE)
+			confirm
+		} catch(Exception ex) {
+			error('''«ex.class.simpleName»: «ex.message»''')
+		}
+	}
+	
+	def void writeToFile(String filePath) {
+		writeToFile(filePath, null)
 	}
 	
 	private def void writeBufferToFile(ByteBuffer buffer) {
@@ -82,6 +114,13 @@ class ReceiveBuffer extends ChannelBuffer {
 			fileChannel.write(buffer)
 		} catch(Exception ex) {
 			error('''«ex.class.simpleName»: «ex.message»''')
+		}
+	}
+	
+	private def void confirm() {
+		if (needConfirmation) {
+			needConfirmation = false
+			outPump.pushSignal(Signal.beginConfirm(signalName))
 		}
 	}
 }

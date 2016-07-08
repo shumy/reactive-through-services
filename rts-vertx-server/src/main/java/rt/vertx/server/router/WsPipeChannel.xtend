@@ -6,13 +6,14 @@ import io.vertx.core.http.ServerWebSocket
 import org.eclipse.xtend.lib.annotations.Accessors
 import org.slf4j.LoggerFactory
 import rt.pipeline.pipe.PipeResource
+import rt.pipeline.pipe.channel.ChannelBuffer
+import rt.pipeline.pipe.channel.ChannelBuffer.Signal
 import rt.pipeline.pipe.channel.ChannelPump
 import rt.pipeline.pipe.channel.IPipeChannel
 import rt.pipeline.pipe.channel.ReceiveBuffer
 import rt.pipeline.pipe.channel.SendBuffer
 
 import static rt.pipeline.pipe.channel.IPipeChannel.PipeChannelInfo.Type.*
-import rt.pipeline.pipe.channel.ChannelBuffer
 
 class WsPipeChannel implements IPipeChannel {
 	static val logger = LoggerFactory.getLogger('WS-CHANNEL')
@@ -36,7 +37,7 @@ class WsPipeChannel implements IPipeChannel {
 			isReady = [ !ws.writeQueueFull ]
 			onSignal = [
 				if (ws.writeQueueFull) logger.error('Send queue is full!')
-				ws.writeFinalTextFrame(it)
+				ws.writeFinalTextFrame(toString)
 			]
 			onData = [
 				if (ws.writeQueueFull) logger.error('Send queue is full!')
@@ -57,7 +58,7 @@ class WsPipeChannel implements IPipeChannel {
 				val buffer = binaryData.byteBuf.nioBuffer
 				inPump.pushData(buffer)
 			} else {
-				inPump.pushSignal(textData)
+				inPump.pushSignal(Signal.process(textData))
 			}
 		]
 		

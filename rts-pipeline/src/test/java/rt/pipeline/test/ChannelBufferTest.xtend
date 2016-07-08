@@ -32,10 +32,12 @@ class ChannelBufferTest {
 				receiver >> [ sb.append(new String(array)) ]
 			]
 			onEnd[ sb.append(' end') ]
+			onError[ sb.append('ERROR: ' + it) ]
 		]
 		
 		val buffer = ByteBuffer.wrap(text.getBytes('UTF-8'))
 		sender => [
+			onError[ sb.append('ERROR: ' + it) ]
 			begin('signal')[
 				it << buffer
 				end
@@ -61,16 +63,15 @@ class ChannelBufferTest {
 				]
 			]
 			onEnd[ sb.append(' end') ]
+			onError[ sb.append('ERROR: ' + it) ]
 		]
 		
 		sender => [
-			sendFile('./test.txt', 5).then[ sb.append(' OK') ]
+			onError[ sb.append('ERROR: ' + it) ]
+			sendFile('./test.txt', 5)[ sb.append(' OK') ]
 		]
 		
-		AsyncUtils.timer(500)[
-			println(sb.toString)
-			Assert.assertEquals(sb.toString, 'begin: ./test.txt Just a string test! end OK')
-		]
+		Assert.assertEquals(sb.toString, 'begin: ./test.txt Just a string test! end OK')
 	}
 	
 	@Test
@@ -89,28 +90,56 @@ class ChannelBufferTest {
 			onBegin[
 				sb.append('begin: ' + it + ' ')
 				receiver.writeToFile('./result.txt')
-				receiver >> [ //should not write in here, because of the writeToFile
-					val textByte = Arrays.copyOf(array, limit)
-					sb.append(new String(textByte))
-				]
 			]
 			onEnd[ sb.append(' end') ]
+			onError[ sb.append('ERROR: ' + it) ]
 		]
 		
 		sender => [
-			sendFile('./test.txt', 5).then[ sb.append(' OK')]
+			onError[ sb.append('ERROR: ' + it) ]
+			sendFile('./test.txt', 5)[ sb.append(' OK') ]
 		]
 		
-		AsyncUtils.timer(500)[
-			Assert.assertEquals(sb.toString, 'begin: ./test.txt  end OK')
-			
-			//assert that file content is ok
-			val fileBuffer = ByteBuffer.allocate(19)
-			val fileChannel = FileChannel.open(Paths.get('./result.txt'), StandardOpenOption.READ)
-			fileChannel.read(fileBuffer)
-			Assert.assertEquals(new String(fileBuffer.array), text)
-			
-			file.delete
-		]
+		Assert.assertEquals(sb.toString, 'begin: ./test.txt  end OK')
+		
+		//assert that file content is ok
+		val fileBuffer = ByteBuffer.allocate(19)
+		val fileChannel = FileChannel.open(Paths.get('./result.txt'), StandardOpenOption.READ)
+		fileChannel.read(fileBuffer)
+		Assert.assertEquals(new String(fileBuffer.array), text)
+		
+		file.delete
 	}
+	
+	@Test
+	def void beginConfirmationTimeout() {
+		AsyncUtils.setDefault => [ timeout = 100 ]
+		val text = 'Just a string test!'
+		
+		val sb = new StringBuilder
+		val receiver = new ReceiveBuffer(outPump, inPump)
+		val sender = new SendBuffer(outPump, inPump)
+		
+		receiver => [
+			onBegin[
+				sb.append('begin: ' + it + ' ')
+				Thread.sleep(500)
+				receiver >> [ sb.append(new String(array)) ]
+			]
+			onEnd[ sb.append(' end') ]
+			onError[ sb.append('ERROR: ' + it) ]
+		]
+		
+		val buffer = ByteBuffer.wrap(text.getBytes('UTF-8'))
+		sender => [
+			onError[ sb.append(' - ' + it) ]
+			begin('signal')[
+				it << buffer
+				end
+			]
+		]
+		
+		Assert.assertEquals(sb.toString, '''begin: signal  - Begin confirmation timeout! - Signal confirmation 'signal' != '' '''.toString)
+	}
+	
 }

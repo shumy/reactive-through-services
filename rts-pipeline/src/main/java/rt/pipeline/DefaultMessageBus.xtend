@@ -4,7 +4,8 @@ import java.util.HashMap
 import java.util.HashSet
 import java.util.Set
 import java.util.concurrent.ConcurrentHashMap
-import rt.pipeline.promise.AsyncUtils
+
+import static rt.pipeline.promise.AsyncUtils.*
 
 class DefaultMessageBus implements IMessageBus {
 	val listeners = new HashMap<String, Set<DefaultListener>>
@@ -23,7 +24,7 @@ class DefaultMessageBus implements IMessageBus {
 		msg.typ = Message.SEND
 		listeners.get(address)?.forEach[ send(msg) ]
 		
-		AsyncUtils.timer(3000)[
+		timeout[
 			val replyTimeoutMsg = new Message => [ id=msg.id clt=msg.clt typ=Message.REPLY cmd=Message.CMD_TIMEOUT result='''Timeout for «msg.path» -> «msg.cmd»'''.toString]
 			replyTimeoutMsg.reply
 		]
