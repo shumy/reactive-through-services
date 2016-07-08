@@ -1,4 +1,4 @@
-package rt.vertx.server.router
+package rt.vertx.server.ws
 
 import io.vertx.core.http.ServerWebSocket
 import org.slf4j.LoggerFactory

@@ -4,5 +4,7 @@
         <entry type="srv" ref="rt.vertx.server.web.FileUploaderService"/>
         <entry type="srv" ref="rt.vertx.server.web.WebFileHandler"/>
         <entry type="srv" ref="rt.vertx.server.web.WebFileService"/>
+        <entry type="srv" ref="rt.vertx.server.web.service.FileUploaderService"/>
+        <entry type="srv" ref="rt.vertx.server.web.service.WebFileService"/>
     </entries>
 </config>

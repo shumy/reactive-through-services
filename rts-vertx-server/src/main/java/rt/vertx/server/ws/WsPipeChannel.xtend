@@ -1,4 +1,4 @@
-package rt.vertx.server.router
+package rt.vertx.server.ws
 
 import io.netty.buffer.Unpooled
 import io.vertx.core.buffer.Buffer

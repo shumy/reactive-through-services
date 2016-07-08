@@ -1,16 +1,17 @@
-package rt.vertx.server.router
+package rt.vertx.server.web
 
 import io.vertx.core.http.HttpServer
-import java.util.HashMap
-import org.slf4j.LoggerFactory
-import java.util.Stack
 import java.util.ArrayList
+import java.util.HashMap
 import java.util.List
-import static extension rt.vertx.server.URIParserHelper.*
-import rt.pipeline.pipe.Pipeline
+import java.util.Stack
+import org.slf4j.LoggerFactory
 import rt.pipeline.IMessageBus.Message
+import rt.pipeline.pipe.Pipeline
 
-class HttpRouter {
+import static extension rt.vertx.server.web.URIParserHelper.*
+
+class WebRouter {
 	static val logger = LoggerFactory.getLogger('HTTP-ROUTER')
 	
 	val HttpServer server

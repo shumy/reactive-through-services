@@ -1,4 +1,4 @@
-package rt.vertx.server.web
+package rt.vertx.server.web.service
 
 import io.vertx.core.http.HttpServerRequest
 import org.slf4j.LoggerFactory

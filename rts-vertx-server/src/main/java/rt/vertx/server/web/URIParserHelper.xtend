@@ -1,4 +1,4 @@
-package rt.vertx.server
+package rt.vertx.server.web
 
 import java.util.HashMap
 

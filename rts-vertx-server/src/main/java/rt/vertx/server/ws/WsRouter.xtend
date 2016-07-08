@@ -1,15 +1,16 @@
-package rt.vertx.server.router
+package rt.vertx.server.ws
 
 import io.vertx.core.http.HttpServer
-import rt.pipeline.DefaultMessageConverter
-import org.slf4j.LoggerFactory
-import rt.pipeline.pipe.Pipeline
 import java.util.HashMap
+import org.eclipse.xtend.lib.annotations.Accessors
+import org.slf4j.LoggerFactory
+import rt.pipeline.DefaultMessageConverter
 import rt.pipeline.pipe.PipeResource
+import rt.pipeline.pipe.Pipeline
 import rt.pipeline.pipe.channel.IPipeChannel
 import rt.pipeline.pipe.channel.IPipeChannel.PipeChannelInfo
-import org.eclipse.xtend.lib.annotations.Accessors
-import static extension rt.vertx.server.URIParserHelper.*
+
+import static extension rt.vertx.server.web.URIParserHelper.*
 
 class WsRouter {
 	static val logger = LoggerFactory.getLogger('WS-ROUTER')
