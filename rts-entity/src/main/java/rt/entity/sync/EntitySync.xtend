@@ -21,7 +21,7 @@ abstract class EntitySync implements IEntity {
 	}
 	
 	override remove() {
-		publisher.publish(new Change(ChangeType.REMOVE, this, 'this'))
+		publisher.publish(new Change(ChangeType.REMOVE, key.uuid, 'this'))
 	}
 	
 	protected def void publish(Change change) {

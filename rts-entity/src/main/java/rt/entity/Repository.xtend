@@ -23,44 +23,63 @@ class Repository<E extends IEntity> implements IObservable {
 		return publisher.addListener(listener)
 	}
 	
+	/*
+	override applyChange(Change change) {
+		change.path
+	}*/
+	
 	def void addEntity(E entity) {
-		val prePath = name + ':' + entity.key.uuid
 		cache.put(entity.key.uuid, entity)
 		
 		entity.publisher.addListener(entity.key.uuid)[ change |
 			if (!ignoreTransitive || !change.tr) {
-				val path = prePath + ':' + entity.key.version
 				val newChange = if (IEntity.isAssignableFrom(change.value.class)) {
 					val eValue = change.value as IEntity
-					if (change.oper == ChangeType.REMOVE) {
+					new Change(change.oper, change.type, eValue.key.toString, change.path).addPath(entity.key.toString, false)
+				} else {
+					if (change.oper == ChangeType.REMOVE && change.path.head == 'this') {
 						//if remove from an IEntity --> remove this listener
 						change.removeListener
-						cache.remove(eValue.key.uuid)
+						val e = cache.remove(change.value)
 						
-						eValue.removeEvent
+						removeEvent(e)
 					} else {
-						new Change(change.oper, change.type, eValue.key.toString, change.path).addPath(path, false)
+						change.addPath(entity.key.toString, false)
 					}
-				} else {
-					change.addPath(path, false)
 				}
 				
 				publisher.publish(newChange)
 			}
 		]
 		
-		publisher.publish(new Change(ChangeType.ADD, entity, prePath + ':' + entity.key.version))
+		publisher.publish(new Change(ChangeType.ADD, entity, entity.key.toString))
 	}
 	
 	def void removeEntity(String uuid) {
 		val entity = cache.remove(uuid)
 		if (entity != null) {
 			entity.publisher.removeListener(uuid)
-			publisher.publish(entity.removeEvent)
+			publisher.publish(removeEvent(entity))
 		}
 	}
 	
 	private def removeEvent(IEntity entity) {
-		return new Change(ChangeType.REMOVE, 1, name + ':' + entity.key)
+		return new Change(ChangeType.REMOVE, 1, entity.key.toString)
+	}
+	
+	private def void applyUpdate(Change change) {
+		
+	}
+	
+	private def void applyAdd(Change change) {
+		
+	}
+	
+	private def void applyRemove(Change change) {
+		
+	}
+	
+	private def void applyClear(Change change) {
+		
 	}
 }

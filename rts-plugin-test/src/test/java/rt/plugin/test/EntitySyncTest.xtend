@@ -44,7 +44,7 @@ class EntitySyncTest {
 			othersMap.put('key', canonEntity)
 		]
 		
-		var String entityUUID = 'repo-AnEntity:' + entity.key.uuid
+		var String entityUUID = entity.key.uuid
 		
 		canonEntity.name = 'Canon-Update-1'
 		
@@ -61,7 +61,7 @@ class EntitySyncTest {
 		
 		entity.remove
 		
-		//these change are not detected because listeners where removed
+		//these change are not detected in the repository because listeners where removed
 		entity.remove 
 		repo.removeEntity(entity.key.uuid)
 		
@@ -82,12 +82,14 @@ class EntitySyncTest {
 			new Change(ChangeType.UPDATE, 'Canon-Update-2', #['name', 'key']).addPath('othersMap', true),
 			
 			new Change(ChangeType.ADD, new EntityList, #['end', 'textList']),
-			new Change(ChangeType.ADD, 'text', #['end', '0', 'textList'])
+			new Change(ChangeType.ADD, 'text', #['end', '0', 'textList']),
+			new Change(ChangeType.REMOVE, entityUUID, #['this']),
+			new Change(ChangeType.REMOVE, entityUUID, #['this'])
 		].map[ gson.toJson(it) ]
 		
 		println('CHANGES:  ' + changes)
 		println('EXPECTED: ' + expected)
-		//Assert.assertArrayEquals(changes, expected)
+		Assert.assertArrayEquals(changes, expected)
 		
 		val repoExpected = #[
 			new Change(ChangeType.ADD, new AnEntity => [name='not observed'], #[entityUUID + ':' + 2]),
