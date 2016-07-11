@@ -7,6 +7,7 @@ import java.util.HashMap
 import org.eclipse.xtend.lib.annotations.Accessors
 import java.util.List
 import java.util.Map
+import rt.entity.change.ChangeType
 
 abstract class EntitySync implements IEntity {
 	@Accessors transient val key = new EntityKey
@@ -19,6 +20,10 @@ abstract class EntitySync implements IEntity {
 		return publisher.addListener(listener)
 	}
 	
+	override remove() {
+		publisher.publish(new Change(ChangeType.REMOVE, this, 'this'))
+	}
+	
 	protected def void publish(Change change) {
 		if (!change.tr) key.version++
 		publisher.publish(change)
@@ -29,12 +34,22 @@ abstract class EntitySync implements IEntity {
 			observable.publisher.removeListener(observableFields.remove(field))
 	}
 	
-	protected def void observe(String field, IObservable observable) {
-		val transitive = IEntity.isAssignableFrom(observable.class)
+	protected def void observe(String field, IEntity entity) {
+		observe(field, entity, true)
+	}
+	
+	protected def void observe(String field, IObservable observable, boolean isTransitive) {
 		val uuid = observable.onChange[ change |
-			val newChange = change.addPath(field, transitive)
+			val newChange = change.addPath(field, isTransitive)
 			
 			if (!newChange.tr) key.version++
+			
+			//if remove from an IEntity --> remove this listener
+			if (change.oper == ChangeType.REMOVE && isTransitive) {
+				change.removeListener
+				observableFields.remove(field)
+			}
+			
 			publisher.publish(newChange)
 		]
 		
@@ -43,13 +58,13 @@ abstract class EntitySync implements IEntity {
 	
 	protected def <T> List<T> newList(String field) {
 		val element = new EntityList<T>
-		observe(field, element)
+		observe(field, element, false)
 		return element
 	}
 	
 	protected def <K, V> Map<K, V> newMap(String field) {
 		val element = new EntityMap<K, V>
-		observe(field, element)
+		observe(field, element, false)
 		return element
 	}
 }

@@ -59,6 +59,10 @@ class EntitySyncTest {
 		entity.textList.add(eList)
 		eList.add('text')
 		
+		entity.remove
+		
+		//these change are not detected because listeners where removed
+		entity.remove 
 		repo.removeEntity(entity.key.uuid)
 		
 		val expected = #[

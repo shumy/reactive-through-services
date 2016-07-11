@@ -3,6 +3,7 @@ package rt.entity.change
 import java.util.List
 import java.util.LinkedList
 import org.eclipse.xtend.lib.annotations.Accessors
+import java.util.Iterator
 
 enum ChangeType {
 	UPDATE, ADD, REMOVE, CLEAR
@@ -20,7 +21,8 @@ class Change {
 	
 	public static val PATH_SEPARATOR = '.'
 	
-	@Accessors(PUBLIC_GETTER) transient boolean tr = false //is transitive? Change from an internal IEntity 
+	@Accessors(PUBLIC_GETTER) transient boolean tr = false //is transitive? Change from an internal IEntity
+	@Accessors(PUBLIC_SETTER) transient Iterator<(Change) => void> iterator = null
 	
 	@Accessors val ChangeType oper
 	@Accessors val String type
@@ -47,6 +49,8 @@ class Change {
 	new(ChangeType oper, Object value, Object path) {
 		this(oper, value, #[ path ])
 	}
+	
+	def void removeListener() { iterator.remove }
 	
 	def Change addPath(Object path, boolean transitive) {
 		val newChange = new Change(this.oper, this.type, this.value, new LinkedList<Object>)

@@ -19,7 +19,7 @@ class Repository<E extends IEntity> implements IObservable {
 		this.name = 'repo-' + name
 	}
 	
-	override onChange((Change)=>void listener) {
+	override onChange((Change) => void listener) {
 		return publisher.addListener(listener)
 	}
 	
@@ -32,7 +32,15 @@ class Repository<E extends IEntity> implements IObservable {
 				val path = prePath + ':' + entity.key.version
 				val newChange = if (IEntity.isAssignableFrom(change.value.class)) {
 					val eValue = change.value as IEntity
-					new Change(change.oper, change.type, eValue.key.toString, change.path).addPath(path, false)
+					if (change.oper == ChangeType.REMOVE) {
+						//if remove from an IEntity --> remove this listener
+						change.removeListener
+						cache.remove(eValue.key.uuid)
+						
+						eValue.removeEvent
+					} else {
+						new Change(change.oper, change.type, eValue.key.toString, change.path).addPath(path, false)
+					}
 				} else {
 					change.addPath(path, false)
 				}
@@ -48,7 +56,11 @@ class Repository<E extends IEntity> implements IObservable {
 		val entity = cache.remove(uuid)
 		if (entity != null) {
 			entity.publisher.removeListener(uuid)
-			publisher.publish(new Change(ChangeType.REMOVE, 1, name + ':' + entity.key))	
+			publisher.publish(entity.removeEvent)
 		}
+	}
+	
+	private def removeEvent(IEntity entity) {
+		return new Change(ChangeType.REMOVE, 1, name + ':' + entity.key)
 	}
 }

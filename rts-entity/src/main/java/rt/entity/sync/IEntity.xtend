@@ -9,4 +9,6 @@ interface IEntity extends IObservable {
 	
 	def Object getValue(String field)
 	def void setValue(String field, Object value)
+	
+	def void remove()
 }

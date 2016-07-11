@@ -96,11 +96,22 @@ class EntityList<T> extends ArrayList<T> implements IObservable {
 	private def void observe(Object element) {
 		if (element != null && IObservable.isAssignableFrom(element.class)) {
 			val observable = element as IObservable
-			val transitive = IEntity.isAssignableFrom(element.class)
+			val isTransitive = IEntity.isAssignableFrom(element.class)
 			val uuid = observable.onChange [ change |
-				//TODO: needs some perfomance optimizations
+				//TODO: needs some perfomance optimizations to get the index?
 				val path = element.indexOf.toString
-				publisher.publish(change.addPath(path, transitive))
+				
+				//if remove from an IEntity --> remove this listener
+				if (change.oper == ChangeType.REMOVE && isTransitive) {
+					change.removeListener
+					val index = super.indexOf(element)
+					
+					super.remove(index)
+					val newChange = new Change(ChangeType.REMOVE, 1, index)
+					publisher.publish(newChange)
+				} else {
+					publisher.publish(change.addPath(path, isTransitive))
+				}
 			]
 			
 			listeners.put(observable, uuid)

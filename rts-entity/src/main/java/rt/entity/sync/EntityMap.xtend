@@ -62,9 +62,18 @@ class EntityMap<K, V> extends HashMap<K, V> implements IObservable {
 	private def void observe(Object key, V element) {
 		if (element != null && IObservable.isAssignableFrom(element.class)) {
 			val observable = element as IObservable
-			val transitive = IEntity.isAssignableFrom(element.class)
+			val isTransitive = IEntity.isAssignableFrom(element.class)
 			val uuid = observable.onChange [ change |
-				publisher.publish(change.addPath(key, transitive))
+				//if remove from an IEntity --> remove this listener
+				if (change.oper == ChangeType.REMOVE && isTransitive) {
+					change.removeListener
+					
+					super.remove(key)
+					val newChange = new Change(ChangeType.REMOVE, 1, key)
+					publisher.publish(newChange)
+				} else {
+					publisher.publish(change.addPath(key, isTransitive))
+				}
 			]
 			
 			listeners.put(key, uuid)

@@ -117,8 +117,8 @@ class EntityProcessor extends AbstractClassProcessor {
 				body = '''
 					«IF field.findAnnotation(Ignore.findTypeGlobally) == null»
 						«IF IObservable.newTypeReference.isAssignableFrom(fTypeRef)»
-							unobserve("«field.simpleName»", («IObservable.name»)this.«field.simpleName»);
-							observe("«field.simpleName»", («IObservable.name»)value);
+							unobserve("«field.simpleName»", this.«field.simpleName»);
+							observe("«field.simpleName»", value);
 							
 						«ENDIF»
 						final «Change.name» change = new «Change.name»(«ChangeType.name».UPDATE, value, "«field.simpleName»");
