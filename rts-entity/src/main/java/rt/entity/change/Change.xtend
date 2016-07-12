@@ -1,9 +1,9 @@
 package rt.entity.change
 
 import java.util.List
-import java.util.LinkedList
 import org.eclipse.xtend.lib.annotations.Accessors
 import java.util.Iterator
+import java.util.Stack
 
 enum ChangeType {
 	UPDATE, ADD, REMOVE, CLEAR
@@ -27,17 +27,18 @@ class Change {
 	@Accessors val ChangeType oper
 	@Accessors val String type
 	@Accessors val Object value
+	@Accessors val Stack<String> path
 	
-	@Accessors val List<Object> path
-	
-	new(ChangeType oper, String type, Object value, List<Object> path) {
+	new(ChangeType oper, String type, Object value, List<String> path) {
 		this.oper = oper
 		this.type = type
 		this.value = value
-		this.path = path
+		this.path = new Stack<String>
+		
+		path.forEach[ this.path.push(it) ]
 	}
 	
-	new(ChangeType oper, Object value, List<Object> path) {
+	new(ChangeType oper, Object value, List<String> path) {
 		this(
 			oper,
 			createType(oper, value.class),
@@ -46,16 +47,15 @@ class Change {
 		)
 	}
 	
-	new(ChangeType oper, Object value, Object path) {
+	new(ChangeType oper, Object value, String path) {
 		this(oper, value, #[ path ])
 	}
 	
 	def void removeListener() { iterator.remove }
 	
-	def Change addPath(Object path, boolean transitive) {
-		val newChange = new Change(this.oper, this.type, this.value, new LinkedList<Object>)
-		newChange.path.addAll(this.path)
-		newChange.path.add(path)
+	def Change pushPath(String path, boolean transitive) {
+		val newChange = new Change(this.oper, this.type, this.value, this.path)
+		newChange.path.push(path)
 		newChange.tr = this.tr || transitive
 		
 		return newChange

@@ -19,6 +19,10 @@ class EntityList<T> extends ArrayList<T> implements IObservable {
 		return publisher.addListener(listener)
 	}
 	
+	override applyChange(Change change) {
+		throw new UnsupportedOperationException("TODO: auto-generated method stub")
+	}
+	
 	override T set(int index, T element) {
 		val oldElement = super.get(index)
 		oldElement.unobserve
@@ -107,10 +111,10 @@ class EntityList<T> extends ArrayList<T> implements IObservable {
 					val index = super.indexOf(element)
 					
 					super.remove(index)
-					val newChange = new Change(ChangeType.REMOVE, 1, index)
+					val newChange = new Change(ChangeType.REMOVE, 1, index.toString)
 					publisher.publish(newChange)
 				} else {
-					publisher.publish(change.addPath(path, isTransitive))
+					publisher.publish(change.pushPath(path, isTransitive))
 				}
 			]
 			

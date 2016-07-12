@@ -69,17 +69,17 @@ class EntitySyncTest {
 			new Change(ChangeType.UPDATE, 'Alex', #['name']),
 			new Change(ChangeType.UPDATE, true, #['active']),
 			new Change(ChangeType.UPDATE, new OtherEntity('Fred'), #['other']),
-			new Change(ChangeType.UPDATE, 'Rex', #['name']).addPath('other', true),
+			new Change(ChangeType.UPDATE, 'Rex', #['name']).pushPath('other', true),
 			new Change(ChangeType.ADD, new OtherEntity('Nikon'), #['end', 'othersList']),
 			new Change(ChangeType.ADD, new OtherEntity('Canon'), #['end', 'othersList']),
 			new Change(ChangeType.ADD, new OtherEntity('Canon'), #['key', 'othersMap']),
 			
-			new Change(ChangeType.UPDATE, 'Canon-Update-1', #['name', '1']).addPath('othersList', true),
-			new Change(ChangeType.UPDATE, 'Canon-Update-1', #['name', 'key']).addPath('othersMap', true),
+			new Change(ChangeType.UPDATE, 'Canon-Update-1', #['name', '1']).pushPath('othersList', true),
+			new Change(ChangeType.UPDATE, 'Canon-Update-1', #['name', 'key']).pushPath('othersMap', true),
 			
 			new Change(ChangeType.REMOVE, 1, #['0', 'othersList']),
-			new Change(ChangeType.UPDATE, 'Canon-Update-2', #['name', '0']).addPath('othersList', true),
-			new Change(ChangeType.UPDATE, 'Canon-Update-2', #['name', 'key']).addPath('othersMap', true),
+			new Change(ChangeType.UPDATE, 'Canon-Update-2', #['name', '0']).pushPath('othersList', true),
+			new Change(ChangeType.UPDATE, 'Canon-Update-2', #['name', 'key']).pushPath('othersMap', true),
 			
 			new Change(ChangeType.ADD, new EntityList, #['end', 'textList']),
 			new Change(ChangeType.ADD, 'text', #['end', '0', 'textList']),

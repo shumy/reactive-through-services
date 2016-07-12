@@ -20,6 +20,10 @@ abstract class EntitySync implements IEntity {
 		return publisher.addListener(listener)
 	}
 	
+	override applyChange(Change change) {
+		throw new UnsupportedOperationException("TODO: auto-generated method stub")
+	}
+	
 	override remove() {
 		publisher.publish(new Change(ChangeType.REMOVE, key.uuid, 'this'))
 	}
@@ -40,7 +44,7 @@ abstract class EntitySync implements IEntity {
 	
 	protected def void observe(String field, IObservable observable, boolean isTransitive) {
 		val uuid = observable.onChange[ change |
-			val newChange = change.addPath(field, isTransitive)
+			val newChange = change.pushPath(field, isTransitive)
 			
 			if (!newChange.tr) key.version++
 			

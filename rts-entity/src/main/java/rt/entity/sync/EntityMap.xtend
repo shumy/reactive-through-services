@@ -18,11 +18,15 @@ class EntityMap<K, V> extends HashMap<K, V> implements IObservable {
 		return publisher.addListener(listener)
 	}
 	
+	override applyChange(Change change) {
+		throw new UnsupportedOperationException("TODO: auto-generated method stub")
+	}
+	
 	override V put(K key, V element) {
 		key.unobserve
 		key.observe(element)
 		
-		val change = new Change(ChangeType.ADD, element, key)
+		val change = new Change(ChangeType.ADD, element, key.toString)
 		publisher.publish(change)
 		return super.put(key, element)
 	}
@@ -30,7 +34,7 @@ class EntityMap<K, V> extends HashMap<K, V> implements IObservable {
 	override V remove(Object key) {
 		key.unobserve
 		
-		val change = new Change(ChangeType.REMOVE, 1, key)
+		val change = new Change(ChangeType.REMOVE, 1, key.toString)
 		publisher.publish(change)
 		return super.remove(key)
 	}
@@ -69,10 +73,10 @@ class EntityMap<K, V> extends HashMap<K, V> implements IObservable {
 					change.removeListener
 					
 					super.remove(key)
-					val newChange = new Change(ChangeType.REMOVE, 1, key)
+					val newChange = new Change(ChangeType.REMOVE, 1, key.toString)
 					publisher.publish(newChange)
 				} else {
-					publisher.publish(change.addPath(key, isTransitive))
+					publisher.publish(change.pushPath(key.toString, isTransitive))
 				}
 			]
 			

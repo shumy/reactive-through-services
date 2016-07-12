@@ -36,6 +36,7 @@ class EntityProcessor extends AbstractClassProcessor {
 	def void addFieldMethods(MutableClassDeclaration clazz, extension TransformationContext ctx) {
 		val allFields = clazz.declaredFields.filter [ !static && !transient ]
 		val variableFields = allFields.filter[ !final ]
+		val syncFields = allFields.filter[ findAnnotation(Ignore.findTypeGlobally) == null ]
 		
 		//convert primitives to boxed fields...
 		allFields.forEach[
@@ -50,11 +51,11 @@ class EntityProcessor extends AbstractClassProcessor {
 				addError('You need to initialize the field in the constructor')
 		]*/
 		
-		clazz.addMethod('getFields') [
+		clazz.addMethod('getSyncFields') [
 			returnType = List.newTypeReference(string)
 			body = '''
-				final List<String> fields = new «ArrayList.name»<>(«allFields.size»);
-				«FOR field: allFields»
+				final List<String> fields = new «ArrayList.name»<>(«syncFields.size»);
+				«FOR field: syncFields»
 					fields.add("«field.simpleName»");
 				«ENDFOR»
 				return fields;
