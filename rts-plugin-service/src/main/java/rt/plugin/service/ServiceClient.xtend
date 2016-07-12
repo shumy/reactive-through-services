@@ -7,8 +7,10 @@ import java.util.concurrent.atomic.AtomicLong
 import rt.plugin.service.an.Public
 import rt.pipeline.promise.PromiseResult
 import java.util.Map
+import org.slf4j.LoggerFactory
 
 class ServiceClient {
+	static val logger = LoggerFactory.getLogger('PROXY')
 	static val clientSeq = new AtomicLong(0L)
 	
 	val IMessageBus bus
@@ -34,7 +36,9 @@ class ServiceClient {
 				msgID++
 				val sendMsg = new Message => [id=msgID clt=uuid path=srvPath cmd=srvMeth.name args=srvArgs]
 				
+				logger.info('SEND id:{} clt:{} path:{} cmd:{}', sendMsg.id, sendMsg.clt, sendMsg.path, sendMsg.cmd)
 				bus.send(address, sendMsg)[ replyMsg |
+					logger.info('REPLY id:{} clt:{} cmd:{}', replyMsg.id, replyMsg.clt, replyMsg.cmd)
 					if (replyMsg.cmd == Message.CMD_OK) {
 						val anPublic = srvMeth.getAnnotation(Public)
 						if (anPublic == null)

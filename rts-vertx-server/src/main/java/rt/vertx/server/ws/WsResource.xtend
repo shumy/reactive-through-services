@@ -18,6 +18,8 @@ class WsResource {
 	@Accessors val PipeResource resource
 	
 	val WsRouter parent
+	val ServiceClientFactory srvClientFactory
+	
 	val ServerWebSocket ws
 	val (String) => void onClose
 	
@@ -31,12 +33,14 @@ class WsResource {
 		this.client = client
 		this.onClose = onClose
 		
-		val sb = new StringBuilder
-		val srvClientFactory = new ServiceClientFactory(parent.pipeline.mb, client, ws.textHandlerID) => [
+		this.srvClientFactory = new ServiceClientFactory(parent.pipeline.mb, client, ws.textHandlerID) => [
 			redirects.put('srv:channel', client + '/ch:req')
 		]
 		
+		val sb = new StringBuilder
 		this.resource  => [
+			object(IServiceClientFactory, srvClientFactory)
+			
 			sendCallback = [ send ]
 			contextCallback = [ object(IServiceClientFactory, srvClientFactory) ]
 			closeCallback = [ ws.close ]
@@ -88,6 +92,10 @@ class WsResource {
 			resource.release
 			onClose?.apply(client)
 		]
+	}
+	
+	def <T> T createProxy(String srvName, Class<T> proxy) {
+		return srvClientFactory.serviceClient.create('srv:' + srvName, proxy)
 	}
 	
 	private def void send(Message msg) {

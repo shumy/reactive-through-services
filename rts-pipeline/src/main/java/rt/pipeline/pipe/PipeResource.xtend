@@ -19,8 +19,12 @@ class PipeResource {
 	val Pipeline pipeline
 	val subscriptions = new HashMap<String, IListener>
 	val channels = new HashMap<String, IPipeChannel>
+	val objects = new HashMap<Class<?>, Object>
 	
 	def IMessageBus bus() { return pipeline.mb }
+	
+	def object(Class<?> type, Object instance) { objects.put(type, instance) }
+	def <T> T object(Class<T> type) { return objects.get(type) as T }
 	
 	package new(Pipeline pipeline, String client) {
 		logger.debug('CREATE {}', client)

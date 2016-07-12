@@ -101,6 +101,7 @@ class ReceiveBuffer extends ChannelBuffer {
 			fileChannel = FileChannel.open(path, StandardOpenOption.CREATE, StandardOpenOption.WRITE)
 			confirm
 		} catch(Exception ex) {
+			ex.printStackTrace
 			error('''«ex.class.simpleName»: «ex.message»''')
 		}
 	}
@@ -113,6 +114,7 @@ class ReceiveBuffer extends ChannelBuffer {
 		try {
 			fileChannel.write(buffer)
 		} catch(Exception ex) {
+			ex.printStackTrace
 			error('''«ex.class.simpleName»: «ex.message»''')
 		}
 	}

@@ -19,7 +19,7 @@ class PipeContext {
 	val Pipeline pipeline
 	val Iterator<IComponent> iter
 	val objects = new HashMap<Class<?>, Object>
-
+	
 	def IMessageBus bus() { return pipeline.mb }
 	
 	def object(Class<?> type, Object instance) { objects.put(type, instance) }
