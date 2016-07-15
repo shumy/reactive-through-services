@@ -53,6 +53,10 @@ class ClientRouter implements IServiceClientFactory {
 		connect
 	}
 	
+	def <T> T createProxy(String srvName, Class<T> proxy) {
+		return serviceClient.create('srv:' + srvName, proxy)
+	}
+	
 	def void connect() {
 		val router = this
 		
