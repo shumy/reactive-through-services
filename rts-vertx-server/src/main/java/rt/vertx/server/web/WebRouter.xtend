@@ -10,6 +10,7 @@ import rt.pipeline.IMessageBus.Message
 import rt.pipeline.pipe.Pipeline
 
 import static extension rt.vertx.server.web.URIParserHelper.*
+import java.util.Map
 
 class WebRouter {
 	static val logger = LoggerFactory.getLogger('HTTP-ROUTER')
@@ -48,6 +49,10 @@ class WebRouter {
 		routes.put(uri, address)
 	}
 	
+	def void rest(WebMethod webMethod, String uri, String address, String method, Map<String, Integer> paramMaps) {
+		//TODO: how to handle REST?
+	}
+	
 	/** Add redirects of HttpServerRequest to the service address, public method 'get, post, put, patch, delete'
 	 * @param uris Http request paths (accepts paths that end with /*)
 	 * @param address Of the service registered in the pipeline
@@ -84,5 +89,9 @@ class WebRouter {
 		}
 		
 		return address
+	}
+	
+	private static class WebRouterConfig {
+		
 	}
 }

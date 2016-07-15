@@ -81,6 +81,32 @@ class SendBuffer extends ChannelBuffer {
 		outPump.pushData(buffer)
 	}
 	
+	def void sendSliced(ByteBuffer buffer, int bufferSize, () => void onFinal) {
+		val limit = buffer.limit
+		buffer.limit(if (bufferSize < limit) bufferSize else limit)
+		
+		val index = new AtomicInteger(0)
+		asyncWhile([ index.get < limit ],[
+			if (outPump.ready) {
+				outPump.pushData(buffer)
+				
+				//next slice...
+				val nextPosition = index.addAndGet(bufferSize)
+				val nextLimit = nextPosition + bufferSize
+				
+				buffer.position(if (nextPosition < limit) nextPosition else limit)
+				buffer.limit(if (nextLimit < limit) nextLimit else limit)
+			}
+			return true
+		],
+		[ if (onFinal != null) onFinal.apply ],
+		[ error('''«class.simpleName»: «message»''') printStackTrace ])
+	}
+	
+	def void sendSliced(ByteBuffer buffer, () => void onFinal) {
+		sendSliced(buffer, 1024*1024, onFinal)
+	}
+	
 	def void sendFile(String filePath, int bufferSize, () => void onFinal) {
 		begin(filePath)[
 			logger.info('FILE-BEGIN ' + filePath)
@@ -93,7 +119,7 @@ class SendBuffer extends ChannelBuffer {
 				}
 				
 				val path = Paths.get(filePath)
-				fileChannel = FileChannel.open(path, StandardOpenOption.READ)	
+				fileChannel = FileChannel.open(path, StandardOpenOption.READ)
 			} catch(Exception ex) {
 				endError('''«ex.class.simpleName»: «ex.message»''')
 				return
@@ -115,7 +141,7 @@ class SendBuffer extends ChannelBuffer {
 				return true
 			],
 			[ end logger.info('FILE-END ' + filePath) ],
-			[ error('''«class.simpleName»: «message»''') ])
+			[ error('''«class.simpleName»: «message»''') printStackTrace ])
 		]
 	}
 	
