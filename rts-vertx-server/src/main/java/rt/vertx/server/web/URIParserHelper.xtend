@@ -4,15 +4,12 @@ import java.util.HashMap
 
 class URIParserHelper {
 	static def getRoute(String uri) {
-		if (uri.contains('..'))
-			throw new RuntimeException('Invalid URI')
-		
 		val route = uri.split('\\?').get(0)
 		
 		if (route.startsWith('/'))
 			return route
 		else
-			return '/' + route 
+			return '/' + route
 	}
 	
 	static def getQueryParams(String query) {
