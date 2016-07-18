@@ -4,23 +4,20 @@ import io.vertx.core.http.HttpMethod
 import io.vertx.core.http.HttpServer
 import java.util.HashMap
 import java.util.List
-import java.util.Stack
 import org.slf4j.LoggerFactory
 import rt.pipeline.IMessageBus.Message
 import rt.pipeline.pipe.Pipeline
-import rt.plugin.service.RoutePath
-import rt.plugin.service.ServiceRoute
+import rt.plugin.service.Router
 import rt.plugin.service.WebMethod
 import rt.vertx.server.web.processor.HttpRouteProcessor
 
 import static extension rt.vertx.server.web.URIParserHelper.*
 
-class WebRouter {
+class WebRouter extends Router {
 	static val logger = LoggerFactory.getLogger('HTTP-ROUTER')
 	
 	val HttpServer server
 	val Pipeline pipeline
-	val routes = new HashMap<String, ServiceRoute>
 	
 	val httpProcessor = new HttpRouteProcessor
 	
@@ -33,7 +30,7 @@ class WebRouter {
 			val uriSplits = req.uri.split('\\?')
 			
 			val route = uriSplits.get(0).route
-			val routeSplits = ServiceRoute.getRouteSplits(route)
+			val routeSplits = route.routeSplits
 			
 			val srvRoute = search(req.method.webMethod, routeSplits)
 			if (srvRoute == null) {
@@ -76,12 +73,7 @@ class WebRouter {
 	}
 	
 	def void route(WebMethod webMethod, String uriPattern, String srvAddress, String srvMethod, List<String> paramMaps) {
-		val routePaths = ServiceRoute.getRouteSplits(uriPattern).map[ new RoutePath(it) ]
-		val path = ServiceRoute.routePathsToRoute(routePaths)
-		
-		val srvRoute = new ServiceRoute(webMethod, srvAddress, srvMethod, paramMaps, routePaths, httpProcessor)
-		logger.info('NEW-ROUTE (path={} route={})', path, srvRoute)
-		routes.put(path, srvRoute)
+		route(webMethod, uriPattern, srvAddress, srvMethod, paramMaps, httpProcessor)
 	}
 	
 	def void route(String uriPattern, String srvAddress) {
@@ -104,37 +96,5 @@ class WebRouter {
 			case CONNECT:	return WebMethod.CONNECT
 			case TRACE:		return WebMethod.TRACE
 		}
-	}
-	
-	private def search(WebMethod webMethod, List<String> routeSplits) {
-		val path = new Stack<String>
-		val newRoute = new StringBuilder
-		
-		var index = 0
-		path.push('/*')
-		for (item: routeSplits) {
-			newRoute.append('/')
-			newRoute.append(item)
-			
-			if (index == routeSplits.size - 1)
-				path.push(newRoute.toString)
-			else
-				path.push(newRoute + '/*')
-			
-			index++
-		}
-		
-		var ServiceRoute srvRoute = null
-		while(srvRoute == null && !path.isEmpty) {
-			val newPath = path.pop
-			logger.trace('SEARCH {}', newPath)
-			srvRoute = routes.get(newPath)
-			if (srvRoute != null) {
-				logger.trace('FOUND {}', srvRoute)
-				if (!srvRoute.isValid(webMethod, routeSplits)) srvRoute = null
-			}
-		}
-		
-		return srvRoute
 	}
 }

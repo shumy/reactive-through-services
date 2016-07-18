@@ -4,13 +4,13 @@ import com.google.gson.Gson
 import java.util.Map
 import rt.pipeline.IMessageBus.Message
 import rt.plugin.service.RouteProcessor
-import rt.plugin.service.ServiceRoute
+import rt.plugin.service.RouteConfig
 
 class HttpRouteProcessor implements RouteProcessor {
 	val gson = new Gson
 	var long msgID = 0
 	
-	override request(ServiceRoute srvRoute, Map<String, Object> params) {
+	override request(RouteConfig srvRoute, Map<String, Object> params) {
 		msgID++
 		
 		//TODO: do I need a client?

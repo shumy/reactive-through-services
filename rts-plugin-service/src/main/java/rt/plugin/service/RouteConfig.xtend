@@ -4,7 +4,6 @@ import rt.pipeline.IMessageBus.Message
 import java.util.Map
 import java.util.List
 import java.util.HashMap
-import java.util.ArrayList
 
 enum WebMethod {
 	GET, POST, PUT, DELETE,
@@ -13,7 +12,7 @@ enum WebMethod {
 	ALL
 }
 
-class ServiceRoute {
+class RouteConfig {
 	public val WebMethod wMethod
 	public val String srvAddress
 	public val String srvMethod
@@ -32,39 +31,6 @@ class ServiceRoute {
 		this.processor = processor
 	}
 	
-	static def getRouteSplits(String uriPattern) {
-		val splits = new ArrayList<String>(uriPattern.split('/'))
-		if (uriPattern.startsWith('/') && splits.size > 0)
-			splits.remove(0)
-		
-		return splits
-	}
-	
-	static def routePathsToRoute(List<RoutePath> routePaths) {
-		val pathSplits = routePaths.map[ if (isParameter) '*' else it ]
-		return '''/«FOR item: pathSplits SEPARATOR '/'»«item»«ENDFOR»'''
-	}
-	
-	def isValid(WebMethod webMethod, List<String> routeSplits) {
-		//println('''IN: «webMethod» «routeSplits»''')
-		//println('''CONFIG: «wMethod» «routePaths»''')
-		
-		if (wMethod != webMethod && wMethod != WebMethod.ALL )
-			return false
-		
-		val iter = routeSplits.iterator
-		for (rPath: routePaths) {
-			if(iter.hasNext) {
-				val next = iter.next
-				if (!rPath.isParameter && rPath.name != '*' && rPath.name != next) return false
-			} else {
-				if (rPath.name != '*') return false
-			}
-		}
-		
-		return true
-	}
-	
 	def getParameters(List<String> routeSplits) {
 		val params = new HashMap<String, Object>
 		
@@ -80,7 +46,7 @@ class ServiceRoute {
 		return params
 	}
 	
-	def processRequest(ServiceRoute srvRoute, Map<String, Object> queryParams) {
+	def processRequest(RouteConfig srvRoute, Map<String, Object> queryParams) {
 		return processor.request(srvRoute, queryParams)
 	}
 	
@@ -104,6 +70,6 @@ class RoutePath {
 }
 
 interface RouteProcessor {
-	def Message request(ServiceRoute srvRoute, Map<String, Object> queryParams)
+	def Message request(RouteConfig srvRoute, Map<String, Object> queryParams)
 	def String response(Message msg)
 }
