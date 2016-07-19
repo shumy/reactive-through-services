@@ -13,6 +13,9 @@ enum WebMethod {
 }
 
 class RouteConfig {
+	public val boolean isGeneric //does it ends with a generic route
+	
+	public val boolean isDirect //are the requests directly processes with no translation?
 	public val WebMethod wMethod
 	public val String srvAddress
 	public val String srvMethod
@@ -21,7 +24,8 @@ class RouteConfig {
 	
 	val RouteProcessor processor
 	
-	new(WebMethod wMethod, String srvAddress, String srvMethod, List<String> paramMaps, List<RoutePath> routePaths, RouteProcessor processor) {
+	new(boolean isDirect, WebMethod wMethod, String srvAddress, String srvMethod, List<String> paramMaps, List<RoutePath> routePaths, RouteProcessor processor) {
+		this.isDirect = isDirect
 		this.wMethod = wMethod
 		this.srvAddress = srvAddress
 		this.srvMethod = srvMethod
@@ -29,10 +33,13 @@ class RouteConfig {
 		this.routePaths = routePaths
 		
 		this.processor = processor
+		
+		val rPath = routePaths.last
+		this.isGeneric = if (rPath != null) rPath.name == '*' else false
 	}
 	
 	def getParameters(List<String> routeSplits) {
-		val params = new HashMap<String, Object>
+		val params = new HashMap<String, String>
 		
 		val iter = routeSplits.iterator
 		for (rPath: routePaths) {
@@ -46,8 +53,8 @@ class RouteConfig {
 		return params
 	}
 	
-	def processRequest(RouteConfig srvRoute, Map<String, Object> queryParams) {
-		return processor.request(srvRoute, queryParams)
+	def processRequest(Map<String, Object> queryParams) {
+		return processor.request(this, queryParams)
 	}
 	
 	def processResponse(Message msg) {
@@ -70,6 +77,6 @@ class RoutePath {
 }
 
 interface RouteProcessor {
-	def Message request(RouteConfig srvRoute, Map<String, Object> queryParams)
+	def Message request(RouteConfig config, Map<String, Object> queryParams)
 	def String response(Message msg)
 }

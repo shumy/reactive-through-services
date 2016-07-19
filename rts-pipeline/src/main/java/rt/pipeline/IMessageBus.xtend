@@ -34,20 +34,16 @@ interface IMessageBus {
 		public String path
 		
 		// from request
-		transient List<String> jsonArgs
-		transient (List<String>, Class<?>[]) => List<Object> argsConverter = null
+		transient (Class<?>[]) => List<Object> argsConverter = null
 		List<Object> args = null
 		
 		// from response
-		transient String jsonResult
-		transient (String, Class<?>) => Object resultConverter = null
+		transient (Class<?>) => Object resultConverter = null
 		Object res = null
 		
 		new() {}
-		new(List<String> jsonArgs, (List<String>, Class<?>[]) => List<Object> argsConverter, String jsonResult, (String, Class<?>) => Object resultConverter) {
-			this.jsonArgs = jsonArgs
+		new((Class<?>[]) => List<Object> argsConverter, (Class<?>) => Object resultConverter) {
 			this.argsConverter = argsConverter
-			this.jsonResult = jsonResult
 			this.resultConverter = resultConverter
 		}
 		
@@ -56,14 +52,14 @@ interface IMessageBus {
 		def void setArgs(List<Object> args) { this.args = args }
 		def List<Object> args(Class<?> ...types) {
 			if (args == null)
-				args = argsConverter?.apply(jsonArgs, types)
+				args = argsConverter?.apply(types)
 			return args
 		}
 		
 		def void setResult(Object value) { this.res = value }
 		def <T> T result(Class<T> type) {
 			if (res == null)
-				res = resultConverter?.apply(jsonResult, type)
+				res = resultConverter?.apply(type)
 			return res as T
 		}
 	}

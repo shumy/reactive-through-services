@@ -1,43 +1,24 @@
 package rt.pipeline
 
 import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import com.google.gson.JsonDeserializer
-import rt.pipeline.IMessageBus.Message
+import java.util.ArrayList
 import java.util.LinkedList
 import java.util.List
-import com.google.gson.GsonBuilder
-import java.util.ArrayList
+import rt.pipeline.IMessageBus.Message
 
 class DefaultMessageConverter {
-	val (List<String>, Class<?>[]) => List<Object> argsConverter = [ values, types |
-		if (types.length != values.size)
-			throw new RuntimeException('Invalid number of arguments!')
-		
-		val args = new ArrayList<Object>(types.length)
-		
-		val valuesIter = values.iterator
-		for (type: types)
-			args.add(gson.fromJson(valuesIter.next, type))
-		
-		return args
-	]
-	
-	val (String, Class<?>) => Object resultConverter = [ value, type |
-		return gson.fromJson(value, type)
-	]
-	
 	val JsonDeserializer<Message> deserializer = [ json, typeOfT, ctx |
 		val obj = json.asJsonObject
 		
-		val jsonArgs = new LinkedList<String>
+		val jsonArgs = new LinkedList<Object>
 		val jsonResult = obj.get('res')?.toString
 		
-		val args = obj.get('args')?.asJsonArray
-		args?.forEach[
-			jsonArgs.add(toString)
-		]
+		val objArgs = obj.get('args')?.asJsonArray
+		objArgs?.forEach[ jsonArgs.add(toString) ]
 		
-		return new Message(jsonArgs, argsConverter, jsonResult, resultConverter) => [
+		return new Message(jsonArgs.createArgsConverter, jsonResult.createResultConverter) => [
 			id = obj.get('id').asLong
 			typ = obj.get('typ')?.asString
 			cmd = obj.get('cmd')?.asString
@@ -51,6 +32,41 @@ class DefaultMessageConverter {
 	]
 
 	val Gson gson = gsonBuilder.create
+	
+	def createArgsConverter(List<Object> jsonArgs) {
+		val (Class<?>[]) => List<Object> converter = [ types |
+			if (types.length != jsonArgs.size)
+				throw new RuntimeException('Invalid number of arguments!')
+			
+			val args = new ArrayList<Object>(types.length)
+			
+			val valuesIter = jsonArgs.iterator
+			for (type: types) {
+				val next = valuesIter.next
+				if (next.class == String) {
+					args.add(gson.fromJson(next as String, type))
+				} else {
+					args.add(next)
+				}
+			}
+			
+			return args
+		]
+		
+		return converter
+	}
+	
+	def createResultConverter(String jsonResult) {
+		val (Class<?>) => Object converter = [ type |
+			return gson.fromJson(jsonResult, type)
+		]
+		
+		return converter
+	}
+	
+	def String toJson(Object obj) {
+		return gson.toJson(obj)
+	}
 	
 	def String toJson(Message msg) {
 		return gson.toJson(msg)
