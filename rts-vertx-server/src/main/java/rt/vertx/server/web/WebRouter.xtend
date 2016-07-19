@@ -1,8 +1,11 @@
 package rt.vertx.server.web
 
+import io.netty.buffer.Unpooled
+import io.vertx.core.buffer.Buffer
 import io.vertx.core.http.HttpMethod
 import io.vertx.core.http.HttpServer
 import io.vertx.core.http.HttpServerRequest
+import java.nio.ByteBuffer
 import java.util.HashMap
 import java.util.List
 import java.util.Map
@@ -10,12 +13,12 @@ import org.slf4j.LoggerFactory
 import rt.pipeline.IMessageBus.Message
 import rt.pipeline.pipe.Pipeline
 import rt.plugin.service.RouteConfig
+import rt.plugin.service.RoutePath
 import rt.plugin.service.Router
 import rt.plugin.service.WebMethod
 import rt.vertx.server.web.processor.HttpRouteProcessor
 
 import static extension rt.vertx.server.web.URIParserHelper.*
-import rt.plugin.service.RoutePath
 
 class WebRouter extends Router {
 	static val logger = LoggerFactory.getLogger('HTTP-ROUTER')
@@ -48,25 +51,61 @@ class WebRouter extends Router {
 		]
 	}
 	
+	
 	def vrtxRoute(String uriPattern, String srvAddress) {
-		return route(true, WebMethod.ALL, uriPattern, srvAddress, 'get', #['http'])
+		val routePaths = uriPattern.routeSplits.routePaths
+		return route(false, WebMethod.ALL, routePaths, srvAddress, 'notify', #['ctx.request'], httpProcessor)
 	}
+	
+	def route(WebMethod webMethod, String uriPattern, String srvAddress, String srvMethod, List<String> paramMaps) {
+		val routePaths = uriPattern.routeSplits.routePaths
+		return route(webMethod, routePaths, srvAddress, srvMethod, paramMaps)
+	}
+	
 	
 	def void get(String uriPattern, String srvAddress, String srvMethod) {
 		val routePaths = uriPattern.routeSplits.routePaths
-		route(true, WebMethod.GET, routePaths, srvAddress, srvMethod, routePaths.defaultParamMaps)
+		route(WebMethod.GET, routePaths, srvAddress, srvMethod, routePaths.defaultParamMaps)
 	}
+	
+	def void get(String uriPattern, String srvAddress, String srvMethod, List<String> paramMaps) {
+		route(WebMethod.GET, uriPattern, srvAddress, srvMethod, paramMaps)
+	}
+	
+	
+	def void delete(String uriPattern, String srvAddress, String srvMethod) {
+		val routePaths = uriPattern.routeSplits.routePaths
+		route(WebMethod.DELETE, routePaths, srvAddress, srvMethod, routePaths.defaultParamMaps)
+	}
+	
+	def void delete(String uriPattern, String srvAddress, String srvMethod, List<String> paramMaps) {
+		route(WebMethod.DELETE, uriPattern, srvAddress, srvMethod, paramMaps)
+	}
+	
 	
 	def void post(String uriPattern, String srvAddress, String srvMethod) {
-		route(false, WebMethod.POST, uriPattern, srvAddress, srvMethod, #['body'])
-	}
-
-	private def route(boolean isDirect, WebMethod webMethod, String uriPattern, String srvAddress, String srvMethod, List<String> paramMaps) {
-		return route(isDirect, webMethod, uriPattern, srvAddress, srvMethod, paramMaps, httpProcessor)
+		val routePaths = uriPattern.routeSplits.routePaths
+		route(WebMethod.POST, routePaths, srvAddress, srvMethod, routePaths.defaultParamMapsWithBody)
 	}
 	
-	private def route(boolean isDirect, WebMethod webMethod, List<RoutePath> routePaths, String srvAddress, String srvMethod, List<String> paramMaps) {
-		return route(isDirect, webMethod, routePaths, srvAddress, srvMethod, paramMaps, httpProcessor)
+	def void post(String uriPattern, String srvAddress, String srvMethod, List<String> paramMaps) {
+		route(WebMethod.POST, uriPattern, srvAddress, srvMethod, paramMaps)
+	}
+	
+	
+	def void put(String uriPattern, String srvAddress, String srvMethod) {
+		val routePaths = uriPattern.routeSplits.routePaths
+		route(WebMethod.PUT, routePaths, srvAddress, srvMethod, routePaths.defaultParamMapsWithBody)
+	}
+	
+	def void put(String uriPattern, String srvAddress, String srvMethod, List<String> paramMaps) {
+		route(WebMethod.PUT, uriPattern, srvAddress, srvMethod, paramMaps)
+	}
+	
+	
+	private def route(WebMethod webMethod, List<RoutePath> routePaths, String srvAddress, String srvMethod, List<String> paramMaps) {
+		val processBody = ( webMethod == WebMethod.POST || webMethod == WebMethod.PUT )
+		return route(processBody, webMethod, routePaths, srvAddress, srvMethod, paramMaps, httpProcessor)
 	}
 	
 	private def process(HttpServerRequest req, RouteConfig config, List<String> routeSplits, Map<String, String> queryParams) {
@@ -91,12 +130,24 @@ class WebRouter extends Router {
 				}
 				
 				req.response.statusCode = 200
-				req.response.end(config.processResponse(reply))
+				
+				val content = config.processResponse(reply)
+				if (content.class == String) {
+					req.response.end(content as String)
+				} else if (content instanceof ByteBuffer) {
+					val cntBuffer = content as ByteBuffer
+					val buffer = Buffer.buffer(Unpooled.wrappedBuffer(cntBuffer))
+					req.response.end(buffer)
+				} else {
+					req.response.statusCode = 500
+					req.response.end('Service output not supported (String or ByteBuffer)!')
+				}
 			]
 		]
 		
-		if (config.isDirect) {
-			params.put('http', req)
+		if (!config.processBody) {
+			params.put('ctx.request', req)
+			params.put('ctx.path', req.path)
 			
 			//direct mode, request will be processed in the service
 			val msg = config.processRequest(params)
@@ -119,11 +170,12 @@ class WebRouter extends Router {
 			case POST: 		return WebMethod.POST
 			case PUT:		return WebMethod.PUT
 			case DELETE:	return WebMethod.DELETE
-			case HEAD:		return WebMethod.HEAD
-			case OPTIONS:	return WebMethod.OPTIONS
-			case PATCH:		return WebMethod.PATCH
-			case CONNECT:	return WebMethod.CONNECT
-			case TRACE:		return WebMethod.TRACE
+			//case HEAD:		return WebMethod.HEAD
+			//case OPTIONS:		return WebMethod.OPTIONS
+			//case PATCH:		return WebMethod.PATCH
+			//case CONNECT:		return WebMethod.CONNECT
+			//case TRACE:		return WebMethod.TRACE
+			default: return WebMethod.ALL
 		}
 	}
 }

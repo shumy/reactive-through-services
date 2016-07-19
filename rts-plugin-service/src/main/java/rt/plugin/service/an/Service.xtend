@@ -103,13 +103,18 @@ class ServiceProcessor extends AbstractClassProcessor {
 				«List»<Object> args = null;
 				Object ret = null;
 				
-				switch(msg.cmd) {
-					«FOR cas: switchCases»
-						«cas»
-					«ENDFOR»
-					default:
-						ctx.replyError("No public method: " + msg.cmd);
-						break;
+				try {
+					switch(msg.cmd) {
+						«FOR cas: switchCases»
+							«cas»
+						«ENDFOR»
+						default:
+							ctx.replyError("No public method: " + msg.cmd);
+							break;
+					}
+				} catch(«Exception.name» ex) {
+					ex.printStackTrace();
+					ctx.replyError(ex.getClass().getName() + ": " + ex.getMessage());
 				}
 			'''
 		]

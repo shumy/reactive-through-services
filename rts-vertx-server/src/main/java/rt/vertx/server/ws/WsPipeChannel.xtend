@@ -41,7 +41,7 @@ class WsPipeChannel implements IPipeChannel {
 			]
 			onData = [
 				if (ws.writeQueueFull) logger.error('Send queue is full!')
-				val buffer = Buffer.buffer(Unpooled.copiedBuffer(it))
+				val buffer = Buffer.buffer(Unpooled.wrappedBuffer(it))
 				ws.writeFinalBinaryFrame(buffer)
 			]
 		]

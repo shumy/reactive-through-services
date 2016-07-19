@@ -5,6 +5,7 @@ import rt.pipeline.IMessageBus.Message
 import rt.plugin.service.RouteProcessor
 import rt.plugin.service.RouteConfig
 import rt.pipeline.DefaultMessageConverter
+import java.nio.ByteBuffer
 
 class HttpRouteProcessor implements RouteProcessor {
 	val converter = new DefaultMessageConverter
@@ -27,7 +28,11 @@ class HttpRouteProcessor implements RouteProcessor {
 	}
 	
 	override response(Message msg) {
-		return converter.toJson(msg.result(Object))
+		val res = msg.result(Object)
+		if (res.class == String || res instanceof ByteBuffer)
+			return res
+		
+		return converter.toJson(res)
 	}
 	
 }

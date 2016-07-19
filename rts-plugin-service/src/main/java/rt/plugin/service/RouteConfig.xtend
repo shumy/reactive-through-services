@@ -7,15 +7,15 @@ import java.util.HashMap
 
 enum WebMethod {
 	GET, POST, PUT, DELETE,
-	HEAD, OPTIONS, PATCH,
-	CONNECT, TRACE,
+	//HEAD, OPTIONS, PATCH,
+	//CONNECT, TRACE,
 	ALL
 }
 
 class RouteConfig {
 	public val boolean isGeneric //does it ends with a generic route
+	public val boolean processBody
 	
-	public val boolean isDirect //are the requests directly processes with no translation?
 	public val WebMethod wMethod
 	public val String srvAddress
 	public val String srvMethod
@@ -24,8 +24,8 @@ class RouteConfig {
 	
 	val RouteProcessor processor
 	
-	new(boolean isDirect, WebMethod wMethod, String srvAddress, String srvMethod, List<String> paramMaps, List<RoutePath> routePaths, RouteProcessor processor) {
-		this.isDirect = isDirect
+	package new(boolean processBody, WebMethod wMethod, String srvAddress, String srvMethod, List<String> paramMaps, List<RoutePath> routePaths, RouteProcessor processor) {
+		this.processBody = processBody
 		this.wMethod = wMethod
 		this.srvAddress = srvAddress
 		this.srvMethod = srvMethod
@@ -68,7 +68,7 @@ class RoutePath {
 	public val boolean isParameter
 	public val String name
 	
-	new(String name) {
+	package new(String name) {
 		this.isParameter = name.startsWith(':')
 		this.name = if (isParameter) name.substring(1) else name
 	}
@@ -78,5 +78,5 @@ class RoutePath {
 
 interface RouteProcessor {
 	def Message request(RouteConfig config, Map<String, Object> queryParams)
-	def String response(Message msg)
+	def Object response(Message msg)
 }

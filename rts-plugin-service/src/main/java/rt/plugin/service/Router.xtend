@@ -5,18 +5,14 @@ import java.util.HashMap
 import java.util.List
 import java.util.ArrayList
 import org.eclipse.xtend.lib.annotations.Accessors
+import java.util.LinkedList
 
 abstract class Router {
 	static val logger = LoggerFactory.getLogger('ROUTER')
 	
 	val root = new Route
 	
-	protected def route(boolean isDirect, WebMethod webMethod, String uriPattern, String srvAddress, String srvMethod, List<String> paramMaps, RouteProcessor routeProcessor) {
-		val routePaths = uriPattern.routeSplits.map[ new RoutePath(it) ]
-		return route(isDirect, webMethod, routePaths, srvAddress, srvMethod, paramMaps, routeProcessor)
-	}
-	
-	protected def route(boolean isDirect, WebMethod webMethod, List<RoutePath> routePaths, String srvAddress, String srvMethod, List<String> paramMaps, RouteProcessor routeProcessor) {
+	protected def route(boolean processBody, WebMethod webMethod, List<RoutePath> routePaths, String srvAddress, String srvMethod, List<String> paramMaps, RouteProcessor routeProcessor) {
 		val sb = new StringBuilder
 		
 		var route = root
@@ -29,7 +25,7 @@ abstract class Router {
 		}
 		
 		if (route.config != null) logger.warn('Override of existent route {}', route.config)
-		route.config = new RouteConfig(isDirect, webMethod, srvAddress, srvMethod, paramMaps, routePaths, routeProcessor)
+		route.config = new RouteConfig(processBody, webMethod, srvAddress, srvMethod, paramMaps, routePaths, routeProcessor)
 		logger.info('ADD (route={} conf={})', sb.toString, route.config)
 		
 		return route
@@ -49,6 +45,13 @@ abstract class Router {
 	
 	protected def defaultParamMaps(List<RoutePath> routePaths) {
 		return routePaths.filter[ isParameter ].map[ name ].toList
+	}
+	
+	protected def defaultParamMapsWithBody(List<RoutePath> routePaths) {
+		val defaultParamMaps = new LinkedList<String>
+		defaultParamMaps.add('body')
+		defaultParamMaps.addAll(routePaths.filter[ isParameter ].map[ name ])
+		return defaultParamMaps
 	}
 	
 	protected def search(WebMethod webMethod, List<String> routeSplits) {

@@ -43,7 +43,7 @@ class DefaultMessageConverter {
 			val valuesIter = jsonArgs.iterator
 			for (type: types) {
 				val next = valuesIter.next
-				if (next.class == String) {
+				if (next.class == String && type != String) {
 					args.add(gson.fromJson(next as String, type))
 				} else {
 					args.add(next)

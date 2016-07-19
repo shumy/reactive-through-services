@@ -22,7 +22,7 @@ class FileUploaderService {
 	}
 	
 	@Public(notif = true)
-	def void get(HttpServerRequest req) {
+	def void notify(HttpServerRequest req) {
 		req.expectMultipart = true
 		req.uploadHandler[upload |
 			logger.debug('UPLOADING {}', upload.filename)
