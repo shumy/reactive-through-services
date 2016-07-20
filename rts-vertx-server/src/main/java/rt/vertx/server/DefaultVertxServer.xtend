@@ -7,6 +7,8 @@ import org.eclipse.xtend.lib.annotations.Accessors
 import rt.pipeline.pipe.Pipeline
 import rt.vertx.server.web.WebRouter
 import rt.vertx.server.ws.WsRouter
+import rt.pipeline.promise.AsyncUtils
+import rt.pipeline.DefaultMessageConverter
 
 class DefaultVertxServer {
 	@Accessors val HttpServer server
@@ -14,15 +16,24 @@ class DefaultVertxServer {
 	@Accessors val WsRouter wsRouter
 	@Accessors val WebRouter webRouter
 	
-	new(Vertx vertx, String wsUri) {
+	@Accessors val converter = new DefaultMessageConverter
+	
+	package val Vertx vertx
+	
+	new(Vertx vertx, String wsBaseRoute, String webBaseRoute) {
+		this.vertx = vertx
+		
 		this.server = vertx.createHttpServer(new HttpServerOptions => [
 			tcpKeepAlive = true
 		])
 		
 		this.pipeline = new Pipeline
-		this.wsRouter = new WsRouter(wsUri, server, pipeline)
-		this.webRouter = new WebRouter(server, pipeline)
+		this.wsRouter = new WsRouter(this, wsBaseRoute)
+		this.webRouter = new WebRouter(this, webBaseRoute)
 	}
 	
-	def void listen(int port) { server.listen(port) }
+	def void listen(int port) {
+		AsyncUtils.set(new VertxAsyncUtils(vertx))
+		server.listen(port)
+	}
 }

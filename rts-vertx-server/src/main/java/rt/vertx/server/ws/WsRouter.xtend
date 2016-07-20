@@ -4,22 +4,23 @@ import io.vertx.core.http.HttpServer
 import java.util.HashMap
 import org.eclipse.xtend.lib.annotations.Accessors
 import org.slf4j.LoggerFactory
-import rt.pipeline.DefaultMessageConverter
 import rt.pipeline.pipe.Pipeline
 import rt.pipeline.pipe.channel.IPipeChannel
 import rt.pipeline.pipe.channel.IPipeChannel.PipeChannelInfo
 
-import static extension rt.vertx.server.web.URIParserHelper.*
+import static extension rt.vertx.server.URIParserHelper.*
+import rt.vertx.server.DefaultVertxServer
 
 class WsRouter {
 	static val logger = LoggerFactory.getLogger('WS-ROUTER')
 	
 	@Accessors val resources = new HashMap<String, WsResource>
 	
-	package val converter = new DefaultMessageConverter
-	package val String route
+	package val DefaultVertxServer parent
 	package val HttpServer server
 	package val Pipeline pipeline
+	
+	val String baseRoute
 	
 	var (WsResource) => void onOpen = null
 	var (String) => void onClose = null
@@ -28,13 +29,17 @@ class WsRouter {
 	val chRequests = new HashMap<String, PipeChannelInfo>
 	val chRequestsHandlers = new HashMap<String, (IPipeChannel) => void>
 	
-	new(String route, HttpServer server, Pipeline pipeline) {
-		this.route = route
-		this.server = server
-		this.pipeline = pipeline
+	def getConverter() { return parent.converter }
+	
+	new(DefaultVertxServer parent, String baseRoute) {
+		this.parent = parent
+		this.server = parent.server
+		this.pipeline = parent.pipeline
+		
+		this.baseRoute = baseRoute
 		
 		server.websocketHandler[ ws |
-			if (ws.uri.route != route) {
+			if (ws.uri.route != baseRoute) {
 				logger.error('Invalid route for uri: {}', ws.uri)
 				ws.close return
 			}
