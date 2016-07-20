@@ -12,7 +12,7 @@ abstract class Router {
 	
 	val root = new Route
 	
-	protected def route(boolean processBody, WebMethod webMethod, List<RoutePath> routePaths, String srvAddress, String srvMethod, List<String> paramMaps, RouteProcessor routeProcessor) {
+	protected def route(boolean processBody, WebMethod webMethod, List<RoutePath> routePaths, String srvAddress, String srvMethod, List<String> paramMaps) {
 		val sb = new StringBuilder
 		
 		var route = root
@@ -25,7 +25,7 @@ abstract class Router {
 		}
 		
 		if (route.config != null) logger.warn('Override of existent route {}', route.config)
-		route.config = new RouteConfig(processBody, webMethod, srvAddress, srvMethod, paramMaps, routePaths, routeProcessor)
+		route.config = new RouteConfig(processBody, webMethod, srvAddress, srvMethod, paramMaps, routePaths)
 		logger.info('ADD (route={} conf={})', sb.toString, route.config)
 		
 		return route

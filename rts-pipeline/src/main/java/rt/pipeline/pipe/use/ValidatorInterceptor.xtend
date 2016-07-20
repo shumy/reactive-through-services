@@ -9,16 +9,16 @@ class ValidatorInterceptor implements IComponent {
 		val msg = ctx.message
 		
 		if(msg.id == 0)
-			ctx.fail("No mandatory field 'id'")
+			ctx.fail(new RuntimeException("No mandatory field 'id'"))
 		
 		if(msg.cmd == null)
-			ctx.fail("No mandatory field 'cmd'")
+			ctx.fail(new RuntimeException("No mandatory field 'cmd'"))
 		
 		if(msg.clt == null)
-			ctx.fail("No mandatory field 'client'")
+			ctx.fail(new RuntimeException("No mandatory field 'client'"))
 		
 		if(msg.path == null)
-			ctx.fail("No mandatory field 'path'")
+			ctx.fail(new RuntimeException("No mandatory field 'path'"))
 		
 		ctx.next
 	}

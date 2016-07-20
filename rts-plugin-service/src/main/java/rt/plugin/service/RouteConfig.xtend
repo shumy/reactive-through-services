@@ -1,9 +1,7 @@
 package rt.plugin.service
 
-import rt.pipeline.IMessageBus.Message
-import java.util.Map
-import java.util.List
 import java.util.HashMap
+import java.util.List
 
 enum WebMethod {
 	GET, POST, PUT, DELETE,
@@ -22,17 +20,13 @@ class RouteConfig {
 	public val List<String> paramMaps
 	public val List<RoutePath> routePaths
 	
-	val RouteProcessor processor
-	
-	package new(boolean processBody, WebMethod wMethod, String srvAddress, String srvMethod, List<String> paramMaps, List<RoutePath> routePaths, RouteProcessor processor) {
+	package new(boolean processBody, WebMethod wMethod, String srvAddress, String srvMethod, List<String> paramMaps, List<RoutePath> routePaths) {
 		this.processBody = processBody
 		this.wMethod = wMethod
 		this.srvAddress = srvAddress
 		this.srvMethod = srvMethod
 		this.paramMaps = paramMaps
 		this.routePaths = routePaths
-		
-		this.processor = processor
 		
 		val rPath = routePaths.last
 		this.isGeneric = if (rPath != null) rPath.name == '*' else false
@@ -53,15 +47,11 @@ class RouteConfig {
 		return params
 	}
 	
-	def processRequest(Map<String, Object> queryParams) {
-		return processor.request(this, queryParams)
-	}
+	def String getRequestPath()
+		'''/«wMethod» «routePaths»'''
 	
-	def processResponse(Message msg) {
-		return processor.response(msg)
-	}
-	
-	override toString() '''/«wMethod» «routePaths» -> «srvAddress».«srvMethod» «paramMaps»'''
+	override toString()
+		'''/«wMethod» «routePaths» -> «srvAddress».«srvMethod» «paramMaps»'''
 }
 
 class RoutePath {
@@ -74,9 +64,4 @@ class RoutePath {
 	}
 	
 	override toString() '''«IF isParameter»:«ENDIF»«name»'''
-}
-
-interface RouteProcessor {
-	def Message request(RouteConfig config, Map<String, Object> queryParams)
-	def Object response(Message msg)
 }

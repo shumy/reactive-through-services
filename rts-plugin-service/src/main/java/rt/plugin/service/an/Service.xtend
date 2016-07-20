@@ -109,12 +109,12 @@ class ServiceProcessor extends AbstractClassProcessor {
 							«cas»
 						«ENDFOR»
 						default:
-							ctx.replyError("No public method: " + msg.cmd);
+							ctx.replyError(new RuntimeException("No public method: " + msg.cmd));
 							break;
 					}
 				} catch(«Exception.name» ex) {
 					ex.printStackTrace();
-					ctx.replyError(ex.getClass().getName() + ": " + ex.getMessage());
+					ctx.replyError(ex);
 				}
 			'''
 		]

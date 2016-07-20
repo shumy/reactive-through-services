@@ -39,16 +39,16 @@ class PipelineTest {
 				sync.countDown
 	
 				if(sync.count == 3)
-					ctx.assertEquals(it, "No mandatory field 'id'")
+					ctx.assertEquals(message, "No mandatory field 'id'")
 
 				if(sync.count == 2)
-					ctx.assertEquals(it, "No mandatory field 'cmd'")
+					ctx.assertEquals(message, "No mandatory field 'cmd'")
 					
 				if(sync.count == 1)
-					ctx.assertEquals(it, "No mandatory field 'client'")
+					ctx.assertEquals(message, "No mandatory field 'client'")
 				
 				if(sync.count == 0)
-					ctx.assertEquals(it, "No mandatory field 'path'")
+					ctx.assertEquals(message, "No mandatory field 'path'")
 			]
 		]
 		

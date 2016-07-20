@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory
 import rt.pipeline.PathValidator
 import rt.plugin.service.an.Public
 import rt.plugin.service.an.Service
+import rt.plugin.service.ServiceException
 
 @Service
 class WebFileService {
@@ -48,11 +49,9 @@ class WebFileService {
 	
 	@Public
 	def ByteBuffer file(String path) {
-		if (!PathValidator.isValid(path)) {
-			//protect against filesystem attacks
-			logger.error('Request path not accepted: {}', path)
-			throw new RuntimeException('Request path not accepted!')
-		}
+		//protect against filesystem attacks
+		if (!PathValidator.isValid(path))
+			throw new ServiceException(403, 'Request path not accepted!')
 		
 		val filePath = if (path.equals('/')) {
 			'/index.html'

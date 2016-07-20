@@ -37,10 +37,16 @@ class PipeContext {
 	 */
 	def void deliver() {
 		if(!inFail) {
-			if (message.typ == Message.REPLY)
-				deliverReply
-			else
-				deliverRequest
+			try {
+				if (message.typ == Message.REPLY)
+					deliverReply
+				else
+					deliverRequest
+				
+			} catch(RuntimeException ex) {
+				ex.printStackTrace
+				fail(ex)
+			}
 		}
 	}
 
@@ -53,7 +59,7 @@ class PipeContext {
 					iter.next.apply(this)
 				} catch(RuntimeException ex) {
 					ex.printStackTrace
-					fail(ex.message)
+					fail(ex)
 				}
 			} else {
 				deliver
@@ -74,10 +80,10 @@ class PipeContext {
 	 * @param from The address that will be on reply "header.from".
 	 * @param error The error descriptor message.
 	 */
-	def void fail(String error) {
+	def void fail(Exception ex) {
 		if(!inFail) {
-			replyError(error)
-			pipeline.fail(error)
+			replyError(ex)
+			pipeline.fail(ex)
 			inFail = true
 		}
 	}
@@ -126,11 +132,11 @@ class PipeContext {
 	/** Does nothing to the pipeline flow and sends a ERROR reply back with a pre formatted JSON schema. 
 	 * @param value The error descriptor message.
 	 */
-	def void replyError(String errorMsg) {
+	def void replyError(Exception ex) {
 		if(!inFail) {
 			val reply = new Message => [
 				cmd = Message.CMD_ERROR
-				result = errorMsg
+				result = ex
 			]
 			
 			reply(reply)
@@ -148,12 +154,7 @@ class PipeContext {
 		val srv = pipeline.getServiceFromPath(message.path)
 		if(srv != null) {
 			logger.debug('DELIVER {}', message.path)
-			try {
-				srv.apply(this)
-			} catch(RuntimeException ex) {
-				ex.printStackTrace
-				fail(ex.message)
-			}
+			srv.apply(this)
 		} else {
 			logger.debug('PUBLISH {}', message.path)
 			pipeline.mb.publish(message.path, message)
