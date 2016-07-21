@@ -1,27 +1,27 @@
 package rt.plugin.service.an
 
 import java.lang.annotation.Target
-import org.eclipse.xtend.lib.macro.Active
+import java.util.LinkedList
+import java.util.List
 import org.eclipse.xtend.lib.macro.AbstractClassProcessor
-import org.eclipse.xtend.lib.macro.declaration.MutableClassDeclaration
-import org.eclipse.xtend.lib.macro.TransformationContext
-import org.eclipse.xtend.lib.macro.declaration.MutableMethodDeclaration
-import org.eclipse.xtend.lib.macro.declaration.ClassDeclaration
+import org.eclipse.xtend.lib.macro.Active
 import org.eclipse.xtend.lib.macro.CodeGenerationContext
+import org.eclipse.xtend.lib.macro.TransformationContext
+import org.eclipse.xtend.lib.macro.ValidationContext
+import org.eclipse.xtend.lib.macro.declaration.AnnotationReference
+import org.eclipse.xtend.lib.macro.declaration.ClassDeclaration
+import org.eclipse.xtend.lib.macro.declaration.MethodDeclaration
+import org.eclipse.xtend.lib.macro.declaration.MutableClassDeclaration
+import org.eclipse.xtend.lib.macro.declaration.MutableMethodDeclaration
+import org.eclipse.xtend.lib.macro.declaration.MutableParameterDeclaration
+import rt.pipeline.IComponent
+import rt.pipeline.IMessageBus.Message
+import rt.pipeline.pipe.PipeContext
 import rt.plugin.config.PluginConfig
 import rt.plugin.config.PluginConfigFactory
 import rt.plugin.config.PluginEntry
-import java.util.List
-import rt.pipeline.IComponent
-import rt.pipeline.pipe.PipeContext
-import rt.pipeline.IMessageBus.Message
-import org.eclipse.xtend.lib.macro.ValidationContext
 import rt.plugin.service.IServiceClientFactory
 import rt.plugin.service.ServiceClient
-import java.util.LinkedList
-import org.eclipse.xtend.lib.macro.declaration.AnnotationReference
-import org.eclipse.xtend.lib.macro.declaration.MutableParameterDeclaration
-import org.eclipse.xtend.lib.macro.declaration.MethodDeclaration
 
 @Target(TYPE)
 @Active(ServiceProcessor)
@@ -142,9 +142,8 @@ class ServiceProcessor extends AbstractClassProcessor {
 	def getContextArgs(MutableMethodDeclaration meth, extension TransformationContext ctx) {
 		val ctxArgs = new LinkedList<AnnotationReference>
 		
-		val annoProxyRef = meth.findAnnotation(Proxy.findTypeGlobally)
-		if (annoProxyRef != null)
-			ctxArgs.add(annoProxyRef)
+		val annoProxyRef = meth.annotations.filter[ annotationTypeDeclaration ==  Proxy.findTypeGlobally ]
+		ctxArgs.addAll(annoProxyRef)
 		
 		val annoProxysRef = meth.findAnnotation(Proxies.findTypeGlobally)
 		if (annoProxysRef != null) {
