@@ -94,7 +94,7 @@ class EntityProcessor extends AbstractClassProcessor {
 			val fType = typeConversions.get(field.type.simpleName)
 			val fTypeRef = fType?.newTypeReference ?: field.type
 			
-			val getType = if (fType == Boolean) 'is' else 'get'			
+			val getType = if (fType == Boolean) 'is' else 'get'
 			clazz.addMethod(getType + field.simpleName.toFirstUpper)[
 				returnType = fTypeRef
 				body = '''
