@@ -22,7 +22,7 @@ class TestData {
 	}
 }
 
-@Data
+@Data(metadata = true)
 class TestDataItem {
 	val String name
 	val boolean correct

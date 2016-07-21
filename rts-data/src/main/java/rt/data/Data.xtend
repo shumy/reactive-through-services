@@ -11,6 +11,11 @@ import org.eclipse.xtend.lib.macro.declaration.FieldDeclaration
 import org.eclipse.xtend.lib.macro.declaration.Visibility
 import org.eclipse.xtext.xbase.lib.Procedures.Procedure1
 import org.eclipse.xtend.lib.macro.ValidationContext
+import java.util.List
+import org.eclipse.xtend.lib.macro.declaration.MutableFieldDeclaration
+import rt.data.schema.ISchema
+import rt.data.schema.SProperty
+import com.google.common.collect.ImmutableList
 
 @Target(TYPE)
 @Active(DataProcessor)
@@ -142,10 +147,46 @@ class DataProcessor extends AbstractClassProcessor {
 				return data;
 			'''
 		]
+		
+		val anno = clazz.findAnnotation(Data.findTypeGlobally)
+		if (anno.getBooleanValue('metadata'))
+			clazz.generateMetadata(allFields.toList, context)
 	}
 	
 	def convert(extension TransformationContext context, FieldDeclaration field) {
 		val fType = typeConversions.get(field.type.simpleName)
 		return fType?.newTypeReference ?: field.type
+	}
+	
+	def void generateMetadata(MutableClassDeclaration clazz, List<? extends MutableFieldDeclaration> fields, extension TransformationContext context) {
+		clazz.extendedClass = ISchema.newTypeReference
+		
+		clazz.addField('properties')[
+			transient = true
+			static = true
+			final = true
+			type = List.newTypeReference(SProperty.newTypeReference)
+			initializer = '''«ImmutableList».copyOf(new SProperty[] {
+				«FOR prop: fields SEPARATOR ','»
+					«context.propertyInitializer(prop)»
+				«ENDFOR»
+			})'''
+		]
+		
+		clazz.addMethod('getProperties')[
+			returnType = List.newTypeReference(SProperty.newTypeReference)
+			body = '''
+				return properties;
+			'''
+		]
+	}
+	
+	def propertyInitializer(extension TransformationContext context, MutableFieldDeclaration prop) {
+		val isOptional = prop.findAnnotation(Optional.findTypeGlobally) != null
+		val defaultValue = prop.findAnnotation(Default.findTypeGlobally)?.getStringValue('value')
+		
+		return '''
+			new SProperty("«context.convert(prop)»", "«prop.simpleName»", «isOptional», «IF defaultValue != null»«defaultValue»«ELSE»null«ENDIF»)
+		'''
 	}
 }
