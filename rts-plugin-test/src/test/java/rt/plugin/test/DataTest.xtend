@@ -7,17 +7,20 @@ import rt.plugin.test.data.TestData
 import rt.plugin.test.data.TestDataItem
 import rt.data.ValidationException
 
+import static extension rt.plugin.test.data.TestData.*
+import static extension rt.plugin.test.data.TestDataItem.*
+
 class DataTest {
 	static val gson = new GsonBuilder().create
 	
 	@Test
 	def void dataSerialize() {
-		val t = TestData.B => [
+		val t = TestData => [
 			name = 'Alex'
 			age = 35
 			items = #[
-				TestDataItem.B => [ name = 'item-a' correct = true ],
-				TestDataItem.B => [ name = 'item-b' correct = false defVar = 30L ]
+				TestDataItem => [ name = 'item-a' correct = true ],
+				TestDataItem => [ name = 'item-b' correct = false defVar = 30L ]
 			]
 		]
 		
@@ -46,7 +49,7 @@ class DataTest {
 	@Test
 	def void mandatoryValidation() {
 		try {
-			TestData.B => [
+			TestData => [
 				name = 'Alex'
 				age = 35
 			]
@@ -61,12 +64,12 @@ class DataTest {
 	@Test
 	def void customValidation() {
 		try {
-			TestData.B => [
+			TestData => [
 				name = 'Invalid-Name'
 				age = 35
 				items = #[
-					TestDataItem.B => [ name = 'item-a' correct = true ],
-					TestDataItem.B => [ name = 'item-b' correct = false defVar = 30L ]
+					TestDataItem => [ name = 'item-a' correct = true ],
+					TestDataItem => [ name = 'item-b' correct = false defVar = 30L ]
 				]
 			]
 		} catch(ValidationException ex) {

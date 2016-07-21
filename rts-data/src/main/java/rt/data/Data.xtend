@@ -70,7 +70,7 @@ class DataProcessor extends AbstractClassProcessor {
 			addParameter('block', Procedure1.newTypeReference(builderClazz.newTypeReference))
 			body = '''
 				block.apply(this);
-				«clazz.simpleName» data = new «clazz.simpleName»(this);
+				final «clazz.simpleName» data = new «clazz.simpleName»(this);
 				data.validate();
 				return data;
 			'''
@@ -125,6 +125,21 @@ class DataProcessor extends AbstractClassProcessor {
 			returnType = builderClazz.newTypeReference
 			body = '''
 				return new «builderClassName»();
+			'''
+		]
+		
+		//this one only works when using static extension imports!
+		clazz.addMethod('operator_doubleArrow') [
+			static = true
+			returnType = clazz.newTypeReference
+			addParameter('left', Class.newTypeReference(clazz.newTypeReference))
+			addParameter('block', Procedure1.newTypeReference(builderClazz.newTypeReference))
+			body = '''
+				final «builderClazz.simpleName» builder = new «builderClazz.simpleName»(); 
+				block.apply(builder);
+				final «clazz.simpleName» data = new «clazz.simpleName»(builder);
+				data.validate();
+				return data;
 			'''
 		]
 	}

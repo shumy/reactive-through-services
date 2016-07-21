@@ -26,5 +26,5 @@ class TestData {
 class TestDataItem {
 	val String name
 	val boolean correct
-	@Default('12L') val Long defVar
+	@Default('12L') val long defVar
 }
