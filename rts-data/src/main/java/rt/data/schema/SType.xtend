@@ -35,7 +35,9 @@ class SType {
 		return new SType(nat)
 	}
 	
-	private static def getNative(String type) {
+	private static def getNative(String inType) {
+		val type = inType.replaceAll('\\s+','')
+		
 		switch type {
 			case 'String': 		'txt'
 			case 'Boolean': 	'bol'

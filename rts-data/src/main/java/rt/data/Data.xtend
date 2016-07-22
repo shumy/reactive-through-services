@@ -1,21 +1,21 @@
 package rt.data
 
+import com.google.common.collect.ImmutableList
 import java.lang.annotation.Target
-import org.eclipse.xtend.lib.macro.Active
+import java.util.List
 import org.eclipse.xtend.lib.macro.AbstractClassProcessor
-import org.eclipse.xtend.lib.macro.declaration.MutableClassDeclaration
-import org.eclipse.xtend.lib.macro.TransformationContext
-import org.eclipse.xtend.lib.macro.declaration.ClassDeclaration
+import org.eclipse.xtend.lib.macro.Active
 import org.eclipse.xtend.lib.macro.RegisterGlobalsContext
+import org.eclipse.xtend.lib.macro.TransformationContext
+import org.eclipse.xtend.lib.macro.ValidationContext
+import org.eclipse.xtend.lib.macro.declaration.ClassDeclaration
 import org.eclipse.xtend.lib.macro.declaration.FieldDeclaration
+import org.eclipse.xtend.lib.macro.declaration.MutableClassDeclaration
+import org.eclipse.xtend.lib.macro.declaration.MutableFieldDeclaration
 import org.eclipse.xtend.lib.macro.declaration.Visibility
 import org.eclipse.xtext.xbase.lib.Procedures.Procedure1
-import org.eclipse.xtend.lib.macro.ValidationContext
-import java.util.List
-import org.eclipse.xtend.lib.macro.declaration.MutableFieldDeclaration
 import rt.data.schema.ISchema
 import rt.data.schema.SProperty
-import com.google.common.collect.ImmutableList
 import rt.data.schema.SType
 
 @Target(TYPE)

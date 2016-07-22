@@ -5,14 +5,14 @@ class SProperty {
 	public val String name
 	public val boolean opt
 	
-	public val Object defaultValue
+	public val Object defv
 	
 	new(String name, SType type, boolean isOptional, Object defaultValue) {
 		this.name = name
 		this.type = type
 		this.opt = isOptional
 		
-		this.defaultValue = defaultValue
+		this.defv = defaultValue
 	}
 	
 }

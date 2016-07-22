@@ -12,9 +12,9 @@ import java.util.Map
 class TestData {
 	val String name
 	val int age
-	val List<TestDataItem> items
+	val List< TestDataItem	> items
 	
-	@Optional val Map<String, TestDataItem> itemMap
+	@Optional val Map< String, TestDataItem> itemMap
 	@Optional val String opt
 	
 	@Optional val TestDataItem item
@@ -30,5 +30,6 @@ class TestData {
 class TestDataItem {
 	val String name
 	val boolean correct
+	
 	@Default('12L') val long defVar
 }
