@@ -6,6 +6,7 @@ import rt.data.Default
 import rt.data.Optional
 import rt.data.ValidationException
 import rt.data.Validation
+import java.util.Map
 
 @Data(metadata = true)
 class TestData {
@@ -13,7 +14,10 @@ class TestData {
 	val int age
 	val List<TestDataItem> items
 	
+	@Optional val Map<String, TestDataItem> itemMap
 	@Optional val String opt
+	
+	@Optional val TestDataItem item
 	
 	@Validation
 	def void custom() {

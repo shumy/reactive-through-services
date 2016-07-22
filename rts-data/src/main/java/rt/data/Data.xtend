@@ -16,6 +16,7 @@ import org.eclipse.xtend.lib.macro.declaration.MutableFieldDeclaration
 import rt.data.schema.ISchema
 import rt.data.schema.SProperty
 import com.google.common.collect.ImmutableList
+import rt.data.schema.SType
 
 @Target(TYPE)
 @Active(DataProcessor)
@@ -83,6 +84,8 @@ class DataProcessor extends AbstractClassProcessor {
 		
 		
 		//change original class...
+		clazz.extendedClass = IData.newTypeReference
+		
 		allFields.forEach[ field |
 			val fType = typeConversions.get(field.type.simpleName)
 			val fTypeRef = fType?.newTypeReference ?: field.type
@@ -106,6 +109,18 @@ class DataProcessor extends AbstractClassProcessor {
 				«FOR field: allFields»
 					this.«field.simpleName» = builder.«field.simpleName»;
 				«ENDFOR»
+			'''
+		]
+		
+		clazz.addMethod('get')[
+			returnType = object
+			addParameter('field', string)
+			body = '''
+				«FOR field: allFields»
+					if (field.equals("«field.simpleName»")) return this.«field.simpleName»;
+				«ENDFOR»
+
+				throw new RuntimeException("No field '" + field + "' for «clazz.qualifiedName»");
 			'''
 		]
 		
@@ -162,6 +177,7 @@ class DataProcessor extends AbstractClassProcessor {
 		clazz.extendedClass = ISchema.newTypeReference
 		
 		clazz.addField('properties')[
+			visibility = Visibility.PUBLIC
 			transient = true
 			static = true
 			final = true
@@ -184,9 +200,9 @@ class DataProcessor extends AbstractClassProcessor {
 	def propertyInitializer(extension TransformationContext context, MutableFieldDeclaration prop) {
 		val isOptional = prop.findAnnotation(Optional.findTypeGlobally) != null
 		val defaultValue = prop.findAnnotation(Default.findTypeGlobally)?.getStringValue('value')
-		
+
 		return '''
-			new SProperty("«context.convert(prop)»", "«prop.simpleName»", «isOptional», «IF defaultValue != null»«defaultValue»«ELSE»null«ENDIF»)
+			new SProperty("«prop.simpleName»", «SType.canonicalName».convertFromJava("«context.convert(prop)»"), «isOptional», «IF defaultValue != null»«defaultValue»«ELSE»null«ENDIF»)
 		'''
 	}
 }

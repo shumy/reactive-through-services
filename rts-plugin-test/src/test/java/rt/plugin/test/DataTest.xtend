@@ -18,13 +18,18 @@ class DataTest {
 		val t = TestData => [
 			name = 'Alex'
 			age = 35
+			
 			items = #[
 				TestDataItem => [ name = 'item-a' correct = true ],
 				TestDataItem => [ name = 'item-b' correct = false defVar = 30L ]
 			]
+			
+			itemMap = #{
+				'first' -> (TestDataItem => [ name = 'item-a' correct = true ])
+			}
 		]
 		
-		Assert.assertEquals(gson.toJson(t), '{"name":"Alex","age":35,"items":[{"name":"item-a","correct":true,"defVar":12},{"name":"item-b","correct":false,"defVar":30}]}')
+		Assert.assertEquals(gson.toJson(t), '{"name":"Alex","age":35,"items":[{"name":"item-a","correct":true,"defVar":12},{"name":"item-b","correct":false,"defVar":30}],"itemMap":{"first":{"name":"item-a","correct":true,"defVar":12}}}')
 	}
 	
 	@Test
@@ -78,6 +83,25 @@ class DataTest {
 		}
 		
 		Assert.fail
+	}
+	
+	@Test
+	def void dataSchema() {
+		val t = TestData => [
+			name = 'Alex'
+			age = 35
+			
+			items = #[
+				TestDataItem => [ name = 'item-a' correct = true ],
+				TestDataItem => [ name = 'item-b' correct = false defVar = 30L ]
+			]
+			
+			itemMap = #{
+				'first' -> (TestDataItem => [ name = 'item-a' correct = true ])
+			}
+		]
+		
+		Assert.assertEquals(gson.toJson(t.properties), '[{"type":{"typ":"txt"},"name":"name","opt":false},{"type":{"typ":"int"},"name":"age","opt":false},{"type":{"typ":"lst","fGen":"TestDataItem"},"name":"items","opt":false},{"type":{"typ":"map","fGen":"txt","sGen":" TestDataItem"},"name":"itemMap","opt":true},{"type":{"typ":"txt"},"name":"opt","opt":true},{"type":{"typ":"TestDataItem"},"name":"item","opt":true}]')
 	}
 	
 }

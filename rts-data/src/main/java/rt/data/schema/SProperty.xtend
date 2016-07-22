@@ -1,17 +1,18 @@
 package rt.data.schema
 
 class SProperty {
-	public val String type
+	public val SType type
 	public val String name
-	public val boolean isOptional
+	public val boolean opt
 	
 	public val Object defaultValue
 	
-	new(String type, String name, boolean isOptional, Object defaultValue) {
-		this.type = type
+	new(String name, SType type, boolean isOptional, Object defaultValue) {
 		this.name = name
-		this.isOptional = isOptional
+		this.type = type
+		this.opt = isOptional
 		
 		this.defaultValue = defaultValue
 	}
+	
 }
