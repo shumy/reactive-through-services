@@ -9,16 +9,14 @@ import rt.pipeline.PathValidator
 import rt.plugin.service.an.Public
 import rt.plugin.service.an.Service
 import rt.plugin.service.ServiceException
+import rt.data.Data
 
 @Service
+@Data(metadata = false)
 class WebFileService {
 	static val logger = LoggerFactory.getLogger('HTTP-FILE-REQUEST')
 	
 	val String folder
-	
-	new(String folder) {
-		this.folder = folder
-	}
 	
 	@Public(notif = true)
 	def void notify(HttpServerRequest req) {

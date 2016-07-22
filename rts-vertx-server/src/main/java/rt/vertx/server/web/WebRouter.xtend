@@ -11,6 +11,7 @@ import rt.plugin.service.WebMethod
 
 import static extension rt.vertx.server.URIParserHelper.*
 import rt.vertx.server.DefaultVertxServer
+import rt.pipeline.IComponent
 
 class WebRouter extends Router {
 	static val logger = LoggerFactory.getLogger('WEB-ROUTER')
@@ -52,8 +53,10 @@ class WebRouter extends Router {
 		]
 	}
 	
-	
-	def vrtxRoute(String uriPattern, String srvAddress) {
+	def vrtxRoute(String uriPattern, IComponent vrtxService) {
+		val srvAddress = 'vrtx:' + vrtxService.class.name
+		pipeline.addComponent(srvAddress, vrtxService)
+		
 		val route = baseRoute + uriPattern
 		val routePaths = route.routeSplits.routePaths
 		return route(false, WebMethod.ALL, routePaths, srvAddress, 'notify', #['ctx.request'])

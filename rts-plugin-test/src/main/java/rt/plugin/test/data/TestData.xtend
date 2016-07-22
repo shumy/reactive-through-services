@@ -8,7 +8,7 @@ import rt.data.ValidationException
 import rt.data.Validation
 import java.util.Map
 
-@Data(metadata = true)
+@Data
 class TestData {
 	val String name
 	val int age
@@ -26,7 +26,7 @@ class TestData {
 	}
 }
 
-@Data(metadata = true)
+@Data
 class TestDataItem {
 	val String name
 	val boolean correct

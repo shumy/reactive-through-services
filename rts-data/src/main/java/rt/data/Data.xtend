@@ -21,7 +21,7 @@ import rt.data.schema.SType
 @Target(TYPE)
 @Active(DataProcessor)
 annotation Data {
-	boolean metadata = false
+	boolean metadata = true
 }
 
 class DataProcessor extends AbstractClassProcessor {
@@ -34,9 +34,14 @@ class DataProcessor extends AbstractClassProcessor {
 	}
 	
 	override doValidate(ClassDeclaration clazz, extension ValidationContext ctx) {
-		val variableFields = clazz.declaredFields.filter [ !final ]
-		variableFields.forEach[
-			addError('Variable fields not supported in Data!')
+		clazz.declaredFields.forEach[
+			if (!final)
+				addError('Variable fields not supported in data types!')
+		]
+		
+		clazz.declaredMethods.forEach[
+			if (findAnnotation(Validation.findTypeGlobally) != null && parameters.length != 0)
+				addError('Validation methods can not have parameters!')
 		]
 	}
 	
@@ -45,7 +50,7 @@ class DataProcessor extends AbstractClassProcessor {
 	}
 	
 	override doTransform(MutableClassDeclaration clazz, extension TransformationContext ctx) {
-		val allFields = clazz.declaredFields.filter[ !transient ].toList
+		val allFields = clazz.declaredFields.filter[ !(transient || static) ].toList
 		val mandatoryFields = allFields.filter[
 			findAnnotation(Optional.findTypeGlobally) == null && findAnnotation(Default.findTypeGlobally) == null
 		]
@@ -124,10 +129,7 @@ class DataProcessor extends AbstractClassProcessor {
 			'''
 		]
 		
-		val customValidations = clazz.declaredMethods.filter[
-			findAnnotation(Validation.findTypeGlobally) != null && parameters.length == 0
-		]
-		
+		val customValidations = clazz.declaredMethods.filter[ findAnnotation(Validation.findTypeGlobally) != null ]
 		clazz.addMethod('validate')[
 			body ='''
 				«FOR field: mandatoryFields»

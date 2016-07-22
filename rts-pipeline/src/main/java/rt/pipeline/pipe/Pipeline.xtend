@@ -21,10 +21,6 @@ class Pipeline {
 		this.mb = mb
 	}
 	
-	def createResource(String client) {
-		return new PipeResource(this, client)
-	}
-	
 	package def void process(PipeResource resource, Message msg) {
 		val ctx = new PipeContext(this, resource, msg, interceptors.iterator)
 		ctx.next
@@ -34,6 +30,10 @@ class Pipeline {
 		val ctx = new PipeContext(this, resource, msg, interceptors.iterator)
 		onContextCreated.apply(ctx)
 		ctx.next
+	}
+	
+	def createResource(String client) {
+		return new PipeResource(this, client)
 	}
 	
 	def fail(Exception ex) {
@@ -48,9 +48,23 @@ class Pipeline {
 		services.put(ChannelService.name, chService)
 	}
 	
-	def getServiceFromPath(String path) {
+	def getComponentPaths() {
+		return services.keySet
+	}
+	
+	def getComponent(String path) {
 		return services.get(path)
 	}
+	
+	def addComponent(String path, IComponent component) {
+		services.put(path, component)
+	}
+	
+	def void removeComponent(String path) {
+		services.remove(path)
+	}
+	
+	
 	
 	def getService(String address) {
 		return services.get('srv:' + address)

@@ -151,7 +151,7 @@ class PipeContext {
 	}
 	
 	private def void deliverRequest() {
-		val srv = pipeline.getServiceFromPath(message.path)
+		val srv = pipeline.getComponent(message.path)
 		if(srv != null) {
 			logger.debug('DELIVER {}', message.path)
 			srv.apply(this)

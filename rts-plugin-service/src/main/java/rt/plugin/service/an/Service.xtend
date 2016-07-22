@@ -1,5 +1,6 @@
 package rt.plugin.service.an
 
+import com.google.common.collect.ImmutableList
 import java.lang.annotation.Target
 import java.util.LinkedList
 import java.util.List
@@ -14,6 +15,10 @@ import org.eclipse.xtend.lib.macro.declaration.MethodDeclaration
 import org.eclipse.xtend.lib.macro.declaration.MutableClassDeclaration
 import org.eclipse.xtend.lib.macro.declaration.MutableMethodDeclaration
 import org.eclipse.xtend.lib.macro.declaration.MutableParameterDeclaration
+import org.eclipse.xtend.lib.macro.declaration.TypeReference
+import org.eclipse.xtend.lib.macro.declaration.Visibility
+import rt.data.schema.SProperty
+import rt.data.schema.SType
 import rt.pipeline.IComponent
 import rt.pipeline.IMessageBus.Message
 import rt.pipeline.pipe.PipeContext
@@ -22,21 +27,14 @@ import rt.plugin.config.PluginConfigFactory
 import rt.plugin.config.PluginEntry
 import rt.plugin.service.IServiceClientFactory
 import rt.plugin.service.ServiceClient
-import rt.plugin.service.descriptor.IDescriptor
-import org.eclipse.xtend.lib.macro.declaration.Visibility
 import rt.plugin.service.descriptor.DMethod
-import com.google.common.collect.ImmutableList
-import rt.data.Optional
-import rt.data.Default
-import rt.data.schema.SType
-import org.eclipse.xtend.lib.macro.declaration.TypeReference
-import rt.data.schema.SProperty
+import rt.plugin.service.descriptor.IDescriptor
 
 @Target(TYPE)
 @Active(ServiceProcessor)
 annotation Service {
 	Class<?> value = Void
-	boolean metadata = false
+	boolean metadata = true
 }
 
 class ServiceProcessor extends AbstractClassProcessor {
@@ -227,11 +225,11 @@ class ServiceProcessor extends AbstractClassProcessor {
 	}
 	
 	def parameterInitializer(extension TransformationContext ctx, MutableParameterDeclaration param) {
-		val isOptional = param.findAnnotation(Optional.findTypeGlobally) != null
-		val defaultValue = param.findAnnotation(Default.findTypeGlobally)?.getStringValue('value')
-
+		//val isOptional = param.findAnnotation(Optional.findTypeGlobally) != null
+		//val defaultValue = param.findAnnotation(Default.findTypeGlobally)?.getStringValue('value')
+		
 		return '''
-			new «SProperty.canonicalName»("«param.simpleName»", «SType.canonicalName».convertFromJava("«ctx.convert(param.type)»"), «isOptional», «IF defaultValue != null»«defaultValue»«ELSE»null«ENDIF»)
+			new «SProperty.canonicalName»("«param.simpleName»", «SType.canonicalName».convertFromJava("«ctx.convert(param.type)»"))
 		'''
 	}
 }

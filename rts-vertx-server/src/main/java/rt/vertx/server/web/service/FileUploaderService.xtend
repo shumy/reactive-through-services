@@ -7,18 +7,20 @@ import org.slf4j.LoggerFactory
 import rt.pipeline.PathValidator
 import rt.plugin.service.an.Public
 import rt.plugin.service.an.Service
+import rt.data.Validation
+import rt.data.Data
 
 @Service
+@Data(metadata = false)
 class FileUploaderService {
 	static val logger = LoggerFactory.getLogger('HTTP-FILE-UPLOADER')
 	
-	val String path
+	val String folder
 	
-	new(String path) {
-		this.path = path
-		
-		val folder = new File(path)
-		if (!folder.exists) folder.mkdirs
+	@Validation
+	def construct() {
+		val fFolder = new File(folder)
+		if (!fFolder.exists) fFolder.mkdirs
 	}
 	
 	@Public(notif = true)
@@ -35,7 +37,7 @@ class FileUploaderService {
 				return
 			}
 			
-			val filePath = path + '/' + upload.filename
+			val filePath = folder + '/' + upload.filename
 			req.response.chunked = true
 			
 			upload.exceptionHandler[
@@ -56,10 +58,10 @@ class FileUploaderService {
 	@Public
 	def List<String> list(String inPath) {
 		//protect against filesystem attacks
-		if (!PathValidator.isValid(path))
+		if (!PathValidator.isValid(folder))
 			throw new RuntimeException('Path not accepted: ' + inPath)
 		
-		val folder = new File(path + inPath)
+		val folder = new File(folder + inPath)
 		return folder.list.toList
 	}
 }

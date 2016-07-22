@@ -4,7 +4,7 @@ import java.util.Map
 import rt.plugin.service.an.Service
 import rt.plugin.service.an.Public
 
-@Service(metadata = true)
+@Service
 class AnnotatedService {
 	
 	@Public
