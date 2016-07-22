@@ -33,20 +33,20 @@ class DataProcessor extends AbstractClassProcessor {
 		'double' -> Double
 	}
 	
-	override doValidate(ClassDeclaration clazz, extension ValidationContext context) {
+	override doValidate(ClassDeclaration clazz, extension ValidationContext ctx) {
 		val variableFields = clazz.declaredFields.filter [ !final ]
 		variableFields.forEach[
 			addError('Variable fields not supported in Data!')
 		]
 	}
 	
-	override doRegisterGlobals(ClassDeclaration clazz, extension RegisterGlobalsContext context) {
+	override doRegisterGlobals(ClassDeclaration clazz, extension RegisterGlobalsContext ctx) {
 		registerClass(clazz.qualifiedName + 'Builder')
 	}
 	
-	override doTransform(MutableClassDeclaration clazz, extension TransformationContext context) {
-		val allFields = clazz.declaredFields.filter [ !transient ]
-		val mandatoryFields = allFields.filter [
+	override doTransform(MutableClassDeclaration clazz, extension TransformationContext ctx) {
+		val allFields = clazz.declaredFields.filter[ !transient ].toList
+		val mandatoryFields = allFields.filter[
 			findAnnotation(Optional.findTypeGlobally) == null && findAnnotation(Default.findTypeGlobally) == null
 		]
 		
@@ -55,7 +55,7 @@ class DataProcessor extends AbstractClassProcessor {
 		val builderClazz = findClass(builderClassName)
 		
 		allFields.forEach[ field |
-			val fTypeRef = context.convert(field)
+			val fTypeRef = ctx.convert(field)
 			
 			builderClazz.addField(field.simpleName)[
 				type = fTypeRef
@@ -165,7 +165,7 @@ class DataProcessor extends AbstractClassProcessor {
 		
 		val anno = clazz.findAnnotation(Data.findTypeGlobally)
 		if (anno.getBooleanValue('metadata'))
-			clazz.generateMetadata(allFields.toList, context)
+			clazz.generateMetadata(allFields, ctx)
 	}
 	
 	def convert(extension TransformationContext context, FieldDeclaration field) {
@@ -197,12 +197,12 @@ class DataProcessor extends AbstractClassProcessor {
 		]
 	}
 	
-	def propertyInitializer(extension TransformationContext context, MutableFieldDeclaration prop) {
+	def propertyInitializer(extension TransformationContext ctx, MutableFieldDeclaration prop) {
 		val isOptional = prop.findAnnotation(Optional.findTypeGlobally) != null
 		val defaultValue = prop.findAnnotation(Default.findTypeGlobally)?.getStringValue('value')
 
 		return '''
-			new SProperty("«prop.simpleName»", «SType.canonicalName».convertFromJava("«context.convert(prop)»"), «isOptional», «IF defaultValue != null»«defaultValue»«ELSE»null«ENDIF»)
+			new SProperty("«prop.simpleName»", «SType.canonicalName».convertFromJava("«ctx.convert(prop)»"), «isOptional», «IF defaultValue != null»«defaultValue»«ELSE»null«ENDIF»)
 		'''
 	}
 }

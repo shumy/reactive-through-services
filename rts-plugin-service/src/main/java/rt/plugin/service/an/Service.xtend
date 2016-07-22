@@ -22,14 +22,31 @@ import rt.plugin.config.PluginConfigFactory
 import rt.plugin.config.PluginEntry
 import rt.plugin.service.IServiceClientFactory
 import rt.plugin.service.ServiceClient
+import rt.plugin.service.descriptor.IDescriptor
+import org.eclipse.xtend.lib.macro.declaration.Visibility
+import rt.plugin.service.descriptor.DMethod
+import com.google.common.collect.ImmutableList
+import rt.data.Optional
+import rt.data.Default
+import rt.data.schema.SType
+import org.eclipse.xtend.lib.macro.declaration.TypeReference
+import rt.data.schema.SProperty
 
 @Target(TYPE)
 @Active(ServiceProcessor)
 annotation Service {
 	Class<?> value = Void
+	boolean metadata = false
 }
 
 class ServiceProcessor extends AbstractClassProcessor {
+	val typeConversions = #{
+		'boolean' -> Boolean,
+		'int' -> Integer,
+		'long' -> Long,
+		'float' -> Float,
+		'double' -> Double
+	}
 	
 	override doValidate(ClassDeclaration clazz, extension ValidationContext ctx) {
 		//TODO: verify if methods have return types, inferred not working!
@@ -40,6 +57,8 @@ class ServiceProcessor extends AbstractClassProcessor {
 	}
 	
 	override doTransform(MutableClassDeclaration clazz, extension TransformationContext ctx) {
+		val publicMethods = clazz.declaredMethods.filter[ findAnnotation(Public.findTypeGlobally) != null ].toList
+		
 		clazz.extendedClass = IComponent.newTypeReference
 		
 		//validate interface implementation before changes...
@@ -54,39 +73,36 @@ class ServiceProcessor extends AbstractClassProcessor {
 			]
 		}
 		
-		
 		val switchCases = new LinkedList<String>
-		for (MutableMethodDeclaration meth: clazz.declaredMethods) {
+		for (MutableMethodDeclaration meth: publicMethods) {
 			val annoPublicRef = meth.findAnnotation(Public.findTypeGlobally)
-			if (annoPublicRef != null) {
-				val isNotification = annoPublicRef.getBooleanValue('notif')
-				
-				//make a copy because the parameters will be changed
-				val methParameters = meth.parameters.map[it as MutableParameterDeclaration].toList
-				
-				val ctxArgs = meth.getContextArgs(ctx)
-				ctxArgs.forEach[
-					meth.addParameter(getStringValue('name'), getClassValue('proxy'))
-				]
-				
-				val retType = meth.returnType.simpleName
-				val hasIntervalSimbol = methParameters.size != 0 && ctxArgs.size != 0
-				switchCases.add('''
-					case "«meth.simpleName»":
-						«IF methParameters.size != 0»
-						args = msg.args(«FOR param: methParameters SEPARATOR ','» «param.type.simpleName.replaceFirst('<.*>', '')».class«ENDFOR» );
+			val isNotification = annoPublicRef.getBooleanValue('notif')
+			
+			//make a copy because the parameters will be changed
+			val methParameters = meth.parameters.map[it as MutableParameterDeclaration].toList
+			
+			val ctxArgs = meth.getContextArgs(ctx)
+			ctxArgs.forEach[
+				meth.addParameter(getStringValue('name'), getClassValue('proxy'))
+			]
+			
+			val retType = meth.returnType.simpleName
+			val hasIntervalSimbol = methParameters.size != 0 && ctxArgs.size != 0
+			switchCases.add('''
+				case "«meth.simpleName»":
+					«IF methParameters.size != 0»
+					args = msg.args(«FOR param: methParameters SEPARATOR ','» «param.type.simpleName.replaceFirst('<.*>', '')».class«ENDFOR» );
+					«ENDIF»
+					«IF retType != 'void'»ret = «ENDIF»«meth.simpleName»(«methParameters.addMessageArgs»«IF hasIntervalSimbol»,«ENDIF»«meth.addContextArgs(ctx, ctxArgs)»);
+					«IF !isNotification»
+						«IF retType != 'void'»
+							ctx.replyOK(ret);
+						«ELSE»
+							ctx.replyOK();
 						«ENDIF»
-						«IF retType != 'void'»ret = «ENDIF»«meth.simpleName»(«methParameters.addMessageArgs»«IF hasIntervalSimbol»,«ENDIF»«meth.addContextArgs(ctx, ctxArgs)»);
-						«IF !isNotification»
-							«IF retType != 'void'»
-								ctx.replyOK(ret);
-							«ELSE»
-								ctx.replyOK();
-							«ENDIF»
-						«ENDIF»
-						break;
-				''')
-			}
+					«ENDIF»
+					break;
+			''')
 		}
 		
 		clazz.addMethod('apply')[
@@ -118,6 +134,10 @@ class ServiceProcessor extends AbstractClassProcessor {
 				}
 			'''
 		]
+		
+		val anno = clazz.findAnnotation(Service.findTypeGlobally)
+		if (anno.getBooleanValue('metadata'))
+			clazz.generateMetadata(publicMethods, ctx)
 	}
 	
 	override doGenerateCode(ClassDeclaration clazz, extension CodeGenerationContext context) {
@@ -165,6 +185,53 @@ class ServiceProcessor extends AbstractClassProcessor {
 	def getSrvPath(AnnotationReference annoRef) {
 		val srvName = annoRef.getStringValue('name')
 		return 'srv:' + srvName
-		//return if (srvName.contains(':')) srvName else 'srv:' + srvName
+	}
+	
+	def convert(extension TransformationContext context, TypeReference type) {
+		val fType = typeConversions.get(type.simpleName)
+		return fType?.newTypeReference ?: type
+	}
+	
+	def void generateMetadata(MutableClassDeclaration clazz, List<? extends MutableMethodDeclaration> methods, extension TransformationContext ctx) {
+		clazz.extendedClass = IDescriptor.newTypeReference
+		
+		clazz.addField('methods')[
+			visibility = Visibility.PUBLIC
+			transient = true
+			static = true
+			final = true
+			type = List.newTypeReference(DMethod.newTypeReference)
+			initializer = '''«ImmutableList».copyOf(new DMethod[] {
+				«FOR meth: methods SEPARATOR ','»
+					«ctx.methodInitializer(meth)»
+				«ENDFOR»
+			})'''
+		]
+		
+		clazz.addMethod('getMethods')[
+			returnType = List.newTypeReference(DMethod.newTypeReference)
+			body = '''
+				return methods;
+			'''
+		]
+	}
+	
+	def methodInitializer(extension TransformationContext ctx, MutableMethodDeclaration meth) {
+		return '''
+			new DMethod("«meth.simpleName»", «SType.canonicalName».convertFromJava("«ctx.convert(meth.returnType)»"), «ImmutableList.simpleName».copyOf(new «SProperty.canonicalName»[] {
+				«FOR param: meth.parameters SEPARATOR ','»
+					«ctx.parameterInitializer(param)»
+				«ENDFOR»
+			}))
+		'''
+	}
+	
+	def parameterInitializer(extension TransformationContext ctx, MutableParameterDeclaration param) {
+		val isOptional = param.findAnnotation(Optional.findTypeGlobally) != null
+		val defaultValue = param.findAnnotation(Default.findTypeGlobally)?.getStringValue('value')
+
+		return '''
+			new «SProperty.canonicalName»("«param.simpleName»", «SType.canonicalName».convertFromJava("«ctx.convert(param.type)»"), «isOptional», «IF defaultValue != null»«defaultValue»«ELSE»null«ENDIF»)
+		'''
 	}
 }
