@@ -2,6 +2,10 @@ package rt.vertx.server.web.service
 
 import java.util.List
 import rt.data.Data
+import rt.data.Default
+import rt.data.Optional
+import rt.data.Validation
+import rt.data.ValidationException
 import rt.pipeline.pipe.Pipeline
 import rt.plugin.service.ServiceException
 import rt.plugin.service.an.Public
@@ -13,14 +17,29 @@ import rt.plugin.service.descriptor.IDescriptor
 @Data(metadata = false)
 class SpecsService {
 	val Pipeline pipeline
-	val List<String> services
+	
+	@Default('false') val boolean autoDetect 
+	@Optional val List<String> services
+	
+	transient var List<String> _services
+	
+	@Validation
+	def construct() {
+		if (!autoDetect && services == null)
+			throw new ValidationException('Service config are not optional with auto detection off!')
+		
+		if (autoDetect)
+			_services = pipeline.componentPaths.map[ replaceAll('srv:', '') ].filter[ pipeline.getService(it) instanceof IDescriptor ].toList
+		else
+			_services = services
+	}
 	
 	@Public
-	def List<String> specs() { services }
+	def List<String> specs() { _services }
 	
 	@Public
 	def Spec srvSpec(String srvName) {
-		if (!services.contains(srvName))
+		if (!_services.contains(srvName))
 			throw new ServiceException(404, 'Service spec not found!')
 			
 		val desc = pipeline.getService(srvName) as IDescriptor

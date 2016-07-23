@@ -34,7 +34,8 @@ class DataProcessor extends AbstractClassProcessor {
 	}
 	
 	override doValidate(ClassDeclaration clazz, extension ValidationContext ctx) {
-		clazz.declaredFields.forEach[
+		val allFields = clazz.declaredFields.filter[ !(transient || static) ].toList
+		allFields.forEach[
 			if (!final)
 				addError('Variable fields not supported in data types!')
 		]
