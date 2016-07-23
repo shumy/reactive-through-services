@@ -10,7 +10,114 @@ import java.util.LinkedList
 abstract class Router {
 	static val logger = LoggerFactory.getLogger('ROUTER')
 	
+	@Accessors val restRoutes = new LinkedList<RouteConfig>
+	
 	val root = new Route
+	
+	protected val String baseRoute
+	
+	new(String baseRoute) {
+		this.baseRoute = baseRoute
+	}
+	
+	def route(WebMethod webMethod, String uriPattern, Pair<String, String> srvPair) {
+		return route(webMethod, uriPattern, srvPair.key, srvPair.value)
+	}
+	
+	def route(WebMethod webMethod, String uriPattern, String srvAddress, String srvMethod) {
+		val route = baseRoute + uriPattern
+		val routePaths = route.routeSplits.routePaths
+		return route(webMethod, routePaths, srvAddress, srvMethod, routePaths.defaultParamMaps)
+	}
+	
+	def route(WebMethod webMethod, String uriPattern, String srvAddress, String srvMethod, List<String> paramMaps) {
+		val route = baseRoute + uriPattern
+		val routePaths = route.routeSplits.routePaths
+		return route(webMethod, routePaths, srvAddress, srvMethod, paramMaps)
+	}
+	
+	
+	def void get(String uriPattern, Pair<String, String> srvPair) {
+		get(uriPattern, srvPair.key, srvPair.value)
+	}
+	
+	def void get(String uriPattern, String srvAddress, String srvMethod) {
+		val route = baseRoute + uriPattern
+		val routePaths = route.routeSplits.routePaths
+		restRoute(WebMethod.GET, routePaths, srvAddress, srvMethod, routePaths.defaultParamMaps)
+	}
+	
+	def void get(String uriPattern, String srvAddress, String srvMethod, List<String> paramMaps) {
+		val route = baseRoute + uriPattern
+		restRoute(WebMethod.GET, route, srvAddress, srvMethod, paramMaps)
+	}
+	
+	
+	def void delete(String uriPattern, Pair<String, String> srvPair) {
+		delete(uriPattern, srvPair.key, srvPair.value)
+	}
+	
+	def void delete(String uriPattern, String srvAddress, String srvMethod) {
+		val route = baseRoute + uriPattern
+		val routePaths = route.routeSplits.routePaths
+		restRoute(WebMethod.DELETE, routePaths, srvAddress, srvMethod, routePaths.defaultParamMaps)
+	}
+	
+	def void delete(String uriPattern, String srvAddress, String srvMethod, List<String> paramMaps) {
+		val route = baseRoute + uriPattern
+		restRoute(WebMethod.DELETE, route, srvAddress, srvMethod, paramMaps)
+	}
+	
+	
+	def void post(String uriPattern, Pair<String, String> srvPair) {
+		post(uriPattern, srvPair.key, srvPair.value)
+	}	
+	
+	def void post(String uriPattern, String srvAddress, String srvMethod) {
+		val route = baseRoute + uriPattern
+		val routePaths = route.routeSplits.routePaths
+		restRoute(WebMethod.POST, routePaths, srvAddress, srvMethod, routePaths.defaultParamMapsWithBody)
+	}
+	
+	def void post(String uriPattern, String srvAddress, String srvMethod, List<String> paramMaps) {
+		val route = baseRoute + uriPattern
+		restRoute(WebMethod.POST, route, srvAddress, srvMethod, paramMaps)
+	}
+	
+	
+	def void put(String uriPattern, Pair<String, String> srvPair) {
+		put(uriPattern, srvPair.key, srvPair.value)
+	}
+	
+	def void put(String uriPattern, String srvAddress, String srvMethod) {
+		val route = baseRoute + uriPattern
+		val routePaths = route.routeSplits.routePaths
+		restRoute(WebMethod.PUT, routePaths, srvAddress, srvMethod, routePaths.defaultParamMapsWithBody)
+	}
+	
+	def void put(String uriPattern, String srvAddress, String srvMethod, List<String> paramMaps) {
+		val route = baseRoute + uriPattern
+		restRoute(WebMethod.PUT, route, srvAddress, srvMethod, paramMaps)
+	}
+	
+	protected def restRoute(WebMethod webMethod, String uriPattern, String srvAddress, String srvMethod, List<String> paramMaps) {
+		val route = baseRoute + uriPattern
+		val routePaths = route.routeSplits.routePaths
+		return restRoute(webMethod, routePaths, srvAddress, srvMethod, paramMaps)
+	}
+	
+	protected def restRoute(WebMethod webMethod, List<RoutePath> routePaths, String srvAddress, String srvMethod, List<String> paramMaps) {
+		val processBody = ( webMethod == WebMethod.POST || webMethod == WebMethod.PUT )
+		val r = route(processBody, webMethod, routePaths, srvAddress, srvMethod, paramMaps)
+		restRoutes.add(r.config)
+		
+		return r
+	}
+	
+	protected def route(WebMethod webMethod, List<RoutePath> routePaths, String srvAddress, String srvMethod, List<String> paramMaps) {
+		val processBody = ( webMethod == WebMethod.POST || webMethod == WebMethod.PUT )
+		return route(processBody, webMethod, routePaths, srvAddress, srvMethod, paramMaps)
+	}
 	
 	protected def route(boolean processBody, WebMethod webMethod, List<RoutePath> routePaths, String srvAddress, String srvMethod, List<String> paramMaps) {
 		val sb = new StringBuilder

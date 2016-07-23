@@ -7,5 +7,7 @@
         <entry type="srv" ref="rt.vertx.server.web.service.FileUploaderService"/>
         <entry type="srv" ref="rt.vertx.server.web.service.WebFileService"/>
         <entry type="srv" ref="rt.vertx.server.web.service.SpecsService"/>
+        <entry type="srv" ref="rt.vertx.server.web.service.DescriptorService"/>
+        <entry type="srv" ref="rt.vertx.server.web.service.RouterService"/>
     </entries>
 </config>

@@ -13,9 +13,9 @@ import rt.plugin.service.an.Service
 import rt.plugin.service.descriptor.DMethod
 import rt.plugin.service.descriptor.IDescriptor
 
-@Service
+@Service(metadata = false)
 @Data(metadata = false)
-class SpecsService {
+class DescriptorService {
 	val Pipeline pipeline
 	
 	@Default('false') val boolean autoDetect 

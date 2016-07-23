@@ -2,16 +2,14 @@ package rt.vertx.server.web
 
 import io.vertx.core.http.HttpMethod
 import io.vertx.core.http.HttpServer
-import java.util.List
 import org.slf4j.LoggerFactory
+import rt.pipeline.IComponent
 import rt.pipeline.pipe.Pipeline
-import rt.plugin.service.RoutePath
 import rt.plugin.service.Router
 import rt.plugin.service.WebMethod
+import rt.vertx.server.DefaultVertxServer
 
 import static extension rt.vertx.server.URIParserHelper.*
-import rt.vertx.server.DefaultVertxServer
-import rt.pipeline.IComponent
 
 class WebRouter extends Router {
 	static val logger = LoggerFactory.getLogger('WEB-ROUTER')
@@ -22,16 +20,14 @@ class WebRouter extends Router {
 	package val HttpServer server
 	package val Pipeline pipeline
 	
-	val String baseRoute
-	
 	def getConverter() { return parent.converter }
 	
 	new(DefaultVertxServer parent, String baseRoute) {
+		super(baseRoute)
+		
 		this.parent = parent
 		this.server = parent.server
 		this.pipeline = parent.pipeline
-		
-		this.baseRoute = baseRoute
 		
 		server.requestHandler[ req |
 			logger.debug('REQUEST {}', req.uri)
@@ -60,82 +56,6 @@ class WebRouter extends Router {
 		val route = baseRoute + uriPattern
 		val routePaths = route.routeSplits.routePaths
 		return route(false, WebMethod.ALL, routePaths, srvAddress, 'notify', #['ctx.request'])
-	}
-	
-	def route(WebMethod webMethod, String uriPattern, String srvAddress, String srvMethod, List<String> paramMaps) {
-		val route = baseRoute + uriPattern
-		val routePaths = route.routeSplits.routePaths
-		return route(webMethod, routePaths, srvAddress, srvMethod, paramMaps)
-	}
-	
-	
-	def void get(String uriPattern, Pair<String, String> srvPair) {
-		get(uriPattern, srvPair.key, srvPair.value)
-	}
-	
-	def void get(String uriPattern, String srvAddress, String srvMethod) {
-		val route = baseRoute + uriPattern
-		val routePaths = route.routeSplits.routePaths
-		route(WebMethod.GET, routePaths, srvAddress, srvMethod, routePaths.defaultParamMaps)
-	}
-	
-	def void get(String uriPattern, String srvAddress, String srvMethod, List<String> paramMaps) {
-		val route = baseRoute + uriPattern
-		route(WebMethod.GET, route, srvAddress, srvMethod, paramMaps)
-	}
-	
-	
-	def void delete(String uriPattern, Pair<String, String> srvPair) {
-		delete(uriPattern, srvPair.key, srvPair.value)
-	}
-	
-	def void delete(String uriPattern, String srvAddress, String srvMethod) {
-		val route = baseRoute + uriPattern
-		val routePaths = route.routeSplits.routePaths
-		route(WebMethod.DELETE, routePaths, srvAddress, srvMethod, routePaths.defaultParamMaps)
-	}
-	
-	def void delete(String uriPattern, String srvAddress, String srvMethod, List<String> paramMaps) {
-		val route = baseRoute + uriPattern
-		route(WebMethod.DELETE, route, srvAddress, srvMethod, paramMaps)
-	}
-	
-	
-	def void post(String uriPattern, Pair<String, String> srvPair) {
-		post(uriPattern, srvPair.key, srvPair.value)
-	}	
-	
-	def void post(String uriPattern, String srvAddress, String srvMethod) {
-		val route = baseRoute + uriPattern
-		val routePaths = route.routeSplits.routePaths
-		route(WebMethod.POST, routePaths, srvAddress, srvMethod, routePaths.defaultParamMapsWithBody)
-	}
-	
-	def void post(String uriPattern, String srvAddress, String srvMethod, List<String> paramMaps) {
-		val route = baseRoute + uriPattern
-		route(WebMethod.POST, route, srvAddress, srvMethod, paramMaps)
-	}
-	
-	
-	def void put(String uriPattern, Pair<String, String> srvPair) {
-		put(uriPattern, srvPair.key, srvPair.value)
-	}
-	
-	def void put(String uriPattern, String srvAddress, String srvMethod) {
-		val route = baseRoute + uriPattern
-		val routePaths = route.routeSplits.routePaths
-		route(WebMethod.PUT, routePaths, srvAddress, srvMethod, routePaths.defaultParamMapsWithBody)
-	}
-	
-	def void put(String uriPattern, String srvAddress, String srvMethod, List<String> paramMaps) {
-		val route = baseRoute + uriPattern
-		route(WebMethod.PUT, route, srvAddress, srvMethod, paramMaps)
-	}
-	
-	
-	private def route(WebMethod webMethod, List<RoutePath> routePaths, String srvAddress, String srvMethod, List<String> paramMaps) {
-		val processBody = ( webMethod == WebMethod.POST || webMethod == WebMethod.PUT )
-		return route(processBody, webMethod, routePaths, srvAddress, srvMethod, paramMaps)
 	}
 	
 	private def getWebMethod(HttpMethod httpMethod) {
