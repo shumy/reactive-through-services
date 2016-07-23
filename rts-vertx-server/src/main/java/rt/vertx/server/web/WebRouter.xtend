@@ -69,6 +69,10 @@ class WebRouter extends Router {
 	}
 	
 	
+	def void get(String uriPattern, Pair<String, String> srvPair) {
+		get(uriPattern, srvPair.key, srvPair.value)
+	}
+	
 	def void get(String uriPattern, String srvAddress, String srvMethod) {
 		val route = baseRoute + uriPattern
 		val routePaths = route.routeSplits.routePaths
@@ -80,6 +84,10 @@ class WebRouter extends Router {
 		route(WebMethod.GET, route, srvAddress, srvMethod, paramMaps)
 	}
 	
+	
+	def void delete(String uriPattern, Pair<String, String> srvPair) {
+		delete(uriPattern, srvPair.key, srvPair.value)
+	}
 	
 	def void delete(String uriPattern, String srvAddress, String srvMethod) {
 		val route = baseRoute + uriPattern
@@ -93,6 +101,10 @@ class WebRouter extends Router {
 	}
 	
 	
+	def void post(String uriPattern, Pair<String, String> srvPair) {
+		post(uriPattern, srvPair.key, srvPair.value)
+	}	
+	
 	def void post(String uriPattern, String srvAddress, String srvMethod) {
 		val route = baseRoute + uriPattern
 		val routePaths = route.routeSplits.routePaths
@@ -104,6 +116,10 @@ class WebRouter extends Router {
 		route(WebMethod.POST, route, srvAddress, srvMethod, paramMaps)
 	}
 	
+	
+	def void put(String uriPattern, Pair<String, String> srvPair) {
+		put(uriPattern, srvPair.key, srvPair.value)
+	}
 	
 	def void put(String uriPattern, String srvAddress, String srvMethod) {
 		val route = baseRoute + uriPattern

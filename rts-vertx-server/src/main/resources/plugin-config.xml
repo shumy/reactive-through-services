@@ -6,5 +6,6 @@
         <entry type="srv" ref="rt.vertx.server.web.WebFileService"/>
         <entry type="srv" ref="rt.vertx.server.web.service.FileUploaderService"/>
         <entry type="srv" ref="rt.vertx.server.web.service.WebFileService"/>
+        <entry type="srv" ref="rt.vertx.server.web.service.SpecsService"/>
     </entries>
 </config>

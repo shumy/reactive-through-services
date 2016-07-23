@@ -108,6 +108,7 @@ class WebResource {
 			val buffer = Buffer.buffer(Unpooled.wrappedBuffer(cntBuffer))
 			res.end(buffer)
 		} else {
+			res.putHeader('Content-Type', 'application/json')
 			res.end(parent.converter.toJson(result))
 		}
 	}

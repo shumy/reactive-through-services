@@ -215,9 +215,11 @@ class ServiceProcessor extends AbstractClassProcessor {
 	}
 	
 	def methodInitializer(extension TransformationContext ctx, MutableMethodDeclaration meth) {
+		//remove context parameters
+		val originalParams = meth.parameters.filter[ primarySourceElement != null ]
 		return '''
 			new DMethod("«meth.simpleName»", «SType.canonicalName».convertFromJava("«ctx.convert(meth.returnType)»"), «ImmutableList.simpleName».copyOf(new «SProperty.canonicalName»[] {
-				«FOR param: meth.parameters SEPARATOR ','»
+				«FOR param: originalParams SEPARATOR ','»
 					«ctx.parameterInitializer(param)»
 				«ENDFOR»
 			}))
@@ -225,9 +227,6 @@ class ServiceProcessor extends AbstractClassProcessor {
 	}
 	
 	def parameterInitializer(extension TransformationContext ctx, MutableParameterDeclaration param) {
-		//val isOptional = param.findAnnotation(Optional.findTypeGlobally) != null
-		//val defaultValue = param.findAnnotation(Default.findTypeGlobally)?.getStringValue('value')
-		
 		return '''
 			new «SProperty.canonicalName»("«param.simpleName»", «SType.canonicalName».convertFromJava("«ctx.convert(param.type)»"))
 		'''
