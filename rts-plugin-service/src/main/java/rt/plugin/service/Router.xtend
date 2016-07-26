@@ -162,7 +162,6 @@ abstract class Router {
 	}
 	
 	protected def search(WebMethod webMethod, List<String> routeSplits) {
-		if (routeSplits.size == 0) routeSplits.add('*')
 		logger.debug('SEARCH {}', routeSplits)
 		
 		var route = root
@@ -189,6 +188,14 @@ abstract class Router {
 		//if not reached the end of path with a final RouteConfig, use the last generic path available
 		if (!isFinal)
 			rConfig = lastGenericConfig
+		
+		//last alternative...
+		if (rConfig == null) {
+			route = route?.get('*')
+			if (route != null && route.config != null && route.config.isGeneric && (webMethod == route.config.wMethod || route.config.wMethod == WebMethod.ALL)) {
+				rConfig = route.config
+			}
+		}
 		
 		if (rConfig == null) logger.warn('Not Found: {}', routeSplits)
 		return rConfig

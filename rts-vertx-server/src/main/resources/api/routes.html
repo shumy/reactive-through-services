@@ -1,0 +1,26 @@
+<table class="ui table">
+	<thead>
+		<tr>
+			<th class="seven wide">Route</th>
+			<th>Service</th>
+			<th>Method</th>
+			<th class="five wide">Parameters Map</th>
+		</tr>
+	</thead>
+	<tbody id="routes"></tbody>
+</table>
+
+<script type="text/javascript">
+(function() {
+	var transform = { '<>':'tr', 'html':[
+		{'<>':'td', 'html':function() { return this.wMeth.toUpperCase() + ' ' + this.path; }},
+		{'<>':'td', 'html':[ {'<>':'a', 'href':'javascript:toService("${srv}")', 'html':'${srv}'} ]},
+		{'<>':'td', 'html':[ {'<>':'a', 'href':'javascript:toServiceMethod("${srv}", "${meth}")', 'html':'${meth}'} ]},
+		{'<>':'td', 'html':function() { return '[' + this.pMaps.toString() + ']'; }}
+	]};
+	
+	$.ajax({ url: 'routes' }).then(function(data) {
+		$('#routes').json2html(data, transform);
+	});
+})();
+</script>

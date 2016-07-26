@@ -18,6 +18,11 @@ import rt.plugin.service.ServiceException
 class WebResource {
 	static val logger = LoggerFactory.getLogger('WEB-RESOURCE')
 	
+	val mimeTypes = #{
+		'json'	-> 'application/json',
+		'css'	-> 'text/css'
+	}
+	
 	@Accessors val String client
 	
 	val WebRouter parent
@@ -45,7 +50,7 @@ class WebResource {
 		val resource = parent.pipeline.createResource(client) => [
 			sendCallback = [
 				logger.trace('RESPONSE {} {}', cmd, client)
-				processResponse(req.response)
+				processResponse(req.response, req.path)
 			]
 		]
 		
@@ -81,7 +86,7 @@ class WebResource {
 		resource.process(msg)
 	}
 	
-	private def void processResponse(Message reply, HttpServerResponse res) {
+	private def void processResponse(Message reply, HttpServerResponse res, String path) {
 		if (reply.cmd != Message.CMD_OK) {
 			//process exception...
 			val ex = reply.result(Exception)
@@ -102,10 +107,19 @@ class WebResource {
 		res.statusCode = 200
 		val result = reply.result(Object)
 		if (result.class == String) {
+			res.putHeader('Content-Type', 'text/plain')
 			res.end(result as String)
 		} else if (result instanceof ByteBuffer) {
 			val cntBuffer = result as ByteBuffer
 			val buffer = Buffer.buffer(Unpooled.wrappedBuffer(cntBuffer))
+			
+			val splits = path.split('\\.')
+			val mimeType = if (splits.length > 1)
+				mimeTypes.get(splits.get(splits.length - 1))
+			
+			if (mimeType != null)
+				res.putHeader('Content-Type', mimeType)
+			
 			res.end(buffer)
 		} else {
 			res.putHeader('Content-Type', 'application/json')

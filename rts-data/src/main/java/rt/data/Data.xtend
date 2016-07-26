@@ -9,7 +9,6 @@ import org.eclipse.xtend.lib.macro.RegisterGlobalsContext
 import org.eclipse.xtend.lib.macro.TransformationContext
 import org.eclipse.xtend.lib.macro.ValidationContext
 import org.eclipse.xtend.lib.macro.declaration.ClassDeclaration
-import org.eclipse.xtend.lib.macro.declaration.FieldDeclaration
 import org.eclipse.xtend.lib.macro.declaration.MutableClassDeclaration
 import org.eclipse.xtend.lib.macro.declaration.MutableFieldDeclaration
 import org.eclipse.xtend.lib.macro.declaration.Visibility
@@ -17,6 +16,7 @@ import org.eclipse.xtext.xbase.lib.Procedures.Procedure1
 import rt.data.schema.ISchema
 import rt.data.schema.SProperty
 import rt.data.schema.SType
+import org.eclipse.xtend.lib.macro.declaration.TypeReference
 
 @Target(TYPE)
 @Active(DataProcessor)
@@ -25,14 +25,6 @@ annotation Data {
 }
 
 class DataProcessor extends AbstractClassProcessor {
-	val typeConversions = #{
-		'boolean' -> Boolean,
-		'int' -> Integer,
-		'long' -> Long,
-		'float' -> Float,
-		'double' -> Double
-	}
-	
 	override doValidate(ClassDeclaration clazz, extension ValidationContext ctx) {
 		val allFields = clazz.declaredFields.filter[ !(transient || static) ].toList
 		allFields.forEach[
@@ -61,7 +53,7 @@ class DataProcessor extends AbstractClassProcessor {
 		val builderClazz = findClass(builderClassName)
 		
 		allFields.forEach[ field |
-			val fTypeRef = ctx.convert(field)
+			val fTypeRef = field.type.wrapperIfPrimitive
 			
 			builderClazz.addField(field.simpleName)[
 				type = fTypeRef
@@ -93,15 +85,15 @@ class DataProcessor extends AbstractClassProcessor {
 		clazz.extendedClass = IData.newTypeReference
 		
 		allFields.forEach[ field |
-			val fType = typeConversions.get(field.type.simpleName)
-			val fTypeRef = fType?.newTypeReference ?: field.type
+			val fType = field.type.wrapperIfPrimitive
+			//val fTypeRef = fType?.newTypeReference ?: field.type
 			
 			field.markAsRead
-			field.type = fTypeRef
+			field.type = fType
 			
-			val getType = if (fType == Boolean) 'is' else 'get'
+			val getType = if (fType == Boolean.newTypeReference) 'is' else 'get'
 			clazz.addMethod(getType + field.simpleName.toFirstUpper)[
-				returnType = fTypeRef
+				returnType = fType
 				body = '''
 					return this.«field.simpleName»;
 				'''
@@ -171,11 +163,6 @@ class DataProcessor extends AbstractClassProcessor {
 			clazz.generateMetadata(allFields, ctx)
 	}
 	
-	def convert(extension TransformationContext context, FieldDeclaration field) {
-		val fType = typeConversions.get(field.type.simpleName)
-		return fType?.newTypeReference ?: field.type
-	}
-	
 	def void generateMetadata(MutableClassDeclaration clazz, List<? extends MutableFieldDeclaration> fields, extension TransformationContext context) {
 		clazz.extendedClass = ISchema.newTypeReference
 		
@@ -205,7 +192,14 @@ class DataProcessor extends AbstractClassProcessor {
 		val defaultValue = prop.findAnnotation(Default.findTypeGlobally)?.getStringValue('value')
 
 		return '''
-			new SProperty("«prop.simpleName»", «SType.canonicalName».convertFromJava("«ctx.convert(prop)»"), «isOptional», «IF defaultValue != null»«defaultValue»«ELSE»null«ENDIF»)
+			new SProperty("«prop.simpleName»", «prop.type.typeInitializer», «isOptional», «IF defaultValue != null»«defaultValue»«ELSE»null«ENDIF»)
 		'''
+	}
+	
+	def typeInitializer(TypeReference rType) {
+		val type = rType.wrapperIfPrimitive.name.split('<').get(0)
+		val argTypes = rType.actualTypeArguments.map[ name.split('<').get(0) ]
+		
+		'''«SType.canonicalName».from(«type».class«IF argTypes.length != 0», «ENDIF»«FOR arg: argTypes SEPARATOR ', '»«arg».class«ENDFOR»)'''
 	}
 }

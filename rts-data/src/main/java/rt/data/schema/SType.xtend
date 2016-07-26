@@ -1,50 +1,52 @@
 package rt.data.schema
 
+import java.util.List
+import java.util.HashMap
+
 class SType {
-	public val String typ
-	public val String fGen
-	public val String sGen
+	public transient val Class<?> cTyp
+	public transient val List<Class<?>> cTypArgs
 	
-	new(String typ) { this(typ, null, null) }
-	new(String typ, String fGen) { this(typ, fGen, null) }
-	new(String typ, String fGen, String sGen) {
-		this.typ = typ
-		this.fGen = fGen
-		this.sGen = sGen
+	public val String typ
+	public val List<String> typArgs
+	
+	new(Class<?> cTyp, List<Class<?>> cTypArgs) {
+		this.cTyp = cTyp
+		this.cTypArgs = cTypArgs
+		
+		this.typ = cTyp.simpleName.native
+		this.typArgs = if (cTypArgs.length != 0) cTypArgs.map[ simpleName.native ] else null
 	}
 	
-	static def convertFromJava(String fromJava) {
-		val nat = getNative(fromJava)
-		if (nat == 'lst' || nat == 'set' || nat == 'map') {
-			val splits = fromJava.split('<')
-			if (splits.length != 2)
-				throw new RuntimeException('Collections not supported with deep generic types!')
-			
-			val genericTypes = splits.get(1).substring(0, splits.get(1).length - 1)
-			if (nat == 'map') {
-				val gSplits = genericTypes.split(',')
-				val firstGeneric = getNative(gSplits.get(0))
-				val secondGeneric = getNative(gSplits.get(1))
-				return new SType(nat, firstGeneric, secondGeneric)
-			}
-			
-			val firstGeneric = getNative(genericTypes)
-			return new SType(nat, firstGeneric)
-		}
+	def getAllSchemas() {
+		val schemas = new HashMap<String, List<SProperty>>
 		
-		return new SType(nat)
+		if (ISchema.isAssignableFrom(cTyp))
+			schemas.put(cTyp.simpleName, cTyp.getDeclaredField('properties').get(cTyp) as List<SProperty>)
+		
+		cTypArgs.forEach[
+			if (ISchema.isAssignableFrom(it))
+				schemas.put(simpleName, getDeclaredField('properties').get(it) as List<SProperty>)
+		]
+		
+		return schemas
+	}
+	
+	static def from(Class<?> type, Class<?>... typeArguments) {
+		return new SType(type, typeArguments.toList)
 	}
 	
 	private static def getNative(String inType) {
 		val type = inType.replaceAll('\\s+','')
 		
 		switch type {
-			case 'String': 		'txt'
-			case 'Boolean': 	'bol'
-			case 'Integer': 	'int'
-			case 'Long': 		'lng'
-			case 'Float': 		'flt'
-			case 'Double': 		'dbl'
+			case 'Void': 		'void'
+			case 'String':		'str'
+			case 'Boolean':		'bol'
+			case 'Integer':		'int'
+			case 'Long':		'lng'
+			case 'Float':		'flt'
+			case 'Double':		'dbl'
 			//TODO: cases for dates ?
 			
 			default: {
@@ -55,5 +57,5 @@ class SType {
 				return type
 			}
 		}
-	} 
+	}
 }

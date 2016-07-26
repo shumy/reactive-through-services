@@ -3,6 +3,8 @@ package rt.plugin.test.srv
 import java.util.Map
 import rt.plugin.service.an.Service
 import rt.plugin.service.an.Public
+import rt.plugin.test.data.TestData
+import java.util.List
 
 @Service
 class AnnotatedService {
@@ -24,5 +26,10 @@ class AnnotatedService {
 			'age' -> data.get('age'),
 			'brothers' -> #[ 'Jorge', 'Mary' ]
 		}
+	}
+	
+	@Public
+	def TestData test(List<TestData> data) {
+		return null
 	}
 }

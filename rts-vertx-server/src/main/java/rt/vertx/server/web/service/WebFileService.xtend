@@ -10,35 +10,26 @@ import rt.plugin.service.an.Public
 import rt.plugin.service.an.Service
 import rt.plugin.service.ServiceException
 import rt.data.Data
+import rt.data.Default
+import java.nio.file.Path
 
-@Service
+@Service(metadata = false)
 @Data(metadata = false)
 class WebFileService {
 	static val logger = LoggerFactory.getLogger('HTTP-FILE-REQUEST')
 	
+	@Default('""') val String root
+	@Default('false') val boolean resource
 	val String folder
 	
 	@Public(notif = true)
 	def void notify(HttpServerRequest req) {
-		//protect against filesystem attacks
-		if (!PathValidator.isValid(req.path)) {
-			logger.error('Request path not accepted: {}', req.path)
-			
-			req.response.statusCode = 403
-			req.response.end = 'Request path not accepted!'
-			return
-		}
+		val filePath = folder + req.path.filePath
 		
-		val file = if (req.path.equals('/')) {
-			'/index.html'
-		} else {
-			if (!req.path.startsWith('/')) '/' + req.path else req.path
-		}
-		
-		logger.debug(file)
-		req.response.sendFile(folder + file, 0, Long.MAX_VALUE)[
+		logger.debug(filePath)
+		req.response.sendFile(filePath, 0, Long.MAX_VALUE)[
 			if (!succeeded) {
-				logger.error('File not found: {}', file)
+				logger.error('File not found: {}', filePath)
 				req.response.statusCode = 404
 				req.response.end
 			}
@@ -47,22 +38,36 @@ class WebFileService {
 	
 	@Public
 	def ByteBuffer file(String path) {
-		//protect against filesystem attacks
-		if (!PathValidator.isValid(path))
-			throw new ServiceException(403, 'Request path not accepted!')
+		val filePath = folder + path.filePath
 		
-		val filePath = if (path.equals('/')) {
-			'/index.html'
+		var Path urlPath = null
+		if (resource) {
+			val uri = this.class.getResource(filePath).toURI
+			urlPath = Paths.get(uri)
 		} else {
-			if (!path.startsWith('/')) '/' + path else path
+			urlPath = Paths.get(filePath)
 		}
 		
-		val cntBytes = Files.readAllBytes(Paths.get(folder + filePath))
+		val cntBytes = Files.readAllBytes(urlPath)
 		val content = ByteBuffer.wrap(cntBytes) => [
 			limit(cntBytes.length)
 		]
 		
 		//TODO: cache content?
 		return content
+	}
+	
+	private def filePath(String inPath) {
+		//protect against filesystem attacks
+		if (!PathValidator.isValid(inPath))
+			throw new ServiceException(403, 'Request path not accepted!')
+		
+		val path = inPath.replaceFirst(root, '')
+		
+		return if (path == '/' || path == '') {
+			'/index.html'
+		} else {
+			if (!path.startsWith('/')) '/' + path else path
+		}
 	}
 }

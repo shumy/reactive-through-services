@@ -101,8 +101,8 @@ class DataTest {
 			}
 		]
 		
-		Assert.assertEquals(gson.toJson(t.properties), '[{"type":{"typ":"txt"},"name":"name","opt":false},{"type":{"typ":"int"},"name":"age","opt":false},{"type":{"typ":"lst","fGen":"TestDataItem"},"name":"items","opt":false},{"type":{"typ":"map","fGen":"txt","sGen":"TestDataItem"},"name":"itemMap","opt":true},{"type":{"typ":"txt"},"name":"opt","opt":true},{"type":{"typ":"TestDataItem"},"name":"item","opt":true}]')
-		Assert.assertEquals(gson.toJson(t.items.get(0).properties), '[{"type":{"typ":"txt"},"name":"name","opt":false},{"type":{"typ":"bol"},"name":"correct","opt":false},{"type":{"typ":"lng"},"name":"defVar","opt":false,"defv":12}]')
+		Assert.assertEquals(gson.toJson(t.properties), '[{"type":{"typ":"str"},"name":"name","opt":false},{"type":{"typ":"int"},"name":"age","opt":false},{"type":{"typ":"lst","typArgs":["TestDataItem"]},"name":"items","opt":false},{"type":{"typ":"map","typArgs":["str","TestDataItem"]},"name":"itemMap","opt":true},{"type":{"typ":"str"},"name":"opt","opt":true},{"type":{"typ":"TestDataItem"},"name":"item","opt":true}]')
+		Assert.assertEquals(gson.toJson(t.items.get(0).properties), '[{"type":{"typ":"str"},"name":"name","opt":false},{"type":{"typ":"bol"},"name":"correct","opt":false},{"type":{"typ":"lng"},"name":"defVar","opt":false,"defv":12}]')
 		
 	}
 	

@@ -103,7 +103,12 @@ class PluginRepository {
 	}
 	
 	def instanceOf(String clazz) {
-		return loadClass(clazz).newInstance
+		try {
+			return loadClass(clazz).newInstance
+		} catch(Throwable ex) {
+			ex.printStackTrace
+			return null
+		}
 	}
 	
 	static class PluginList {

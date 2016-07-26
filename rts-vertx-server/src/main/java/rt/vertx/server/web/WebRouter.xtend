@@ -49,9 +49,8 @@ class WebRouter extends Router {
 		]
 	}
 	
-	def vrtxRoute(String uriPattern, IComponent vrtxService) {
-		val srvAddress = 'vrtx:' + vrtxService.class.name
-		pipeline.addComponent(srvAddress, vrtxService)
+	def vrtxService(String uriPattern, String srvAddress, IComponent vrtxService) {
+		pipeline.addService(srvAddress, vrtxService)
 		
 		val route = baseRoute + uriPattern
 		val routePaths = route.routeSplits.routePaths

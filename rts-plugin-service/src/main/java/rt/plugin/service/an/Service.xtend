@@ -15,7 +15,6 @@ import org.eclipse.xtend.lib.macro.declaration.MethodDeclaration
 import org.eclipse.xtend.lib.macro.declaration.MutableClassDeclaration
 import org.eclipse.xtend.lib.macro.declaration.MutableMethodDeclaration
 import org.eclipse.xtend.lib.macro.declaration.MutableParameterDeclaration
-import org.eclipse.xtend.lib.macro.declaration.TypeReference
 import org.eclipse.xtend.lib.macro.declaration.Visibility
 import rt.data.schema.SProperty
 import rt.data.schema.SType
@@ -29,6 +28,7 @@ import rt.plugin.service.IServiceClientFactory
 import rt.plugin.service.ServiceClient
 import rt.plugin.service.descriptor.DMethod
 import rt.plugin.service.descriptor.IDescriptor
+import org.eclipse.xtend.lib.macro.declaration.TypeReference
 
 @Target(TYPE)
 @Active(ServiceProcessor)
@@ -38,14 +38,6 @@ annotation Service {
 }
 
 class ServiceProcessor extends AbstractClassProcessor {
-	val typeConversions = #{
-		'boolean' -> Boolean,
-		'int' -> Integer,
-		'long' -> Long,
-		'float' -> Float,
-		'double' -> Double
-	}
-	
 	override doValidate(ClassDeclaration clazz, extension ValidationContext ctx) {
 		//TODO: verify if methods have return types, inferred not working!
 	}
@@ -185,11 +177,6 @@ class ServiceProcessor extends AbstractClassProcessor {
 		return 'srv:' + srvName
 	}
 	
-	def convert(extension TransformationContext context, TypeReference type) {
-		val fType = typeConversions.get(type.simpleName)
-		return fType?.newTypeReference ?: type
-	}
-	
 	def void generateMetadata(MutableClassDeclaration clazz, List<? extends MutableMethodDeclaration> methods, extension TransformationContext ctx) {
 		clazz.extendedClass = IDescriptor.newTypeReference
 		
@@ -218,7 +205,7 @@ class ServiceProcessor extends AbstractClassProcessor {
 		//remove context parameters
 		val originalParams = meth.parameters.filter[ primarySourceElement != null ]
 		return '''
-			new DMethod("«meth.simpleName»", «SType.canonicalName».convertFromJava("«ctx.convert(meth.returnType)»"), «ImmutableList.simpleName».copyOf(new «SProperty.canonicalName»[] {
+			new DMethod("«meth.simpleName»", «meth.returnType.typeInitializer», «ImmutableList.simpleName».copyOf(new «SProperty.canonicalName»[] {
 				«FOR param: originalParams SEPARATOR ','»
 					«ctx.parameterInitializer(param)»
 				«ENDFOR»
@@ -226,9 +213,13 @@ class ServiceProcessor extends AbstractClassProcessor {
 		'''
 	}
 	
-	def parameterInitializer(extension TransformationContext ctx, MutableParameterDeclaration param) {
-		return '''
-			new «SProperty.canonicalName»("«param.simpleName»", «SType.canonicalName».convertFromJava("«ctx.convert(param.type)»"))
-		'''
+	def parameterInitializer(extension TransformationContext ctx, MutableParameterDeclaration param)
+		'''new «SProperty.canonicalName»("«param.simpleName»", «param.type.typeInitializer»)'''
+	
+	def typeInitializer(TypeReference rType) {
+		val type = rType.wrapperIfPrimitive.name.split('<').get(0)
+		val argTypes = rType.actualTypeArguments.map[ name.split('<').get(0) ]
+		
+		'''«SType.canonicalName».from(«type».class«IF argTypes.length != 0», «ENDIF»«FOR arg: argTypes SEPARATOR ', '»«arg».class«ENDFOR»)'''
 	}
 }

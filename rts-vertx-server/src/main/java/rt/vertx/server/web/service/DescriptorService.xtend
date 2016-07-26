@@ -1,11 +1,14 @@
 package rt.vertx.server.web.service
 
+import java.util.HashMap
 import java.util.List
+import java.util.Map
 import rt.data.Data
 import rt.data.Default
 import rt.data.Optional
 import rt.data.Validation
 import rt.data.ValidationException
+import rt.data.schema.SProperty
 import rt.pipeline.pipe.Pipeline
 import rt.plugin.service.ServiceException
 import rt.plugin.service.an.Public
@@ -43,12 +46,24 @@ class DescriptorService {
 			throw new ServiceException(404, 'Service spec not found!')
 			
 		val desc = pipeline.getService(srvName) as IDescriptor
-		Spec.B => [ srv = srvName methods = desc.methods ]
+		
+		val allSchemas = new HashMap<String, List<SProperty>>
+		desc.methods.forEach[
+			allSchemas.putAll(retType.allSchemas)
+			params.forEach[ allSchemas.putAll(type.allSchemas) ]
+		]
+		
+		return Spec.B => [
+			srv = srvName
+			meths = desc.methods
+			schemas = allSchemas
+		]
 	}
 }
 
 @Data(metadata = false)
 class Spec {
 	val String srv
-	val List<DMethod> methods
+	val List<DMethod> meths
+	val Map<String, List<SProperty>> schemas 
 }

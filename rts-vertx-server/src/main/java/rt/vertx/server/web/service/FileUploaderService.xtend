@@ -10,7 +10,7 @@ import rt.plugin.service.an.Service
 import rt.data.Validation
 import rt.data.Data
 
-@Service
+@Service(metadata = false)
 @Data(metadata = false)
 class FileUploaderService {
 	static val logger = LoggerFactory.getLogger('HTTP-FILE-UPLOADER')

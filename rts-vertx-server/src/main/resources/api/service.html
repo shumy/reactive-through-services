@@ -1,0 +1,83 @@
+<h1 id="srv"></h1>
+<table class="ui table">
+	<thead>
+		<tr>
+			<th class="seven wide">Method</th>
+			<th class="five wide">Return</th>
+			<th>Parameters</th>
+		</tr>
+	</thead>
+	<tbody id="specs"></tbody>
+</table>
+
+<div id="schemas" class="ui fluid styled accordion"></div>
+
+<script type="text/javascript">
+(function() {
+	function typeToString(type) {
+		var ret = type.typ;
+		if (type.fGen) {
+			ret += '<' + type.fGen;
+			if (type.sGen) ret += ', ' + type.sGen; 
+			ret += '>';
+		}
+		return ret;
+	}
+	
+	function paramToString(param) {
+		return param.name + ':' + typeToString(param.type);
+	}
+	
+	var transService = {'<>':'tr','html':[
+		{'<>':'td', 'html':'${name}'},
+		{'<>':'td', 'html':function() { return typeToString(this.retType); }},
+		{'<>':'td', 'html':function() {
+			var ret = '['
+			this.params.forEach(function(p) {
+				ret += paramToString(p);
+				ret += ', ';
+			});
+			
+			ret = ret.substring(0, ret.length - 2);
+			ret += ']';
+			return ret
+		}}
+	]};
+	
+	var transSchemas = {'<>':'tr', 'html':[
+		{'<>':'td', 'html':'${name}'},
+		{'<>':'td', 'html':function() { return typeToString(this.type); }},
+		{'<>':'td', 'html':'${opt}'}
+	]};
+	
+	$.ajax({ url: 'specs/' + params.srv }).then(function(data) {
+		$('#srv').html('service: ' + data.srv)
+		$('#specs').json2html(data.meths, transService);
+		
+		Object.getOwnPropertyNames(data.schemas).forEach(function(schema) {
+			$('#schemas')
+			.append(
+				$('<div class="title"></div>').append($('<i class="dropdown icon"></i>')).append(schema)
+			)
+			.append(
+				$('<div class="content"></div>').append(
+					$('<table class="ui table"></table>')
+					.append(
+						$('<thead></thead>').append(
+							$('<tr></tr>')
+							.append($('<th class="seven wide">Name</th>'))
+							.append($('<th class="five wide">Type</th>'))
+							.append($('<th>Optional</th>'))
+						)
+					)
+					.append($('<tbody id="' + schema + '"></tbody>'))
+				)
+			);
+			
+			$('#' + schema).json2html(data.schemas[schema], transSchemas);
+		});
+		
+		$('#schemas').accordion();
+	});
+})();
+</script>

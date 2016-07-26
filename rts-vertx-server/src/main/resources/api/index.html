@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Platform API</title>
+		
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+		
+		<link rel="stylesheet" href="css/semantic.min.css">
+		<link rel="stylesheet" href="css/base.css">
+		
+		<script src="libs/jquery.min.js"></script>
+		<script src="libs/json2html.js"></script>
+		<script src="libs/jquery.json2html.js"></script>
+		<script src="libs/semantic.min.js"></script>
+	</head>
+	<body>
+		<div class="ui fixed inverted menu">
+			<a href="javascript:toRoutes()" class="header item">Routes</a>
+			<!--<a class="header item">Services</a>-->
+		</div>
+		
+		<div id="content" class="ui main basic segment"></div>
+		<script type="text/javascript">
+			var params = {};
+			
+			function toRoutes() {
+				$('#content').load('routes.html');
+			}
+			
+			function toService(srv) {
+				params.srv = srv;
+				params.meth = null;
+				$('#content').load('service.html');
+			}
+			
+			function toServiceMethod(srv, meth) {
+				params.srv = srv;
+				params.meth = meth;
+				$('#content').load('service.html');
+			}
+			
+			$(document).ready(function() { toRoutes(); });
+		</script>
+	</body>
+</html>
