@@ -50,7 +50,7 @@
 		{'<>':'td', 'html':'${opt}'}
 	]};
 	
-	$.ajax({ url: 'specs/' + params.srv }).then(function(data) {
+	$.ajax({ url: 'api/specs/' + params.srv }).then(function(data) {
 		$('#srv').html('service: ' + data.srv)
 		$('#specs').json2html(data.meths, transService);
 		

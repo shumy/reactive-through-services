@@ -1,28 +1,32 @@
 package rt.vertx.server.web.service
 
-import io.vertx.core.http.HttpServerRequest
 import java.nio.ByteBuffer
 import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.Paths
+import java.util.HashMap
 import org.slf4j.LoggerFactory
-import rt.pipeline.PathValidator
-import rt.plugin.service.an.Public
-import rt.plugin.service.an.Service
-import rt.plugin.service.ServiceException
 import rt.data.Data
 import rt.data.Default
-import java.nio.file.Path
+import rt.pipeline.PathValidator
+import rt.plugin.service.ServiceException
+import rt.plugin.service.an.Public
+import rt.plugin.service.an.Service
 
 @Service(metadata = false)
 @Data(metadata = false)
 class WebFileService {
 	static val logger = LoggerFactory.getLogger('HTTP-FILE-REQUEST')
 	
+	transient val cacheData = new HashMap<String, ByteBuffer>
+	
 	@Default('""') val String root
 	@Default('false') val boolean resource
+	@Default('false') val boolean cache
+	
 	val String folder
 	
-	@Public(notif = true)
+	/*@Public(notif = true)
 	def void notify(HttpServerRequest req) {
 		val filePath = folder + req.path.filePath
 		
@@ -34,12 +38,13 @@ class WebFileService {
 				req.response.end
 			}
 		]
-	}
+	}*/
 	
 	@Public
 	def ByteBuffer file(String path) {
 		val filePath = folder + path.filePath
 		
+		logger.debug(filePath)
 		var Path urlPath = null
 		if (resource) {
 			val uri = this.class.getResource(filePath).toURI
@@ -48,13 +53,28 @@ class WebFileService {
 			urlPath = Paths.get(filePath)
 		}
 		
-		val cntBytes = Files.readAllBytes(urlPath)
-		val content = ByteBuffer.wrap(cntBytes) => [
-			limit(cntBytes.length)
-		]
-		
-		//TODO: cache content?
-		return content
+		if (cache) {
+			var content = cacheData.get(path)
+			if (content == null) {
+				content = urlPath.read
+				cacheData.put(path, content)
+			}
+			
+			return content
+		} else {
+			return urlPath.read
+		}
+	}
+	
+	private def read(Path urlPath) {
+		try {
+			val cntBytes = Files.readAllBytes(urlPath)
+			return ByteBuffer.wrap(cntBytes) => [
+				limit(cntBytes.length)
+			]
+		} catch(Exception ex) {
+			throw new ServiceException(404, 'File not found!')
+		}
 	}
 	
 	private def filePath(String inPath) {

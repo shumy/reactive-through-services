@@ -19,7 +19,7 @@
 		{'<>':'td', 'html':function() { return '[' + this.pMaps.toString() + ']'; }}
 	]};
 	
-	$.ajax({ url: 'routes' }).then(function(data) {
+	$.ajax({ url: 'api/routes' }).then(function(data) {
 		$('#routes').json2html(data, transform);
 	});
 })();

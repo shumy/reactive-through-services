@@ -3,16 +3,18 @@
 	<head>
 		<title>Platform API</title>
 		
+		<base href="/api" />
+		
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 		
-		<link rel="stylesheet" href="css/semantic.min.css">
-		<link rel="stylesheet" href="css/base.css">
+		<link rel="stylesheet" href="api/css/semantic.min.css">
+		<link rel="stylesheet" href="api/css/base.css">
 		
-		<script src="libs/jquery.min.js"></script>
-		<script src="libs/json2html.js"></script>
-		<script src="libs/jquery.json2html.js"></script>
-		<script src="libs/semantic.min.js"></script>
+		<script src="api/libs/jquery.min.js"></script>
+		<script src="api/libs/json2html.js"></script>
+		<script src="api/libs/jquery.json2html.js"></script>
+		<script src="api/libs/semantic.min.js"></script>
 	</head>
 	<body>
 		<div class="ui fixed inverted menu">
@@ -25,19 +27,19 @@
 			var params = {};
 			
 			function toRoutes() {
-				$('#content').load('routes.html');
+				$('#content').load('api/routes.html');
 			}
 			
 			function toService(srv) {
 				params.srv = srv;
 				params.meth = null;
-				$('#content').load('service.html');
+				$('#content').load('api/service.html');
 			}
 			
 			function toServiceMethod(srv, meth) {
 				params.srv = srv;
 				params.meth = meth;
-				$('#content').load('service.html');
+				$('#content').load('api/service.html');
 			}
 			
 			$(document).ready(function() { toRoutes(); });
