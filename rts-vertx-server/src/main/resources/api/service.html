@@ -59,20 +59,20 @@
 			.append(
 				$('<div class="title"></div>').append($('<i class="dropdown icon"></i>')).append(schema)
 			)
-			.append(
-				$('<div class="content"></div>').append(
-					$('<table class="ui table"></table>')
-					.append(
-						$('<thead></thead>').append(
-							$('<tr></tr>')
-							.append($('<th class="seven wide">Name</th>'))
-							.append($('<th class="five wide">Type</th>'))
-							.append($('<th>Optional</th>'))
-						)
-					)
-					.append($('<tbody id="' + schema + '"></tbody>'))
-				)
-			);
+			.append($(
+				'<div class="content">' +
+					'<table class="ui table">' +
+						'<thead>' +
+							'<tr>' +
+								'<th class="seven wide">Name</th>' +
+								'<th class="five wide">Type</th>' +
+								'<th>Optional</th>' +
+							'</tr>' +
+						'</thead>' +
+						'<tbody id="' + schema + '"></tbody>' +
+					'</table>' +
+				'</div>'
+			));
 			
 			$('#' + schema).json2html(data.schemas[schema], transSchemas);
 		});

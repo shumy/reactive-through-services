@@ -12,5 +12,5 @@ annotation Proxies {
 @Repeatable(Proxies)
 annotation Proxy {
 	String name
-	Class<?> proxy
+	Class<?> type
 }

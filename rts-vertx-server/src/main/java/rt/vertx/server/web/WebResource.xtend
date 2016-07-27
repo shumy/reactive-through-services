@@ -14,6 +14,7 @@ import rt.pipeline.IMessageBus.Message
 import rt.pipeline.pipe.PipeResource
 import rt.plugin.service.RouteConfig
 import rt.plugin.service.ServiceException
+import rt.vertx.server.CtxHeaders
 
 class WebResource {
 	static val logger = LoggerFactory.getLogger('WEB-RESOURCE')
@@ -51,6 +52,18 @@ class WebResource {
 			sendCallback = [
 				logger.trace('RESPONSE {} {}', cmd, client)
 				processResponse(req.response, req.path)
+			]
+			
+			contextCallback = [
+				if (parent.headersMap != null) {
+					val headers = new CtxHeaders
+					req.headers.forEach[
+						if (parent.headersMap.containsKey(key))
+							headers.add(parent.headersMap.get(key), value)
+					]
+					
+					object(CtxHeaders, headers)
+				}
 			]
 		]
 		

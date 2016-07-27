@@ -10,11 +10,14 @@ import rt.plugin.service.WebMethod
 import rt.vertx.server.DefaultVertxServer
 
 import static extension rt.vertx.server.URIParserHelper.*
+import org.eclipse.xtend.lib.annotations.Accessors
+import java.util.Map
 
 class WebRouter extends Router {
 	static val logger = LoggerFactory.getLogger('WEB-ROUTER')
 	
 	//@Accessors val resources = new HashMap<String, WebResource>
+	@Accessors var Map<String, String> headersMap
 	
 	package val DefaultVertxServer parent
 	package val HttpServer server

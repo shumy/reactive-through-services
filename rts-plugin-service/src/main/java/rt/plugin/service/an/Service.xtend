@@ -73,7 +73,7 @@ class ServiceProcessor extends AbstractClassProcessor {
 			
 			val ctxArgs = meth.getContextArgs(ctx)
 			ctxArgs.forEach[
-				meth.addParameter(getStringValue('name'), getClassValue('proxy'))
+				meth.addParameter(getStringValue('name'), getClassValue('type'))
 			]
 			
 			val retType = meth.returnType.simpleName
@@ -151,21 +151,28 @@ class ServiceProcessor extends AbstractClassProcessor {
 	
 	def getContextArgs(MutableMethodDeclaration meth, extension TransformationContext ctx) {
 		val ctxArgs = new LinkedList<AnnotationReference>
-		
-		val annoProxyRef = meth.annotations.filter[ annotationTypeDeclaration ==  Proxy.findTypeGlobally ]
-		ctxArgs.addAll(annoProxyRef)
-		
-		val annoProxysRef = meth.findAnnotation(Proxies.findTypeGlobally)
-		if (annoProxysRef != null) {
-			val proxies = annoProxysRef.getAnnotationArrayValue('value')
-			ctxArgs.addAll(proxies)
-		}
+
+		meth.annotations.forEach[
+			if (annotationTypeDeclaration ==  Proxy.findTypeGlobally || annotationTypeDeclaration ==  Context.findTypeGlobally) {
+				ctxArgs.add(it)
+			} else if (annotationTypeDeclaration == Proxies.findTypeGlobally || annotationTypeDeclaration == Contexts.findTypeGlobally) {
+				val annoArray = getAnnotationArrayValue('value')
+				ctxArgs.addAll(annoArray)
+			}
+		]
 		
 		return ctxArgs
 	}
 	
-	def addContextArgs(MutableMethodDeclaration meth, extension TransformationContext ctx, List<AnnotationReference> ctxArgs)
-		'''«FOR annoRef: ctxArgs SEPARATOR ','» client.create("«annoRef.getSrvPath»", «annoRef.getClassValue('proxy')».class)«ENDFOR» '''
+	def addContextArgs(MutableMethodDeclaration meth, extension TransformationContext ctx, List<AnnotationReference> ctxArgs) '''
+		«FOR annoRef: ctxArgs SEPARATOR ','»
+			«IF annoRef.annotationTypeDeclaration == Proxy.findTypeGlobally»
+				client.create("«annoRef.getSrvPath»", «annoRef.getClassValue('type')».class)
+			«ELSE»
+				ctx.object(«annoRef.getClassValue('type')».class)
+			«ENDIF»
+		«ENDFOR»
+	'''
 	
 	def addMessageArgs(List<MutableParameterDeclaration> parameters) {
 		var index = 0
