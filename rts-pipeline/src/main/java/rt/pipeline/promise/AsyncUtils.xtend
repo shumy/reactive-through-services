@@ -30,6 +30,9 @@ abstract class AsyncUtils {
 		local.get.setAsyncWhile(evaluate, onWhileTrue, onReturn, onError)
 	}
 	
+	static def <T> Promise<T> task(() => T execute) {
+		local.get.setTask(execute)
+	}
 	
 	//configs...
 	@Accessors var long timeout = 3000L
@@ -42,6 +45,7 @@ abstract class AsyncUtils {
 	def void setPeriodic(long delay, () => void callback)
 	def void setAsyncWhile(() => boolean evaluate, () => boolean onWhileTrue, () => void onReturn, (Exception) => void onError)
 	def void setWaitUntil(() => boolean evaluate, () => void onReturn)
+	def <T> Promise<T> setTask(() => T execute)
 	
 	static class DefaultAsyncUtils extends AsyncUtils {
 		
@@ -66,5 +70,10 @@ abstract class AsyncUtils {
 			while(!evaluate.apply) {}
 			onReturn.apply
 		}
+		
+		override <T> setTask(()=>T execute) {
+			throw new UnsupportedOperationException('setTask')
+		}
+		
 	}
 }

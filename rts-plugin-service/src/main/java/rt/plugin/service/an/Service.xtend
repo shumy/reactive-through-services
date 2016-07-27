@@ -15,12 +15,14 @@ import org.eclipse.xtend.lib.macro.declaration.MethodDeclaration
 import org.eclipse.xtend.lib.macro.declaration.MutableClassDeclaration
 import org.eclipse.xtend.lib.macro.declaration.MutableMethodDeclaration
 import org.eclipse.xtend.lib.macro.declaration.MutableParameterDeclaration
+import org.eclipse.xtend.lib.macro.declaration.TypeReference
 import org.eclipse.xtend.lib.macro.declaration.Visibility
 import rt.data.schema.SProperty
 import rt.data.schema.SType
 import rt.pipeline.IComponent
 import rt.pipeline.IMessageBus.Message
 import rt.pipeline.pipe.PipeContext
+import rt.pipeline.promise.AsyncUtils
 import rt.plugin.config.PluginConfig
 import rt.plugin.config.PluginConfigFactory
 import rt.plugin.config.PluginEntry
@@ -28,7 +30,6 @@ import rt.plugin.service.IServiceClientFactory
 import rt.plugin.service.ServiceClient
 import rt.plugin.service.descriptor.DMethod
 import rt.plugin.service.descriptor.IDescriptor
-import org.eclipse.xtend.lib.macro.declaration.TypeReference
 
 @Target(TYPE)
 @Active(ServiceProcessor)
@@ -67,6 +68,7 @@ class ServiceProcessor extends AbstractClassProcessor {
 		for (MutableMethodDeclaration meth: publicMethods) {
 			val annoPublicRef = meth.findAnnotation(Public.findTypeGlobally)
 			val isNotification = annoPublicRef.getBooleanValue('notif')
+			val isAsync = annoPublicRef.getBooleanValue('async')
 			
 			//make a copy because the parameters will be changed
 			val methParameters = meth.parameters.map[it as MutableParameterDeclaration].toList
@@ -81,14 +83,36 @@ class ServiceProcessor extends AbstractClassProcessor {
 			switchCases.add('''
 				case "«meth.simpleName»":
 					«IF methParameters.size != 0»
-					args = msg.args(«FOR param: methParameters SEPARATOR ','» «param.type.simpleName.replaceFirst('<.*>', '')».class«ENDFOR» );
+						final «List.canonicalName»<Object> «meth.simpleName»Args = msg.args(«FOR param: methParameters SEPARATOR ','» «param.type.simpleName.replaceFirst('<.*>', '')».class«ENDFOR» );
 					«ENDIF»
-					«IF retType != 'void'»ret = «ENDIF»«meth.simpleName»(«methParameters.addMessageArgs»«IF hasIntervalSimbol»,«ENDIF»«meth.addContextArgs(ctx, ctxArgs)»);
-					«IF !isNotification»
-						«IF retType != 'void'»
-							ctx.replyOK(ret);
-						«ELSE»
-							ctx.replyOK();
+					
+					«IF isAsync»
+						«AsyncUtils.canonicalName».task(() -> {
+							«IF retType != 'void'»final Object «meth.simpleName»Ret = «ENDIF»«meth.simpleName»(«addMessageArgs(meth.simpleName + 'Args', methParameters)»«IF hasIntervalSimbol»,«ENDIF»«meth.addContextArgs(ctx, ctxArgs)»);
+							«IF retType != 'void'»
+								return «meth.simpleName»Ret;
+							«ELSE»
+								return null;
+							«ENDIF»
+						}).then(res -> {
+							«IF !isNotification»
+								«IF retType != 'void'»
+									ctx.replyOK(res);
+								«ELSE»
+									ctx.replyOK();
+								«ENDIF»
+							«ENDIF»
+						}, err -> {
+							ctx.replyError(err);
+						});
+					«ELSE»
+						«IF retType != 'void'»final Object «meth.simpleName»Ret = «ENDIF»«meth.simpleName»(«addMessageArgs(meth.simpleName + 'Args', methParameters)»«IF hasIntervalSimbol»,«ENDIF»«meth.addContextArgs(ctx, ctxArgs)»);
+						«IF !isNotification»
+							«IF retType != 'void'»
+								ctx.replyOK(«meth.simpleName»Ret);
+							«ELSE»
+								ctx.replyOK();
+							«ENDIF»
 						«ENDIF»
 					«ENDIF»
 					break;
@@ -99,15 +123,10 @@ class ServiceProcessor extends AbstractClassProcessor {
 			addParameter('ctx', PipeContext.newTypeReference)
 			
 			body = '''
-				«ServiceClient» client = null;
-				
-				final IServiceClientFactory clientFactory = ctx.object(«IServiceClientFactory».class);
-				if (clientFactory != null)
-					client = clientFactory.getServiceClient();
-				
 				final «Message» msg = ctx.getMessage();
-				«List»<Object> args = null;
-				Object ret = null;
+				
+				final «IServiceClientFactory» clientFactory = ctx.object(«IServiceClientFactory».class);
+				final «ServiceClient» client = clientFactory != null ? clientFactory.getServiceClient() : null;
 				
 				try {
 					switch(msg.cmd) {
@@ -174,9 +193,9 @@ class ServiceProcessor extends AbstractClassProcessor {
 		«ENDFOR»
 	'''
 	
-	def addMessageArgs(List<MutableParameterDeclaration> parameters) {
+	def addMessageArgs(String varName, List<MutableParameterDeclaration> parameters) {
 		var index = 0
-		'''«FOR param: parameters SEPARATOR ','» («param.type»)args.get(«index++»)«ENDFOR» '''
+		'''«FOR param: parameters SEPARATOR ','» («param.type»)«varName».get(«index++»)«ENDFOR» '''
 	}
 	
 	def getSrvPath(AnnotationReference annoRef) {

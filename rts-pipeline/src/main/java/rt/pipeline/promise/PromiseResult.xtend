@@ -4,7 +4,7 @@ abstract class PromiseResult<T> {
 	var isResolved = false
 	
 	package var (T) => void onResolve
-	package var (String) => void onReject
+	package var (Throwable) => void onReject
 	
 	def promise() {
 		return new Promise<T>(this)
@@ -17,10 +17,10 @@ abstract class PromiseResult<T> {
 		}
 	}
 	
-	def void reject(String error) {
+	def void reject(Throwable ex) {
 		if (!isResolved) {
 			isResolved = true
-			onReject?.apply(error)	
+			onReject?.apply(ex)
 		}
 	}
 	

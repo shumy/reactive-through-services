@@ -17,7 +17,7 @@ class Promise<T> {
 		}
 	}
 	
-	def void then((T) => void onResolve, (String) => void onReject) {
+	def void then((T) => void onResolve, (Throwable) => void onReject) {
 		result.onResolve = onResolve
 		result.onReject = onReject
 		

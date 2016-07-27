@@ -2,6 +2,7 @@ package rt.vertx.server
 
 import io.vertx.core.Vertx
 import rt.pipeline.promise.AsyncUtils
+import rt.pipeline.promise.PromiseResult
 
 class VertxAsyncUtils extends AsyncUtils {
 	val Vertx vertx
@@ -35,5 +36,24 @@ class VertxAsyncUtils extends AsyncUtils {
 		} else {
 			onReturn.apply
 		}
+	}
+	
+	override <T> setTask(() => T execute) {
+		val PromiseResult<T> pr = [
+			vertx.executeBlocking([
+				try {
+					complete(execute.apply)
+				} catch(Throwable throwable) {
+					fail(throwable)
+				}
+			],[ res |
+				if (res.succeeded)
+					resolve(res.result)
+				else
+					reject(res.cause)
+			])
+		]
+		
+		return pr.promise
 	}
 }

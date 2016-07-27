@@ -80,7 +80,7 @@ class PipeContext {
 	 * @param from The address that will be on reply "header.from".
 	 * @param error The error descriptor message.
 	 */
-	def void fail(Exception ex) {
+	def void fail(Throwable ex) {
 		if(!inFail) {
 			replyError(ex)
 			pipeline.fail(ex)
@@ -132,7 +132,7 @@ class PipeContext {
 	/** Does nothing to the pipeline flow and sends a ERROR reply back with a pre formatted JSON schema. 
 	 * @param value The error descriptor message.
 	 */
-	def void replyError(Exception ex) {
+	def void replyError(Throwable ex) {
 		if(!inFail) {
 			val reply = new Message => [
 				cmd = Message.CMD_ERROR

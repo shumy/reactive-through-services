@@ -46,7 +46,7 @@ class ServiceClient {
 						
 						resolve(replyMsg.result(anPublic.retType))
 					} else {
-						reject(replyMsg.result(String))
+						reject(replyMsg.result(Throwable))
 					}
 				]
 			] 

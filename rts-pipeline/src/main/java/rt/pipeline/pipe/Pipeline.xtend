@@ -11,7 +11,7 @@ import rt.pipeline.pipe.use.ChannelService
 
 class Pipeline {
 	@Accessors val IMessageBus mb
-	@Accessors(PUBLIC_SETTER) (Exception) => void failHandler = null
+	@Accessors(PUBLIC_SETTER) (Throwable) => void failHandler = null
 	
 	val interceptors = new ArrayList<IComponent>
 	val services = new HashMap<String, IComponent>
@@ -36,7 +36,7 @@ class Pipeline {
 		return new PipeResource(this, client)
 	}
 	
-	def fail(Exception ex) {
+	def fail(Throwable ex) {
 		failHandler?.apply(ex)
 	}
 	
