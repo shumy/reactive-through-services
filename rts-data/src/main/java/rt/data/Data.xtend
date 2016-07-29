@@ -101,6 +101,7 @@ class DataProcessor extends AbstractClassProcessor {
 		]
 		
 		clazz.addConstructor[
+			visibility = Visibility.DEFAULT
 			val builderTypeRef = newTypeReference(builderClassName)
 			addParameter('builder', builderTypeRef)
 			body = '''
@@ -140,6 +141,16 @@ class DataProcessor extends AbstractClassProcessor {
 			returnType = builderClazz.newTypeReference
 			body = '''
 				return new «builderClassName»();
+			'''
+		]
+		
+		clazz.addMethod('create')[
+			static = true
+			returnType = clazz.newTypeReference
+			body = '''
+				final «clazz.simpleName» data = new «clazz.simpleName»(new «builderClassName»());
+				data.validate();
+				return data;
 			'''
 		]
 		

@@ -9,5 +9,6 @@
         <entry type="srv" ref="rt.vertx.server.web.service.SpecsService"/>
         <entry type="srv" ref="rt.vertx.server.web.service.DescriptorService"/>
         <entry type="srv" ref="rt.vertx.server.web.service.RouterService"/>
+        <entry type="srv" ref="rt.vertx.server.web.service.ObservableService"/>
     </entries>
 </config>

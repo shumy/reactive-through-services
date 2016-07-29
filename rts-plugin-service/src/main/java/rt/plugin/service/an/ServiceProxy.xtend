@@ -23,12 +23,17 @@ class ServiceProxyProcessor extends AbstractInterfaceProcessor {
 		
 		client.declaredResolvedMethods.forEach[ meth |
 			val interMeth = meth.declaration
+			val annoPublic = interMeth.findAnnotation(Public.findTypeGlobally)
+			val isNotification = if (annoPublic != null) annoPublic.getBooleanValue('notif') else false
+			
 			inter.addMethod(interMeth.simpleName)[ proxyMeth |
 				interMeth.parameters.forEach[ proxyMeth.addParameter(simpleName, type) ]
-				proxyMeth.returnType = Promise.newTypeReference(interMeth.returnType)
+				if (!isNotification)
+					proxyMeth.returnType = Promise.newTypeReference(interMeth.returnType)
 				
-				val anRef = Public.newAnnotationReference[ ref |
-					ref.setClassValue('retType', interMeth.returnType)
+				val anRef = Public.newAnnotationReference[
+					setClassValue('retType', interMeth.returnType)
+					setBooleanValue('notif', isNotification)
 				]
 				
 				proxyMeth.addAnnotation(anRef)

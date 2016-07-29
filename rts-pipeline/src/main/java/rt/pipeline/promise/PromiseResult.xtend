@@ -1,27 +1,35 @@
 package rt.pipeline.promise
 
 abstract class PromiseResult<T> {
-	var isResolved = false
+	var T result = null
+	var (T) => void onResolve = null
 	
-	package var (T) => void onResolve
-	package var (Throwable) => void onReject
+	var Throwable error = null
+	var (Throwable) => void onReject = null
+	
+	def void setOnResolve((T) => void onResolve) {
+		this.onResolve = onResolve
+		if (result != null) onResolve.apply(result)
+	}
+	
+	def void setOnReject((Throwable) => void onReject) {
+		this.onReject = onReject
+		if (error != null) onReject.apply(error)
+	}
 	
 	def promise() {
+		invoke(this)
 		return new Promise<T>(this)
 	}
 	
 	def void resolve(T result) {
-		if (!isResolved) {
-			isResolved = true
-			onResolve?.apply(result)
-		}
+		this.result = result
+		onResolve?.apply(result)
 	}
 	
-	def void reject(Throwable ex) {
-		if (!isResolved) {
-			isResolved = true
-			onReject?.apply(ex)
-		}
+	def void reject(Throwable error) {
+		this.error = error
+		onReject?.apply(error)
 	}
 	
 	def void invoke(PromiseResult<T> result)

@@ -54,15 +54,17 @@ class ServiceClient {
 	}
 	
 	private def send(String address, Message sendMsg, PromiseResult<Object> result, Public anPublic) {
-		//TODO: and if the service proxy is (notif = true), use publish instead!
-		bus.send(address, sendMsg)[ replyMsg |
-			logger.debug('REPLY id:{} clt:{} cmd:{}', replyMsg.id, replyMsg.clt, replyMsg.cmd)
-			if (replyMsg.cmd == Message.CMD_OK) {
-				result.resolve(replyMsg.result(anPublic.retType))
-			} else {
-				val errorMsg = replyMsg.result(String)
-				result.reject(new RuntimeException(errorMsg))
-			}
-		]
+		if (anPublic.notif)
+			bus.publish(address, sendMsg)
+		else
+			bus.send(address, sendMsg)[ replyMsg |
+				logger.debug('REPLY id:{} clt:{} cmd:{}', replyMsg.id, replyMsg.clt, replyMsg.cmd)
+				if (replyMsg.cmd == Message.CMD_OK) {
+					result.resolve(replyMsg.result(anPublic.retType))
+				} else {
+					val errorMsg = replyMsg.result(String)
+					result.reject(new RuntimeException(errorMsg))
+				}
+			]
 	}
 }

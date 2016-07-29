@@ -10,11 +10,13 @@ import rt.pipeline.pipe.channel.IPipeChannel.PipeChannelInfo
 
 import static extension rt.vertx.server.URIParserHelper.*
 import rt.vertx.server.DefaultVertxServer
+import java.util.Map
 
 class WsRouter {
 	static val logger = LoggerFactory.getLogger('WS-ROUTER')
 	
 	@Accessors val resources = new HashMap<String, WsResource>
+	@Accessors var Map<String, String> headersMap
 	
 	package val DefaultVertxServer parent
 	package val HttpServer server

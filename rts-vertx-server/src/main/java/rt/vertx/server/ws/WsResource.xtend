@@ -1,15 +1,16 @@
 package rt.vertx.server.ws
 
 import io.vertx.core.http.ServerWebSocket
-import org.slf4j.LoggerFactory
-import rt.vertx.server.ServiceClientFactory
-import rt.plugin.service.IServiceClientFactory
 import org.eclipse.xtend.lib.annotations.Accessors
-import rt.pipeline.pipe.PipeResource
+import org.slf4j.LoggerFactory
+import rt.pipeline.IMessageBus.IListener
 import rt.pipeline.IMessageBus.Message
+import rt.pipeline.pipe.PipeResource
 import rt.pipeline.pipe.channel.IPipeChannel.PipeChannelInfo
 import rt.pipeline.pipe.use.ChannelService
-import rt.pipeline.IMessageBus.IListener
+import rt.plugin.service.IServiceClientFactory
+import rt.vertx.server.CtxHeaders
+import rt.vertx.server.ServiceClientFactory
 
 class WsResource {
 	static val logger = LoggerFactory.getLogger('WS-RESOURCE')
@@ -42,7 +43,25 @@ class WsResource {
 			object(IServiceClientFactory, srvClientFactory)
 			
 			sendCallback = [ send ]
-			contextCallback = [ object(IServiceClientFactory, srvClientFactory) ]
+			
+			contextCallback = [
+				object(IServiceClientFactory, srvClientFactory)
+				if (parent.headersMap != null) {
+					val reqHeaders = #{
+						//TODO: add more possible required headers...
+						'client' -> client
+					}
+					
+					val headers = new CtxHeaders
+					reqHeaders.forEach[ key, value |
+						if (parent.headersMap.containsKey(key))
+							headers.add(parent.headersMap.get(key), value)
+					]
+					
+					object(CtxHeaders, headers)
+				}
+			]
+			
 			closeCallback = [ ws.close ]
 			
 			subscribe(client)
