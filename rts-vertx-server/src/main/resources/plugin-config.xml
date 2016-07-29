@@ -10,5 +10,7 @@
         <entry type="srv" ref="rt.vertx.server.web.service.DescriptorService"/>
         <entry type="srv" ref="rt.vertx.server.web.service.RouterService"/>
         <entry type="srv" ref="rt.vertx.server.web.service.ObservableService"/>
+        <entry type="srv" ref="rt.vertx.server.web.service.TransferService"/>
+        <entry type="srv" ref="rt.vertx.server.web.service.ObserverService"/>
     </entries>
 </config>
