@@ -139,6 +139,7 @@ class PipeContext {
 				result = ex
 			]
 			
+			logger.error('REPLY-ERROR {}', ex)
 			reply(reply)
 		}
 	}
@@ -156,7 +157,7 @@ class PipeContext {
 			logger.debug('DELIVER {}', message.path)
 			srv.apply(this)
 		} else {
-			logger.debug('PUBLISH {}', message.path)
+			logger.info('PUBLISH {}', message.path)
 			pipeline.mb.publish(message.path, message)
 		}
 	}

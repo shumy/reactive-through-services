@@ -78,7 +78,7 @@ class WsResource {
 			sb.append(textData)
 			if (isFinal) {
 				val textMsg = sb.toString
-				logger.trace('RECEIVED {}', textMsg)
+				logger.info('RECEIVED {} {}', Thread.currentThread, textMsg)
 				
 				val msg = parent.converter.fromJson(textMsg)
 				sb.length = 0
@@ -101,6 +101,6 @@ class WsResource {
 	private def void send(Message msg) {
 		val textReply = parent.converter.toJson(msg)
 		ws.writeFinalTextFrame(textReply)
-		logger.trace('SENT {}', textReply)
+		logger.info('SENT {} {}', Thread.currentThread, textReply)
 	}
 }

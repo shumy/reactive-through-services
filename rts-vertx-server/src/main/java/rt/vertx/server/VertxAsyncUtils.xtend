@@ -6,7 +6,13 @@ import rt.pipeline.promise.PromiseResult
 
 class VertxAsyncUtils extends AsyncUtils {
 	val Vertx vertx
-	new(Vertx vertx) { this.vertx = vertx }
+	
+	new(Vertx vertx) { this(vertx, false, 3000L) }
+	new(Vertx vertx, boolean isWorker) { this(vertx, isWorker, 3000L) }
+	new(Vertx vertx, boolean isWorker, long timeout) {
+		super(isWorker, timeout)
+		this.vertx = vertx
+	}
 	
 	override setTimer(long delay, () => void callback) {
 		val cDelay = if (delay < 1) 1 else delay 
@@ -40,7 +46,8 @@ class VertxAsyncUtils extends AsyncUtils {
 	
 	override <T> setTask(() => T execute) {
 		val PromiseResult<T> pr = [
-			vertx.executeBlocking([
+			vertx.executeBlocking([ 
+				AsyncUtils.set(new VertxAsyncUtils(vertx, true))
 				try {
 					complete(execute.apply)
 				} catch(Throwable throwable) {

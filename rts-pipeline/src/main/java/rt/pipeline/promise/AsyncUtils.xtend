@@ -8,7 +8,17 @@ abstract class AsyncUtils {
 	
 	static def AsyncUtils get() { local.get }
 	static def void set(AsyncUtils instance) { local.set(instance) }
-	static def setDefault() { local.set(new DefaultAsyncUtils) return local.get }
+	
+	static def setDefault() { local.set(new DefaultAsyncUtils()) }
+	static def setDefault(long timeout) { local.set(new DefaultAsyncUtils(false, timeout)) }
+	
+	static def isWorker() {
+		return local.get.isWorker
+	}
+	
+	static def void schedule(() => void callback) {
+		local.get.setTimer(0, callback)
+	}
 	
 	static def void timeout(() => void callback) {
 		local.get.setTimeout(callback)
@@ -35,7 +45,13 @@ abstract class AsyncUtils {
 	}
 	
 	//configs...
-	@Accessors var long timeout = 3000L
+	@Accessors val boolean isWorker
+	@Accessors val long timeout
+	
+	new(boolean isWorker, long timeout) {
+		this.isWorker = isWorker
+		this.timeout = timeout
+	}
 	
 	def void setTimeout(() => void callback) {
 		setTimer(timeout, callback)
@@ -48,6 +64,11 @@ abstract class AsyncUtils {
 	def <T> Promise<T> setTask(() => T execute)
 	
 	static class DefaultAsyncUtils extends AsyncUtils {
+		new() { this(false, 3000L) }
+		new(boolean isWorker) { this(isWorker, 3000L) }
+		new(boolean isWorker, long timeout) {
+			super(isWorker, timeout)
+		}
 		
 		override setTimer(long delay, () => void callback) {
 			new Timer().schedule([ callback.apply ], delay)

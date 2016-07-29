@@ -8,6 +8,7 @@ import rt.plugin.service.an.Public
 import rt.pipeline.promise.PromiseResult
 import java.util.Map
 import org.slf4j.LoggerFactory
+import rt.pipeline.promise.AsyncUtils
 
 class ServiceClient {
 	static val logger = LoggerFactory.getLogger('PROXY')
@@ -18,7 +19,7 @@ class ServiceClient {
 	val Map<String, String> redirects
 	
 	val String uuid
-	var long msgID = 0		//increment for every new message
+	val AtomicLong msgID = new AtomicLong(1)		//increment for every new message
 	
 	new(IMessageBus bus, String server, String client, Map<String, String> redirects) {
 		this.bus = bus
@@ -32,28 +33,36 @@ class ServiceClient {
 		val address = redirects.get(srvPath) ?: server
 		
 		val srvProxy = Proxy.newProxyInstance(srvProxyInterface.classLoader, #[srvProxyInterface])[ proxy, srvMeth, srvArgs |
-			val PromiseResult<Object> result = [
-				msgID++
-				val sendMsg = new Message => [id=msgID clt=uuid path=srvPath cmd=srvMeth.name args=srvArgs]
-				
-				logger.info('SEND id:{} clt:{} path:{} cmd:{}', sendMsg.id, sendMsg.clt, sendMsg.path, sendMsg.cmd)
-				bus.send(address, sendMsg)[ replyMsg |
-					logger.info('REPLY id:{} clt:{} cmd:{}', replyMsg.id, replyMsg.clt, replyMsg.cmd)
-					if (replyMsg.cmd == Message.CMD_OK) {
-						val anPublic = srvMeth.getAnnotation(Public)
-						if (anPublic == null)
-							throw new RuntimeException('@Public annotation with return type is mandatory for a ServiceProxy!')
-						
-						resolve(replyMsg.result(anPublic.retType))
-					} else {
-						reject(replyMsg.result(Throwable))
-					}
-				]
-			] 
+			val anPublic = srvMeth.getAnnotation(Public)
+			if (anPublic == null)
+				throw new RuntimeException('@Public annotation with return type is mandatory for a ServiceProxy!')
 			
+			val PromiseResult<Object> result = [
+				val sendMsg = new Message => [id=msgID.andIncrement clt=uuid path=srvPath cmd=srvMeth.name args=srvArgs]
+				logger.debug('SEND id:{} clt:{} path:{} cmd:{}', sendMsg.id, sendMsg.clt, sendMsg.path, sendMsg.cmd)
+				
+				//protect against multi thread...
+				if (AsyncUtils.worker)
+					AsyncUtils.schedule[ send(address, sendMsg, it, anPublic) ]
+				else
+					send(address, sendMsg, it, anPublic)
+			]
 			return result.promise
 		]
 		
 		return srvProxy as T
+	}
+	
+	private def send(String address, Message sendMsg, PromiseResult<Object> result, Public anPublic) {
+		//TODO: and if the service proxy is (notif = true), use publish instead!
+		bus.send(address, sendMsg)[ replyMsg |
+			logger.debug('REPLY id:{} clt:{} cmd:{}', replyMsg.id, replyMsg.clt, replyMsg.cmd)
+			if (replyMsg.cmd == Message.CMD_OK) {
+				result.resolve(replyMsg.result(anPublic.retType))
+			} else {
+				val errorMsg = replyMsg.result(String)
+				result.reject(new RuntimeException(errorMsg))
+			}
+		]
 	}
 }

@@ -38,7 +38,7 @@ class DefaultMessageBus implements IMessageBus {
 		
 		//process backward replies. In case of internal components need the information
 		if (msg.cmd == Message.CMD_OK) {
-			replyOKBackFun?.apply(msg)	
+			replyOKBackFun?.apply(msg)
 		} else {
 			replyERRORBackFun?.apply(msg)
 		}

@@ -113,7 +113,7 @@ class ChannelBufferTest {
 	
 	@Test
 	def void beginConfirmationTimeout() {
-		AsyncUtils.setDefault => [ timeout = 100 ]
+		AsyncUtils.setDefault(100L)
 		val text = 'Just a string test!'
 		
 		val sb = new StringBuilder
