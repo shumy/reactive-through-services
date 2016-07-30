@@ -4,17 +4,24 @@ import java.util.HashMap
 import java.util.HashSet
 import java.util.Set
 import java.util.concurrent.ConcurrentHashMap
+import rt.async.pubsub.IMessageBus
+import rt.async.pubsub.ISubscription
+import rt.async.pubsub.Message
 
-import static rt.pipeline.promise.AsyncUtils.*
+import static rt.async.AsyncUtils.*
 
 class DefaultMessageBus implements IMessageBus {
-	val listeners = new HashMap<String, Set<DefaultListener>>
+	val subscriptions = new HashMap<String, Set<DefaultSubscription>>
 	val replyListeners = new ConcurrentHashMap<String, (Message) => void>
 	
+	override publish(String address, String inCmd, Object inResult) {
+		val msg = new Message => [ path = 'srv:' + address cmd = inCmd result = inResult ]
+		subscriptions.get(address)?.forEach[ send(msg) ]
+	}
 	
 	override publish(String address, Message msg) {
 		if (msg.typ != null) msg.typ = Message.PUBLISH
-		listeners.get(address)?.forEach[ send(msg) ]
+		subscriptions.get(address)?.forEach[ send(msg) ]
 	}
 	
 	override send(String address, Message msg, (Message) => void replyCallback) {
@@ -22,7 +29,7 @@ class DefaultMessageBus implements IMessageBus {
 		replyListener(replyID, replyCallback)
 		
 		msg.typ = Message.SEND
-		listeners.get(address)?.forEach[ send(msg) ]
+		subscriptions.get(address)?.forEach[ send(msg) ]
 		
 		timeout[
 			val replyTimeoutMsg = new Message => [ id=msg.id clt=msg.clt typ=Message.REPLY cmd=Message.CMD_TIMEOUT result='''Timeout for «msg.path» -> «msg.cmd»'''.toString]
@@ -51,20 +58,20 @@ class DefaultMessageBus implements IMessageBus {
 		replyListeners.put(replyID, listener)
 	}
 	
-	override listener(String address, (Message) => void listener) {
-		var holder = listeners.get(address)
+	override subscribe(String address, (Message) => void listener) {
+		var holder = subscriptions.get(address)
 		if (holder == null) {
 			holder = new HashSet
-			listeners.put(address, holder)
+			subscriptions.put(address, holder)
 		}
 		
-		val rtsListener = new DefaultListener(this, address, listener)
-		holder.add(rtsListener)
+		val sub = new DefaultSubscription(this, address, listener)
+		holder.add(sub)
 		
-		return rtsListener
+		return sub
 	}
 	
-	static class DefaultListener implements IListener {
+	static class DefaultSubscription implements ISubscription {
 		val DefaultMessageBus parent
 		val String address
 		val (Message) => void  callback
@@ -80,7 +87,7 @@ class DefaultMessageBus implements IMessageBus {
 		}
 		
 		override remove() {
-			val holder = parent.listeners.get(address)
+			val holder = parent.subscriptions.get(address)
 			holder?.remove(this)
 		}
 	}

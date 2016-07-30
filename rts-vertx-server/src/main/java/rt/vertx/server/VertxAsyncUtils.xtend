@@ -1,8 +1,8 @@
 package rt.vertx.server
 
 import io.vertx.core.Vertx
-import rt.pipeline.promise.AsyncUtils
-import rt.pipeline.promise.PromiseResult
+import rt.async.AsyncUtils
+import rt.async.promise.PromiseResult
 
 class VertxAsyncUtils extends AsyncUtils {
 	val Vertx vertx

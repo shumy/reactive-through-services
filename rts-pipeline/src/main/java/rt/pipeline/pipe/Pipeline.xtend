@@ -3,11 +3,14 @@ package rt.pipeline.pipe
 import java.util.ArrayList
 import java.util.HashMap
 import org.eclipse.xtend.lib.annotations.Accessors
+import rt.async.pubsub.IMessageBus
+import rt.async.pubsub.Message
 import rt.pipeline.DefaultMessageBus
 import rt.pipeline.IComponent
-import rt.pipeline.IMessageBus
-import rt.pipeline.IMessageBus.Message
 import rt.pipeline.pipe.use.ChannelService
+import rt.async.pubsub.IPublisher
+import rt.async.pubsub.IResource
+import java.util.HashSet
 
 class Pipeline {
 	@Accessors val IMessageBus mb
@@ -15,6 +18,7 @@ class Pipeline {
 	
 	val interceptors = new ArrayList<IComponent>
 	val services = new HashMap<String, IComponent>
+	val ctxServices = new HashSet<IComponent>
 	
 	new() { this(new DefaultMessageBus) }
 	new(IMessageBus mb) {
@@ -22,14 +26,21 @@ class Pipeline {
 	}
 	
 	package def void process(PipeResource resource, Message msg) {
-		val ctx = new PipeContext(this, resource, msg, interceptors.iterator)
-		ctx.next
+		resource.process(msg, null)
 	}
 	
 	package def void process(PipeResource resource, Message msg, (PipeContext) => void onContextCreated) {
 		val ctx = new PipeContext(this, resource, msg, interceptors.iterator)
-		onContextCreated.apply(ctx)
-		ctx.next
+		onContextCreated?.apply(ctx)
+		
+		ctx => [
+			object(IPublisher, mb)
+			object(IResource, resource)
+			for (ctxSrv: ctxServices)
+				object(ctxSrv.class, ctxSrv)
+			
+			next
+		]
 	}
 	
 	def createResource(String client) {
@@ -71,10 +82,18 @@ class Pipeline {
 	}
 		
 	def void addService(String address, IComponent service) {
+		addService(address, service, false)
+	}
+	
+	def void addService(String address, IComponent service, boolean asContext) {
+		if (asContext)
+			ctxServices.add(service)
+			
 		services.put('srv:' + address, service)
 	}
 	
 	def void removeService(String address) {
-		services.remove('srv:' + address)
+		val srv = services.remove('srv:' + address)
+		ctxServices.remove(srv)
 	}
 }

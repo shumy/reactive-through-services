@@ -6,7 +6,7 @@ import com.google.gson.JsonDeserializer
 import java.util.ArrayList
 import java.util.LinkedList
 import java.util.List
-import rt.pipeline.IMessageBus.Message
+import rt.async.pubsub.Message
 
 class DefaultMessageConverter {
 	val JsonDeserializer<Message> deserializer = [ json, typeOfT, ctx |

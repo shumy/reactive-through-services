@@ -6,9 +6,9 @@ import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
 import java.util.concurrent.atomic.AtomicInteger
 import org.slf4j.LoggerFactory
-
-import static rt.pipeline.promise.AsyncUtils.*
 import rt.pipeline.PathValidator
+
+import static rt.async.AsyncUtils.*
 
 class SendBuffer extends ChannelBuffer {
 	static val logger = LoggerFactory.getLogger('BUFFER-SEND')

@@ -10,7 +10,7 @@ import java.util.List
 import java.util.Map
 import org.eclipse.xtend.lib.annotations.Accessors
 import org.slf4j.LoggerFactory
-import rt.pipeline.IMessageBus.Message
+import rt.async.pubsub.Message
 import rt.pipeline.pipe.PipeResource
 import rt.plugin.service.RouteConfig
 import rt.plugin.service.ServiceException

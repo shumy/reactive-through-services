@@ -1,4 +1,4 @@
-package rt.pipeline.promise
+package rt.async.promise
 
 class Promise<T> {
 	val PromiseResult<T> result

@@ -17,12 +17,12 @@ import org.eclipse.xtend.lib.macro.declaration.MutableMethodDeclaration
 import org.eclipse.xtend.lib.macro.declaration.MutableParameterDeclaration
 import org.eclipse.xtend.lib.macro.declaration.TypeReference
 import org.eclipse.xtend.lib.macro.declaration.Visibility
+import rt.async.AsyncUtils
+import rt.async.pubsub.Message
 import rt.data.schema.SProperty
 import rt.data.schema.SType
 import rt.pipeline.IComponent
-import rt.pipeline.IMessageBus.Message
 import rt.pipeline.pipe.PipeContext
-import rt.pipeline.promise.AsyncUtils
 import rt.plugin.config.PluginConfig
 import rt.plugin.config.PluginConfigFactory
 import rt.plugin.config.PluginEntry

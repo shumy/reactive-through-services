@@ -4,11 +4,11 @@ import io.vertx.core.Vertx
 import io.vertx.core.http.HttpServer
 import io.vertx.core.http.HttpServerOptions
 import org.eclipse.xtend.lib.annotations.Accessors
+import rt.async.AsyncUtils
+import rt.pipeline.DefaultMessageConverter
 import rt.pipeline.pipe.Pipeline
 import rt.vertx.server.web.WebRouter
 import rt.vertx.server.ws.WsRouter
-import rt.pipeline.promise.AsyncUtils
-import rt.pipeline.DefaultMessageConverter
 
 class DefaultVertxServer {
 	@Accessors val HttpServer server

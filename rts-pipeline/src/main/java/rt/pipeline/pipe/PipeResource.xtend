@@ -1,14 +1,15 @@
 package rt.pipeline.pipe
 
-import org.eclipse.xtend.lib.annotations.Accessors
 import java.util.HashMap
-import rt.pipeline.IMessageBus.Message
-import rt.pipeline.IMessageBus.IListener
+import org.eclipse.xtend.lib.annotations.Accessors
 import org.slf4j.LoggerFactory
-import rt.pipeline.IMessageBus
+import rt.async.pubsub.IMessageBus
+import rt.async.pubsub.IResource
+import rt.async.pubsub.ISubscription
+import rt.async.pubsub.Message
 import rt.pipeline.pipe.channel.IPipeChannel
 
-class PipeResource {
+class PipeResource implements IResource {
 	static val logger = LoggerFactory.getLogger('RESOURCE')
 	
 	@Accessors val String client
@@ -17,7 +18,7 @@ class PipeResource {
 	@Accessors var () => void closeCallback
 	
 	val Pipeline pipeline
-	val subscriptions = new HashMap<String, IListener>
+	val subscriptions = new HashMap<String, ISubscription>
 	val channels = new HashMap<String, IPipeChannel>
 	val objects = new HashMap<Class<?>, Object>
 	
@@ -33,6 +34,27 @@ class PipeResource {
 		this.client = client
 	}
 	
+	override subscribe(String address) {
+		if(subscriptions.containsKey(address)) return;
+		
+		logger.debug('SUBSCRIBE {}', address)
+		val sub = pipeline.mb.subscribe(address, sendCallback)
+		
+		subscriptions.put(address, sub)
+	}
+	
+	override unsubscribe(String address) {
+		val listener = subscriptions.remove(address)
+		if(listener != null) {
+			logger.debug('UNSUBSCRIBE {}', address)
+			listener.remove
+		}
+	}
+	
+	override disconnect() {
+		closeCallback?.apply
+	}
+	
 	def void process(Message msg) {
 		if (contextCallback != null)
 			pipeline.process(this, msg, contextCallback)
@@ -42,25 +64,6 @@ class PipeResource {
 	
 	def void send(Message msg) {
 		sendCallback?.apply(msg)
-	}
-
-	def subscribe(String address) {
-		if(subscriptions.containsKey(address))
-			return false
-		
-		logger.debug('SUBSCRIBE {}', address)
-		val listener = pipeline.mb.listener(address, sendCallback)
-		
-		subscriptions.put(address, listener)
-		return true
-	}
-	
-	def void unsubscribe(String address) {
-		val listener = subscriptions.remove(address)
-		if(listener != null) {
-			logger.debug('UNSUBSCRIBE {}', address)
-			listener.remove
-		}
 	}
 	
 	def void addChannel(IPipeChannel channel) {
@@ -79,9 +82,5 @@ class PipeResource {
 		
 		channels.values.forEach[ close ]
 		channels.clear
-	}
-	
-	def void disconnect() {
-		closeCallback?.apply
 	}
 }

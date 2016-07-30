@@ -1,12 +1,12 @@
 package rt.plugin.service.an
 
-import java.lang.annotation.Target
-import org.eclipse.xtend.lib.macro.Active
-import org.eclipse.xtend.lib.macro.AbstractInterfaceProcessor
-import org.eclipse.xtend.lib.macro.declaration.MutableInterfaceDeclaration
-import org.eclipse.xtend.lib.macro.TransformationContext
-import rt.pipeline.promise.Promise
 import java.lang.annotation.Retention
+import java.lang.annotation.Target
+import org.eclipse.xtend.lib.macro.AbstractInterfaceProcessor
+import org.eclipse.xtend.lib.macro.Active
+import org.eclipse.xtend.lib.macro.TransformationContext
+import org.eclipse.xtend.lib.macro.declaration.MutableInterfaceDeclaration
+import rt.async.promise.Promise
 
 @Target(TYPE)
 @Retention(RUNTIME)

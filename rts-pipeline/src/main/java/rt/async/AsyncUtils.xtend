@@ -1,7 +1,8 @@
-package rt.pipeline.promise
+package rt.async
 
 import java.util.Timer
 import org.eclipse.xtend.lib.annotations.Accessors
+import rt.async.promise.Promise
 
 abstract class AsyncUtils {
 	static val local = new ThreadLocal<AsyncUtils>

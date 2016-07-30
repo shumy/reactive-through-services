@@ -3,8 +3,8 @@ package rt.vertx.server.ws
 import io.vertx.core.http.ServerWebSocket
 import org.eclipse.xtend.lib.annotations.Accessors
 import org.slf4j.LoggerFactory
-import rt.pipeline.IMessageBus.IListener
-import rt.pipeline.IMessageBus.Message
+import rt.async.pubsub.ISubscription
+import rt.async.pubsub.Message
 import rt.pipeline.pipe.PipeResource
 import rt.pipeline.pipe.channel.IPipeChannel.PipeChannelInfo
 import rt.pipeline.pipe.use.ChannelService
@@ -24,7 +24,7 @@ class WsResource {
 	val ServerWebSocket ws
 	val (String) => void onClose
 	
-	IListener chListener
+	ISubscription chSubscription
 	
 	package new(WsRouter parent, ServerWebSocket ws, String client, (String) => void onClose) {
 		this.resource = parent.pipeline.createResource(client)
@@ -64,10 +64,11 @@ class WsResource {
 			
 			closeCallback = [ ws.close ]
 			
+			//TODO: if PipeResource is a ServiceClientFactory parameter, do I really need this?
 			subscribe(client)
 			
 			//process channel requests..
-			chListener = bus.listener(client + '/ch:req')[ chReqMsg |
+			chSubscription = bus.subscribe(client + '/ch:req')[ chReqMsg |
 				val args = chReqMsg.args(PipeChannelInfo)
 				val chInfo = args.get(0) as PipeChannelInfo
 				logger.debug('CHANNEL-REQ {}', chInfo.uuid)
@@ -107,7 +108,7 @@ class WsResource {
 		]
 		
 		ws.closeHandler[
-			chListener.remove
+			chSubscription.remove
 			resource.release
 			onClose?.apply(client)
 		]

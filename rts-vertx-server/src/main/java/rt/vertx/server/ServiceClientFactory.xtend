@@ -1,11 +1,11 @@
 package rt.vertx.server
 
-import rt.plugin.service.IServiceClientFactory
-import rt.plugin.service.ServiceClient
-import rt.pipeline.IMessageBus
-import org.eclipse.xtend.lib.annotations.Accessors
 import java.util.HashMap
 import java.util.Map
+import org.eclipse.xtend.lib.annotations.Accessors
+import rt.async.pubsub.IMessageBus
+import rt.plugin.service.IServiceClientFactory
+import rt.plugin.service.ServiceClient
 
 class ServiceClientFactory implements IServiceClientFactory {
 	@Accessors val ServiceClient serviceClient

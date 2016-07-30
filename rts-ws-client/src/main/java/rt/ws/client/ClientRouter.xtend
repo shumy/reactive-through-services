@@ -1,22 +1,22 @@
 package rt.ws.client
 
-import org.java_websocket.client.WebSocketClient
 import java.net.URI
-import org.java_websocket.handshake.ServerHandshake
-import rt.pipeline.IMessageBus.Message
-import rt.pipeline.pipe.Pipeline
-import rt.pipeline.pipe.PipeResource
-import java.util.concurrent.atomic.AtomicBoolean
-import rt.pipeline.DefaultMessageConverter
-import rt.plugin.service.ServiceClient
-import rt.plugin.service.IServiceClientFactory
-import org.eclipse.xtend.lib.annotations.Accessors
-import java.util.Map
 import java.util.HashMap
+import java.util.Map
+import java.util.concurrent.atomic.AtomicBoolean
+import org.eclipse.xtend.lib.annotations.Accessors
+import org.java_websocket.client.WebSocketClient
+import org.java_websocket.handshake.ServerHandshake
 import org.slf4j.LoggerFactory
-import rt.pipeline.pipe.use.ChannelService
-import rt.pipeline.IMessageBus.IListener
+import rt.async.pubsub.Message
+import rt.pipeline.DefaultMessageConverter
+import rt.pipeline.pipe.PipeResource
+import rt.pipeline.pipe.Pipeline
 import rt.pipeline.pipe.channel.IPipeChannel.PipeChannelInfo
+import rt.pipeline.pipe.use.ChannelService
+import rt.plugin.service.IServiceClientFactory
+import rt.plugin.service.ServiceClient
+import rt.async.pubsub.ISubscription
 
 class ClientRouter implements IServiceClientFactory {
 	static val logger = LoggerFactory.getLogger('CLIENT-ROUTER')
@@ -32,7 +32,7 @@ class ClientRouter implements IServiceClientFactory {
 	
 	PipeResource resource = null
 	WebSocketClient ws = null
-	IListener chListener = null
+	ISubscription chSubscription = null
 	
 	var ready = new AtomicBoolean
 	
@@ -48,7 +48,7 @@ class ClientRouter implements IServiceClientFactory {
 		this.pipeline = pipeline
 		this.serviceClient = new ServiceClient(pipeline.mb, server, client, redirects)
 		
-		pipeline.mb.listener(server)[ send ]
+		pipeline.mb.subscribe(server)[ send ]
 		
 		connect
 	}
@@ -92,11 +92,11 @@ class ClientRouter implements IServiceClientFactory {
 	def void close() {
 		ready.set(false)
 		
-		chListener?.remove
+		chSubscription?.remove
 		resource?.release
 		ws?.close
 		
-		chListener = null
+		chSubscription = null
 		resource = null
 		ws = null
 	}
@@ -120,7 +120,7 @@ class ClientRouter implements IServiceClientFactory {
 			contextCallback = [ object(IServiceClientFactory, this) ]
 			closeCallback = [ close ]
 			
-			chListener = bus.listener(server + '/ch:rpl')[ chReqMsg |
+			chSubscription = bus.subscribe(server + '/ch:rpl')[ chReqMsg |
 				if (chReqMsg.cmd != Message.CMD_OK) {
 					chReqMsg.typ = Message.REPLY
 					this.send(chReqMsg)

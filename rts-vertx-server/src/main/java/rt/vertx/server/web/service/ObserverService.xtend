@@ -2,62 +2,60 @@ package rt.vertx.server.web.service
 
 import java.util.HashMap
 import java.util.UUID
+import rt.async.pubsub.IPublisher
+import rt.async.pubsub.IResource
 import rt.data.Data
+import rt.data.Optional
+import rt.plugin.service.an.Context
 import rt.plugin.service.an.Public
 import rt.plugin.service.an.Service
-import rt.plugin.service.an.ServiceProxy
-import rt.data.Optional
-
-interface EventsInterface {
-	@Public(notif = true)
-	def void event(Event event)
-}
-
-@ServiceProxy(EventsInterface)
-interface EventsProxy {}
 
 @Service
 @Data(metadata = false)
 class ObserverService {
-	transient val observers = new HashMap<String, RemoteObserver>
+	transient val observers = new HashMap<String, RemoteSubscriber>
+	
+	val IPublisher publisher
 	
 	//only used internally from other services
-	def RemoteObserver register(EventsProxy eventsProxy) {
+	def RemoteSubscriber register() {
 		val uuid = UUID.randomUUID.toString
-		val ro = RemoteObserver.B => [ id = uuid proxy = eventsProxy ]
+		val ro = RemoteSubscriber.B => [ id = uuid publisher = this.publisher ]
 		
 		observers.put(uuid, ro)
 		return ro
 	}
 	
 	@Public
+	@Context(name = 'resource', type = IResource)
 	def void unregister(String uuid) {
 		observers.remove(uuid)
 	}
 }
 
 @Data(metadata = false)
-class RemoteObserver {
+class RemoteSubscriber {
+	public static val String ADDRESS 	= 'events'
+	
+	public static val String NEXT 		= 'nxt'
+	public static val String COMPLETE 	= 'clp'
+	
 	val String id
-	val EventsProxy proxy
+	val IPublisher publisher
 	
 	def void next(Object sData) {
-		proxy.event(Event.B => [ uuid = id type = Event.NEXT event = sData])
+		publisher.publish(ADDRESS, NEXT, Event.B => [ uuid = id data = sData ])
 	}
 	
 	def void complete() {
-		proxy.event(Event.B => [ uuid = id type = Event.COMPLETE ])
+		publisher.publish(ADDRESS, COMPLETE, Event.B => [ uuid = id ])
 	}
 }
 
 @Data(metadata = false)
 class Event {
-	public static val String NEXT 		= 'nxt'
-	public static val String COMPLETE 	= 'clp'
-	
 	val String uuid
-	val String type
-	@Optional val Object event
+	@Optional val Object data
 }
 
 @Data(metadata = false)

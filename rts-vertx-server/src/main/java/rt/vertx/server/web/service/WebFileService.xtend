@@ -73,7 +73,7 @@ class WebFileService {
 				limit(cntBytes.length)
 			]
 		} catch(Exception ex) {
-			throw new ServiceException(404, 'File not found!')
+			throw new ServiceException(404, 'File not found: ' + urlPath)
 		}
 	}
 	

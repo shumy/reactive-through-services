@@ -4,9 +4,9 @@ import java.util.HashMap
 import java.util.Iterator
 import org.eclipse.xtend.lib.annotations.Accessors
 import org.slf4j.LoggerFactory
+import rt.async.pubsub.IMessageBus
+import rt.async.pubsub.Message
 import rt.pipeline.IComponent
-import rt.pipeline.IMessageBus
-import rt.pipeline.IMessageBus.Message
 
 class PipeContext {
 	static val logger = LoggerFactory.getLogger('PIPELINE')

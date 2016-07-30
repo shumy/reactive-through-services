@@ -1,14 +1,14 @@
 package rt.plugin.service
 
-import rt.pipeline.IMessageBus
 import java.lang.reflect.Proxy
-import rt.pipeline.IMessageBus.Message
-import java.util.concurrent.atomic.AtomicLong
-import rt.plugin.service.an.Public
-import rt.pipeline.promise.PromiseResult
 import java.util.Map
+import java.util.concurrent.atomic.AtomicLong
 import org.slf4j.LoggerFactory
-import rt.pipeline.promise.AsyncUtils
+import rt.async.AsyncUtils
+import rt.async.promise.PromiseResult
+import rt.async.pubsub.IMessageBus
+import rt.async.pubsub.Message
+import rt.plugin.service.an.Public
 
 class ServiceClient {
 	static val logger = LoggerFactory.getLogger('PROXY')

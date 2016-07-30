@@ -1,11 +1,11 @@
 package rt.pipeline.pipe.use
 
+import org.eclipse.xtend.lib.annotations.Accessors
+import rt.async.pubsub.Message
 import rt.pipeline.IComponent
 import rt.pipeline.pipe.PipeContext
-import rt.pipeline.IMessageBus.Message
-import org.eclipse.xtend.lib.annotations.Accessors
-import rt.pipeline.pipe.channel.IPipeChannel.PipeChannelInfo
 import rt.pipeline.pipe.channel.IPipeChannel
+import rt.pipeline.pipe.channel.IPipeChannel.PipeChannelInfo
 
 abstract class ChannelService implements IComponent {
 	@Accessors static val name = 'ch:srv'

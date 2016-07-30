@@ -1,18 +1,18 @@
 package rt.vertx.server.test
 
+import com.google.gson.Gson
 import io.vertx.ext.unit.TestContext
 import io.vertx.ext.unit.junit.RunTestOnContext
 import io.vertx.ext.unit.junit.VertxUnitRunner
+import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.junit.Assert
-import com.google.gson.Gson
-import rt.pipeline.IMessageBus.Message
-import rt.pipeline.pipe.use.ValidatorInterceptor
-import rt.pipeline.IComponent
+import rt.async.pubsub.Message
 import rt.pipeline.DefaultMessageBus
+import rt.pipeline.IComponent
 import rt.pipeline.pipe.Pipeline
+import rt.pipeline.pipe.use.ValidatorInterceptor
 
 @RunWith(VertxUnitRunner)
 class PipelineTest {

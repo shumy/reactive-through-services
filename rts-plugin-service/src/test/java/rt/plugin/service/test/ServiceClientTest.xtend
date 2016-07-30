@@ -2,9 +2,9 @@ package rt.plugin.service.test
 
 import java.util.Collections
 import org.junit.Test
+import rt.async.AsyncUtils
+import rt.async.pubsub.Message
 import rt.pipeline.DefaultMessageBus
-import rt.pipeline.IMessageBus.Message
-import rt.pipeline.promise.AsyncUtils
 import rt.plugin.service.ServiceClient
 
 class ServiceClientTest {
@@ -14,7 +14,7 @@ class ServiceClientTest {
 		AsyncUtils.setDefault
 		
 		val mb = new DefaultMessageBus
-		mb.listener('clt:address')[ msg |
+		mb.subscribe('clt:address')[ msg |
 			val reply = switch msg.cmd {
 				case 'hello': new Message => [id=msg.id clt=msg.clt cmd='ok']
 				case 'sum':   new Message => [id=msg.id clt=msg.clt cmd='ok' result=13.4]

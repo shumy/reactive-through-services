@@ -1,4 +1,4 @@
-package rt.pipeline.promise
+package rt.async.promise
 
 abstract class PromiseResult<T> {
 	var T result = null

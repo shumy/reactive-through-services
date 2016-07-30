@@ -8,10 +8,10 @@ import java.nio.file.StandardOpenOption
 import java.util.Arrays
 import org.junit.Assert
 import org.junit.Test
+import rt.async.AsyncUtils
 import rt.pipeline.pipe.channel.ChannelPump
 import rt.pipeline.pipe.channel.ReceiveBuffer
 import rt.pipeline.pipe.channel.SendBuffer
-import rt.pipeline.promise.AsyncUtils
 
 class ChannelBufferTest {
 	val outPump = new ChannelPump
