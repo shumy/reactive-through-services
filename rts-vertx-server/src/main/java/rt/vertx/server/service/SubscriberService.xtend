@@ -1,7 +1,5 @@
-package rt.vertx.server.web.service
+package rt.vertx.server.service
 
-import java.util.HashMap
-import java.util.UUID
 import rt.async.pubsub.IPublisher
 import rt.async.pubsub.IResource
 import rt.data.Data
@@ -11,50 +9,43 @@ import rt.plugin.service.an.Public
 import rt.plugin.service.an.Service
 
 @Service
-@Data(metadata = false)
-class ObserverService {
-	transient val observers = new HashMap<String, RemoteSubscriber>
+class SubscriberService {
 	
-	val IPublisher publisher
-	
-	//only used internally from other services
-	def RemoteSubscriber register() {
-		val uuid = UUID.randomUUID.toString
-		val ro = RemoteSubscriber.B => [ id = uuid publisher = this.publisher ]
-		
-		observers.put(uuid, ro)
-		return ro
+	@Public
+	@Context(name = 'resource', type = IResource)
+	def void subscribe(String address) {
+		resource.subscribe(address)
 	}
 	
 	@Public
 	@Context(name = 'resource', type = IResource)
-	def void unregister(String uuid) {
-		observers.remove(uuid)
+	def void unsubscribe(String address) {
+		resource.unsubscribe(address)
 	}
 }
 
 @Data(metadata = false)
 class RemoteSubscriber {
-	public static val String ADDRESS 	= 'events'
+	public static val String SERVICE 	= 'events'
 	
 	public static val String NEXT 		= 'nxt'
 	public static val String COMPLETE 	= 'clp'
 	
-	val String id
+	val String address
 	val IPublisher publisher
 	
 	def void next(Object sData) {
-		publisher.publish(ADDRESS, NEXT, Event.B => [ uuid = id data = sData ])
+		publisher.publish(address, SERVICE, NEXT, Event.B => [ address = this.address data = sData ])
 	}
 	
 	def void complete() {
-		publisher.publish(ADDRESS, COMPLETE, Event.B => [ uuid = id ])
+		publisher.publish(address, SERVICE, COMPLETE, Event.B => [ address = this.address ])
 	}
 }
 
 @Data(metadata = false)
 class Event {
-	val String uuid
+	val String address
 	@Optional val Object data
 }
 

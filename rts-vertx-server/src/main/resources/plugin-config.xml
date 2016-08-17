@@ -12,5 +12,12 @@
         <entry type="srv" ref="rt.vertx.server.web.service.ObservableService"/>
         <entry type="srv" ref="rt.vertx.server.web.service.TransferService"/>
         <entry type="srv" ref="rt.vertx.server.web.service.ObserverService"/>
+        <entry type="srv" ref="rt.vertx.server.web.service.SubscriptionService"/>
+        <entry type="srv" ref="rt.vertx.server.web.service.SubscriberService"/>
+        <entry type="srv" ref="rt.vertx.server.service.DescriptorService"/>
+        <entry type="srv" ref="rt.vertx.server.service.FileUploaderService"/>
+        <entry type="srv" ref="rt.vertx.server.service.RouterService"/>
+        <entry type="srv" ref="rt.vertx.server.service.SubscriberService"/>
+        <entry type="srv" ref="rt.vertx.server.service.WebFileService"/>
     </entries>
 </config>

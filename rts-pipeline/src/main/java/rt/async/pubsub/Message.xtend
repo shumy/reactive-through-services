@@ -14,7 +14,7 @@ public class Message {
 	public static val String CMD_TIMEOUT = 'tout'
 	
 	// from all
-	public long id
+	public Long id
 	public String typ
 	public String cmd
 	public String clt

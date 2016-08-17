@@ -4,18 +4,29 @@ import java.util.HashMap
 import java.util.HashSet
 import java.util.Set
 import java.util.concurrent.ConcurrentHashMap
+import org.eclipse.xtend.lib.annotations.Accessors
 import rt.async.pubsub.IMessageBus
+import rt.async.pubsub.IObserver
 import rt.async.pubsub.ISubscription
 import rt.async.pubsub.Message
 
 import static rt.async.AsyncUtils.*
+import org.slf4j.LoggerFactory
 
 class DefaultMessageBus implements IMessageBus {
+	static val logger = LoggerFactory.getLogger('BUS')
+	
 	val subscriptions = new HashMap<String, Set<DefaultSubscription>>
 	val replyListeners = new ConcurrentHashMap<String, (Message) => void>
 	
+	val observers = new HashMap<String, IObserver>
+	
 	override publish(String address, String inCmd, Object inResult) {
-		val msg = new Message => [ path = 'srv:' + address cmd = inCmd result = inResult ]
+		publish(address, address, inCmd, inResult)
+	}
+	
+	override publish(String address, String inPath, String inCmd, Object inResult) {
+		val msg = new Message => [ typ = Message.PUBLISH path = 'srv:' + inPath cmd = inCmd result = inResult ]
 		subscriptions.get(address)?.forEach[ send(msg) ]
 	}
 	
@@ -59,10 +70,12 @@ class DefaultMessageBus implements IMessageBus {
 	}
 	
 	override subscribe(String address, (Message) => void listener) {
+		logger.info('SUBSCRIBE {}', address)
 		var holder = subscriptions.get(address)
 		if (holder == null) {
 			holder = new HashSet
 			subscriptions.put(address, holder)
+			observers.get(address)?.onCreate(address)
 		}
 		
 		val sub = new DefaultSubscription(this, address, listener)
@@ -71,9 +84,14 @@ class DefaultMessageBus implements IMessageBus {
 		return sub
 	}
 	
+	override addObserver(String address, IObserver observer) {
+		observers.put(address, observer)
+	}
+	
 	static class DefaultSubscription implements ISubscription {
+		@Accessors val String address
+		
 		val DefaultMessageBus parent
-		val String address
 		val (Message) => void  callback
 		
 		package new(DefaultMessageBus parent, String address, (Message) => void callback) {
@@ -87,8 +105,16 @@ class DefaultMessageBus implements IMessageBus {
 		}
 		
 		override remove() {
+			logger.info('UNSUBSCRIBE {}', address)
 			val holder = parent.subscriptions.get(address)
-			holder?.remove(this)
+			if (holder != null) {
+				holder.remove(this)
+				
+				if (holder.size == 0) {
+					parent.observers.get(address)?.onDestroy(address)
+					parent.subscriptions.remove(address)
+				}	
+			}
 		}
 	}
 }

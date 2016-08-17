@@ -37,18 +37,13 @@ class PipeResource implements IResource {
 	override subscribe(String address) {
 		if(subscriptions.containsKey(address)) return;
 		
-		logger.debug('SUBSCRIBE {}', address)
 		val sub = pipeline.mb.subscribe(address, sendCallback)
-		
 		subscriptions.put(address, sub)
 	}
 	
 	override unsubscribe(String address) {
 		val listener = subscriptions.remove(address)
-		if(listener != null) {
-			logger.debug('UNSUBSCRIBE {}', address)
-			listener.remove
-		}
+		listener?.remove
 	}
 	
 	override disconnect() {

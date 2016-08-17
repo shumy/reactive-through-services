@@ -70,7 +70,7 @@ class WebResource {
 		logger.trace('REQUEST {}', client)
 		if (!config.processBody) {
 			params.put('ctx.request', req)
-			params.put('ctx.path', req.path)
+			params.put('ctx.path', '''"«req.path»"'''.toString)
 			
 			//direct mode, request body will be processed in the service
 			resource.processRequest(params)
@@ -90,7 +90,7 @@ class WebResource {
 		val argsConverter = parent.converter.createArgsConverter(rawParams)
 		
 		val msg = new Message(argsConverter, null) => [
-			id = 0
+			id = 0L
 			typ = Message.SEND
 			path = 'srv:' + config.srvAddress
 			cmd = config.srvMethod

@@ -1,4 +1,4 @@
-package rt.vertx.server.web.service
+package rt.vertx.server.service
 
 import io.vertx.core.http.HttpServerRequest
 import java.io.File

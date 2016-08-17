@@ -1,4 +1,4 @@
-package rt.vertx.server.web.service
+package rt.vertx.server.service
 
 import java.nio.ByteBuffer
 import java.nio.file.Files

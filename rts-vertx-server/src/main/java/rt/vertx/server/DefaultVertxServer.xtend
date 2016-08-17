@@ -9,6 +9,7 @@ import rt.pipeline.DefaultMessageConverter
 import rt.pipeline.pipe.Pipeline
 import rt.vertx.server.web.WebRouter
 import rt.vertx.server.ws.WsRouter
+import rt.async.pubsub.IMessageBus
 
 class DefaultVertxServer {
 	@Accessors val HttpServer server
@@ -17,6 +18,8 @@ class DefaultVertxServer {
 	@Accessors val WebRouter webRouter
 	
 	@Accessors val converter = new DefaultMessageConverter
+	
+	def IMessageBus getMb() { return pipeline.mb }
 	
 	package val Vertx vertx
 	
