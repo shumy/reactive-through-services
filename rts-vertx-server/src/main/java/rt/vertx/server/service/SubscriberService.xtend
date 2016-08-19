@@ -2,6 +2,7 @@ package rt.vertx.server.service
 
 import rt.async.pubsub.IPublisher
 import rt.async.pubsub.IResource
+import rt.data.Change
 import rt.data.Data
 import rt.data.Optional
 import rt.plugin.service.an.Context
@@ -35,6 +36,8 @@ class RemoteSubscriber {
 	val String address
 	val IPublisher publisher
 	
+	def (Change) => void link() { return [ next ] }
+	
 	def void next(Object sData) {
 		publisher.publish(address, SERVICE, NEXT, Event.B => [ address = this.address data = sData ])
 	}
@@ -48,14 +51,4 @@ class RemoteSubscriber {
 class Event {
 	val String address
 	@Optional val Object data
-}
-
-@Data(metadata = false)
-class Change {
-	public static val String ADD 		= 'add'
-	public static val String UPDATE 	= 'upd'
-	public static val String REMOVE 	= 'rem'
-	
-	val String oper
-	val Object data
 }

@@ -35,7 +35,7 @@ class ServiceClient {
 		val srvProxy = Proxy.newProxyInstance(srvProxyInterface.classLoader, #[srvProxyInterface])[ proxy, srvMeth, srvArgs |
 			val anPublic = srvMeth.getAnnotation(Public)
 			if (anPublic == null)
-				throw new RuntimeException('@Public annotation with return type is mandatory for a ServiceProxy!')
+				throw new RuntimeException('@Public annotation with return type is mandatory for a ServiceProxy! In method: ' + srvMeth.name)
 			
 			val PromiseResult<Object> result = [
 				val sendMsg = new Message => [id=msgID.andIncrement clt=uuid path=srvPath cmd=srvMeth.name args=srvArgs]
