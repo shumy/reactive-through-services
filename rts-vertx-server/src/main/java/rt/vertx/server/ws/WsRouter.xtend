@@ -78,7 +78,7 @@ class WsRouter {
 				}
 				
 				val wsResource = new WsResource(this, ws, clientUUID)[ removeResource ]
-				addResource(wsResource)
+				wsResource.addResource
 			}
 		]
 	}
@@ -102,7 +102,7 @@ class WsRouter {
 	}
 	
 	private def void removeResource(String clientUUID) {
-		resources.remove(clientUUID)
 		onClose?.apply(clientUUID)
+		resources.remove(clientUUID)
 	}
 }

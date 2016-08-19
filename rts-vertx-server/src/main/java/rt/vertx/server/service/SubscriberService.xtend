@@ -9,6 +9,7 @@ import rt.plugin.service.an.Public
 import rt.plugin.service.an.Service
 
 @Service
+@Data(metadata = false)
 class SubscriberService {
 	
 	@Public

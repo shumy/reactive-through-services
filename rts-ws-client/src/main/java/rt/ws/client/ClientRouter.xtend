@@ -8,6 +8,7 @@ import org.eclipse.xtend.lib.annotations.Accessors
 import org.java_websocket.client.WebSocketClient
 import org.java_websocket.handshake.ServerHandshake
 import org.slf4j.LoggerFactory
+import rt.async.pubsub.ISubscription
 import rt.async.pubsub.Message
 import rt.pipeline.DefaultMessageConverter
 import rt.pipeline.pipe.PipeResource
@@ -16,7 +17,6 @@ import rt.pipeline.pipe.channel.IPipeChannel.PipeChannelInfo
 import rt.pipeline.pipe.use.ChannelService
 import rt.plugin.service.IServiceClientFactory
 import rt.plugin.service.ServiceClient
-import rt.async.pubsub.ISubscription
 
 class ClientRouter implements IServiceClientFactory {
 	static val logger = LoggerFactory.getLogger('CLIENT-ROUTER')
@@ -27,14 +27,18 @@ class ClientRouter implements IServiceClientFactory {
 	@Accessors val ServiceClient serviceClient
 	@Accessors val Map<String, String> redirects = new HashMap
 	
+	val scheduler = new AsyncScheduler
 	val converter = new DefaultMessageConverter
 	val URI url
+	
+	val ready = new AtomicBoolean
 	
 	PipeResource resource = null
 	WebSocketClient ws = null
 	ISubscription chSubscription = null
 	
-	var ready = new AtomicBoolean
+	var () => void onOpen = null
+	var () => void onClose = null
 	
 	new(String server, String client) {
 		this(server, client, new Pipeline)
@@ -49,47 +53,19 @@ class ClientRouter implements IServiceClientFactory {
 		this.serviceClient = new ServiceClient(pipeline.mb, server, client, redirects)
 		
 		pipeline.mb.subscribe(server)[ send ]
-		
-		connect
 	}
 	
 	def <T> T createProxy(String srvName, Class<T> proxy) {
 		return serviceClient.create('srv:' + srvName, proxy)
 	}
 	
-	def void connect() {
-		val router = this
-		
-		logger.info('TRY-OPEN {}', url)
-		ws = new WebSocketClient(url) {
-			
-			override onOpen(ServerHandshake handshakedata) {
-				logger.trace('OPEN')
-				router.onOpen
-			}
-			
-			override onClose(int code, String reason, boolean remote) {
-				logger.trace('CLOSE')
-				router.close
-				Thread.sleep(3000)
-				router.connect
-			}
-			
-			override onError(Exception ex) {
-				ex.printStackTrace
-			}
-			
-			override onMessage(String textMsg) {
-				logger.trace('RECEIVED {}', textMsg)
-				router.receive(textMsg)
-			}
-		}
-		
-		ws.connect
+	def run() {
+		connect
+		scheduler.run
 	}
 	
-	
 	def void close() {
+		logger.trace('CLOSE')
 		ready.set(false)
 		
 		chSubscription?.remove
@@ -99,12 +75,47 @@ class ClientRouter implements IServiceClientFactory {
 		chSubscription = null
 		resource = null
 		ws = null
+		
+		onClose?.apply()
+	}
+	
+	def void onOpen(() => void callback) { onOpen = callback }
+	def void onClose(() => void callback) { onClose = callback }
+	
+	private def void connect() {
+		val router = this
+		
+		logger.info('TRY-OPEN {}', url)
+		ws = new WebSocketClient(url) {
+			
+			override onOpen(ServerHandshake handshakedata) {
+				ready.set(true)
+				scheduler.schedule[ router.onClientOpen ]
+			}
+			
+			override onClose(int code, String reason, boolean remote) {
+				scheduler.schedule[ router.close ]
+				Thread.sleep(3000)
+				router.connect
+			}
+			
+			override onError(Exception ex) {
+				ex.printStackTrace
+			}
+			
+			override onMessage(String textMsg) {
+				scheduler.schedule[ router.receive(textMsg) ]
+			}
+		}
+		
+		ws.connect
 	}
 	
 	private def void send(Message msg) {
 		waitReady[
-			val textMsg = converter.toJson(msg)
-			ws.send(textMsg)
+			val textReply = converter.toJson(msg)
+			ws.send(textReply)
+			logger.info('SENT {} {}', Thread.currentThread, textReply)
 		]
 	}
 	
@@ -114,7 +125,8 @@ class ClientRouter implements IServiceClientFactory {
 		readyCallback.apply
 	}
 	
-	private def void onOpen() {
+	private def void onClientOpen() {
+		logger.trace('OPEN')
 		resource = pipeline.createResource(server) => [
 			sendCallback = [ send ]
 			contextCallback = [ object(IServiceClientFactory, this) ]
@@ -137,10 +149,11 @@ class ClientRouter implements IServiceClientFactory {
 				logger.debug('CHANNEL-BIND {}', chInfo.uuid)
 			]
 		]
-		ready.set(true)
+		onOpen?.apply()
 	}
 	
 	private def void receive(String textMsg) {
+		logger.info('RECEIVED {} {}', Thread.currentThread, textMsg)
 		val msg = converter.fromJson(textMsg)
 		resource.process(msg)
 	}

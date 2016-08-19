@@ -96,6 +96,5 @@ abstract class AsyncUtils {
 		override <T> setTask(()=>T execute) {
 			throw new UnsupportedOperationException('setTask')
 		}
-		
 	}
 }
