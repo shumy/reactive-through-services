@@ -11,6 +11,7 @@ import rt.pipeline.pipe.use.ChannelService
 import rt.plugin.service.IServiceClientFactory
 import rt.vertx.server.CtxHeaders
 import rt.vertx.server.ServiceClientFactory
+import rt.plugin.service.ServiceException
 
 class WsResource {
 	static val logger = LoggerFactory.getLogger('WS-RESOURCE')
@@ -119,6 +120,16 @@ class WsResource {
 	}
 	
 	private def void send(Message msg) {
+		if (msg.cmd == Message.CMD_ERROR) {
+			val ex = msg.result(Exception)
+			if (ex instanceof ServiceException) {
+				val sex = ex as ServiceException
+				msg.result = #{ 'message' -> sex.message, 'httpCode' -> sex.httpCode }
+			} else {
+				msg.result = #{ 'message' -> ex.message }
+			}
+		}
+		
 		val textReply = parent.converter.toJson(msg)
 		ws.writeFinalTextFrame(textReply)
 		logger.info('SENT {} {}', Thread.currentThread, textReply)
