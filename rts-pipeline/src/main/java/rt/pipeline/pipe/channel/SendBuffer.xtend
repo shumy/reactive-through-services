@@ -14,7 +14,7 @@ class SendBuffer extends ChannelBuffer {
 	static val logger = LoggerFactory.getLogger('BUFFER-SEND')
 	override getLogger() { return logger }
 	
-	var () => void onReady = null
+	var (SendBuffer) => void onReady = null
 	
 	new(ChannelPump outPump, ChannelPump inPump) {
 		super(inPump, outPump)
@@ -35,7 +35,7 @@ class SendBuffer extends ChannelBuffer {
 			if (signal.flag == Signal.SIGNAL_BEGIN_CONFIRM) {
 				if (needConfirmation) {
 					needConfirmation = false
-					onReady?.apply
+					onReady?.apply(this)
 				}
 			} else if (signal.flag == Signal.SIGNAL_END_CONFIRM) {
 				if (needConfirmation) {
@@ -47,7 +47,7 @@ class SendBuffer extends ChannelBuffer {
 		]
 	}
 	
-	def void begin(String name, () => void onReady) {
+	def void begin(String name, (SendBuffer) => void onReady) {
 		//wait for channel unlock
 		waitUntil([ !isLocked ], [
 			isLocked = true

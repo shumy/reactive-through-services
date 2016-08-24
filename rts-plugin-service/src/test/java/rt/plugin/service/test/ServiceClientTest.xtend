@@ -35,6 +35,8 @@ class ServiceClientTest {
 			println('REPLY-OK: ' + it)
 		]
 		
-		srvProxy.error.then([ println('REPLY-OK!') ], [ println('REPLY-ERROR: ' + it) ])
+		srvProxy.error
+			.then[ println('REPLY-OK!') ]
+			.error[ println('REPLY-ERROR: ' + it) ]
 	}
 }

@@ -1,15 +1,12 @@
 package rt.async.promise
 
-class Promise<T> {
+import rt.async.IAsyncError
+
+class Promise<T> implements IAsyncError {
 	val PromiseResult<T> result
 	
 	package new(PromiseResult<T> result) {
 		this.result = result
-	}
-	
-	def void then((T) => void onResolve, (Throwable) => void onReject) {
-		result.onResolve = onResolve
-		result.onReject = onReject
 	}
 	
 	def Promise<T> then((T) => void onResolve) {
@@ -17,8 +14,7 @@ class Promise<T> {
 		return this
 	}
 	
-	def Promise<T> error((Throwable) => void onReject) {
+	override error((Throwable) => void onReject) {
 		result.onReject = onReject
-		return this
 	}
 }

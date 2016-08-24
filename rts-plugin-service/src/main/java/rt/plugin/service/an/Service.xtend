@@ -102,7 +102,7 @@ class ServiceProcessor extends AbstractClassProcessor {
 									ctx.replyOK();
 								«ENDIF»
 							«ENDIF»
-						}, err -> {
+						}).error(err -> {
 							ctx.replyError(err);
 						});
 					«ELSE»

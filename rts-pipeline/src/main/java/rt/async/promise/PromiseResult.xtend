@@ -9,12 +9,14 @@ abstract class PromiseResult<T> {
 	
 	def void setOnResolve((T) => void onResolve) {
 		this.onResolve = onResolve
-		if (result != null) onResolve.apply(result)
+		if (result != null)
+			runResolve(result)
 	}
 	
 	def void setOnReject((Throwable) => void onReject) {
 		this.onReject = onReject
-		if (error != null) onReject.apply(error)
+		if (error != null) 
+			onReject.apply(error)
 	}
 	
 	def promise() {
@@ -24,7 +26,7 @@ abstract class PromiseResult<T> {
 	
 	def void resolve(T result) {
 		this.result = result
-		onResolve?.apply(result)
+		runResolve(result)
 	}
 	
 	def void reject(Throwable error) {
@@ -33,4 +35,12 @@ abstract class PromiseResult<T> {
 	}
 	
 	def void invoke(PromiseResult<T> result)
+	
+	private def void runResolve(T data) {
+		try {
+			onResolve?.apply(data)	
+		} catch(Throwable ex) {
+			onReject?.apply(ex)
+		}
+	}
 }
