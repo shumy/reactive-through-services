@@ -78,7 +78,9 @@ class SendBuffer extends ChannelBuffer {
 			return
 		}
 		
-		outPump.pushData(buffer)
+		waitUntil([ outPump.ready ],[
+			outPump.pushData(buffer)
+		])
 	}
 	
 	def void sendSliced(ByteBuffer buffer, int bufferSize, () => void onFinal) {

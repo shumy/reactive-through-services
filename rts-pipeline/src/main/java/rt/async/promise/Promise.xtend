@@ -14,6 +14,11 @@ class Promise<T> implements IAsyncError {
 		return this
 	}
 	
+	def Promise<T> thenTry((T) => IAsyncError onResolve) {
+		result.onResolve = onResolve
+		return this
+	}
+	
 	override error((Throwable) => void onReject) {
 		result.onReject = onReject
 	}

@@ -1,14 +1,23 @@
 package rt.async.promise
 
+import rt.async.IAsyncError
+
 abstract class PromiseResult<T> {
 	var T result = null
-	var (T) => void onResolve = null
+	var (T) => void onResolveVoid = null
+	var (T) => IAsyncError onResolveError = null
 	
 	var Throwable error = null
 	var (Throwable) => void onReject = null
 	
 	def void setOnResolve((T) => void onResolve) {
-		this.onResolve = onResolve
+		this.onResolveVoid = onResolve
+		if (result != null)
+			runResolve(result)
+	}
+	
+	def void setOnResolve((T) => IAsyncError onResolve) {
+		this.onResolveError = onResolve
 		if (result != null)
 			runResolve(result)
 	}
@@ -38,7 +47,14 @@ abstract class PromiseResult<T> {
 	
 	private def void runResolve(T data) {
 		try {
-			onResolve?.apply(data)	
+			if (onResolveVoid != null) {
+				onResolveVoid.apply(data)
+			} else {
+				if (onResolveError != null) {
+					//error forward...
+					onResolveError.apply(data).error(onReject)
+				}
+			}
 		} catch(Throwable ex) {
 			onReject?.apply(ex)
 		}
