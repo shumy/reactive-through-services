@@ -1,9 +1,12 @@
 package rt.plugin.service.an
 
 import com.google.common.collect.ImmutableList
+import com.google.common.collect.ImmutableSet
 import java.lang.annotation.Target
+import java.util.HashMap
 import java.util.LinkedList
 import java.util.List
+import java.util.Set
 import org.eclipse.xtend.lib.macro.AbstractClassProcessor
 import org.eclipse.xtend.lib.macro.Active
 import org.eclipse.xtend.lib.macro.CodeGenerationContext
@@ -64,11 +67,18 @@ class ServiceProcessor extends AbstractClassProcessor {
 			]
 		}
 		
+		val authorizations = new HashMap<String, String[]>
 		val switchCases = new LinkedList<String>
 		for (MutableMethodDeclaration meth: publicMethods) {
 			val annoPublicRef = meth.findAnnotation(Public.findTypeGlobally)
 			val isNotification = annoPublicRef.getBooleanValue('notif')
 			val isAsync = annoPublicRef.getBooleanValue('async')
+			
+			val annoAuthorizeRef = meth.findAnnotation(Authorize.findTypeGlobally)
+			val groups = annoAuthorizeRef?.getStringArrayValue('value')
+			
+			if (groups != null)
+				authorizations.put(meth.simpleName + 'Groups', groups)
 			
 			//make a copy because the parameters will be changed
 			val methParameters = meth.parameters.map[it as MutableParameterDeclaration].toList
@@ -82,6 +92,13 @@ class ServiceProcessor extends AbstractClassProcessor {
 			val hasIntervalSimbol = methParameters.size != 0 && ctxArgs.size != 0
 			switchCases.add('''
 				case "«meth.simpleName»":
+					«IF annoAuthorizeRef != null»
+						if (!authorized(«meth.simpleName + 'Groups'», userInfo)) {
+							ctx.replyError(new RuntimeException("Required authorization!"));
+							return;
+						}
+					«ENDIF»
+					
 					«IF methParameters.size != 0»
 						final «List.canonicalName»<Object> «meth.simpleName»Args = msg.args(«FOR param: methParameters SEPARATOR ','» «param.type.simpleName.replaceFirst('<.*>', '')».class«ENDFOR» );
 					«ENDIF»
@@ -128,6 +145,10 @@ class ServiceProcessor extends AbstractClassProcessor {
 				final «IServiceClientFactory» clientFactory = ctx.object(«IServiceClientFactory».class);
 				final «ServiceClient» client = clientFactory != null ? clientFactory.getServiceClient() : null;
 				
+				final «UserInfo» userInfo = ctx.object(«UserInfo».class);
+				
+				boolean isAuthorized = false;
+				
 				try {
 					switch(msg.cmd) {
 						«FOR cas: switchCases»
@@ -144,8 +165,42 @@ class ServiceProcessor extends AbstractClassProcessor {
 			'''
 		]
 		
-		val anno = clazz.findAnnotation(Service.findTypeGlobally)
-		if (anno.getBooleanValue('metadata'))
+		authorizations.keySet.forEach[ key |
+			val groups = authorizations.get(key)
+			clazz.addField(key)[
+				visibility = Visibility.PRIVATE
+				transient = true
+				static = true
+				final = true
+				type = Set.newTypeReference(string)
+				initializer = '''«ImmutableSet».copyOf(new String[] {«FOR gr: groups SEPARATOR ','»"«gr»"«ENDFOR»})'''
+			]
+		]
+		
+		clazz.addMethod('authorized')[
+			visibility = Visibility.PRIVATE
+			
+			returnType = boolean.newTypeReference
+			addParameter('groups', Set.newTypeReference(string))
+			addParameter('userInfo', UserInfo.newTypeReference)
+			
+			body = '''
+				if (userInfo == null)
+					return false;
+				
+				boolean isAuthorized = false;
+				for (String gr: userInfo.groups) {
+					if (groups.contains(gr)) {
+						isAuthorized = true;
+						break;
+					} 
+				}
+				
+				return isAuthorized;
+			'''
+		]
+		
+		if (annoRef.getBooleanValue('metadata'))
 			clazz.generateMetadata(publicMethods, ctx)
 	}
 	

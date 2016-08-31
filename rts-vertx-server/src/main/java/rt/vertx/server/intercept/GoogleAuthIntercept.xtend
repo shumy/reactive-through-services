@@ -1,12 +1,13 @@
 package rt.vertx.server.intercept
 
 import com.google.gson.Gson
+import io.vertx.core.Vertx
 import io.vertx.core.http.HttpClient
+import io.vertx.core.http.HttpClientOptions
 import java.util.HashMap
 import rt.pipeline.IComponent
 import rt.pipeline.pipe.PipeContext
-import io.vertx.core.Vertx
-import io.vertx.core.http.HttpClientOptions
+import rt.plugin.service.an.UserInfo
 
 class GoogleAuthIntercept implements IComponent {
 	val gson = new Gson
@@ -68,7 +69,9 @@ class GoogleAuthIntercept implements IComponent {
 	
 	def void process(PipeContext ctx, String user) {
 		println('Auth-User: ' + user)
-		//TODO: process user context
+
+		//TODO: get UserInfo from a DB or other service
+		ctx.object(UserInfo, new UserInfo(user, #['admin']))
 		
 		ctx.next
 	}
