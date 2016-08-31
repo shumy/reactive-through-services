@@ -19,5 +19,6 @@
         <entry type="srv" ref="rt.vertx.server.service.RouterService"/>
         <entry type="srv" ref="rt.vertx.server.service.SubscriberService"/>
         <entry type="srv" ref="rt.vertx.server.service.WebFileService"/>
+        <entry type="srv" ref="rt.vertx.server.service.OAuthService"/>
     </entries>
 </config>

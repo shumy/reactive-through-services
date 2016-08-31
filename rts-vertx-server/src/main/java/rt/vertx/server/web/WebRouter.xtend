@@ -36,6 +36,8 @@ class WebRouter extends Router {
 			logger.debug('REQUEST {}', req.uri)
 			val uriSplits = req.uri.split('\\?')
 			
+			//req.headers.entries.forEach[ println('''key:«key», value:«value» ''') ]
+			
 			val route = uriSplits.get(0).route
 			val routeSplits = route.routeSplits
 			

@@ -39,6 +39,11 @@ class WebResource {
 		//if is REST service, add route parameters
 		val routeParams = config.getParameters(routeSplits)
 		
+		/*println('REQUEST -> ' + routeSplits)
+		queryParams.keySet.forEach[ key |
+			print('''  «key»:«queryParams.get(key)» ''')
+		]*/
+		
 		//create msg parameters
 		val params = new HashMap<String, Object> => [
 			putAll(queryParams)
@@ -119,7 +124,9 @@ class WebResource {
 		//process result...
 		res.statusCode = 200
 		val result = reply.result(Object)
-		if (result.class == String) {
+		if (result == null) {
+			res.end
+		} else if (result.class == String) {
 			res.putHeader('Content-Type', 'text/plain')
 			res.end(result as String)
 		} else if (result instanceof ByteBuffer) {
