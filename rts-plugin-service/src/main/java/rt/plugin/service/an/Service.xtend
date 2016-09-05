@@ -33,6 +33,7 @@ import rt.plugin.service.IServiceClientFactory
 import rt.plugin.service.ServiceClient
 import rt.plugin.service.descriptor.DMethod
 import rt.plugin.service.descriptor.IDescriptor
+import rt.plugin.service.ServiceException
 
 @Target(TYPE)
 @Active(ServiceProcessor)
@@ -94,7 +95,7 @@ class ServiceProcessor extends AbstractClassProcessor {
 				case "«meth.simpleName»":
 					«IF annoAuthorizeRef != null»
 						if (!authorized(«meth.simpleName + 'Groups'», userInfo)) {
-							ctx.replyError(new RuntimeException("Required authorization!"));
+							ctx.replyError(new «ServiceException.canonicalName»(403, "Required authorization!"));
 							return;
 						}
 					«ENDIF»

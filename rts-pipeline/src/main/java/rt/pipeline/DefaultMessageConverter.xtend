@@ -6,8 +6,8 @@ import com.google.gson.JsonDeserializer
 import java.util.ArrayList
 import java.util.LinkedList
 import java.util.List
+import java.util.Map
 import rt.async.pubsub.Message
-import rt.async.pubsub.Auth
 
 class DefaultMessageConverter {
 	val JsonDeserializer<Message> deserializer = [ json, typeOfT, ctx |
@@ -19,7 +19,7 @@ class DefaultMessageConverter {
 		val objArgs = obj.get('args')?.asJsonArray
 		objArgs?.forEach[ jsonArgs.add(toString) ]
 		
-		val mAuth = obj.get('auth')
+		val jsonAuth = obj.get('auth')?.asJsonObject
 		
 		return new Message(jsonArgs.createArgsConverter, jsonResult.createResultConverter) => [
 			id = obj.get('id').asLong
@@ -28,10 +28,8 @@ class DefaultMessageConverter {
 			clt = obj.get('clt')?.asString
 			path = obj.get('path')?.asString
 			
-			if (mAuth != null) {
-				val jAuth = mAuth.asJsonObject
-				auth = new Auth(jAuth.get('type').asString, jAuth.get('token').asString, jAuth.get('idp').asString)
-			}
+			if (jsonAuth != null)
+				auth = gson.fromJson(jsonAuth, Map)
 		]
 	]
 	

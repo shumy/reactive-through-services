@@ -1,6 +1,7 @@
 package rt.async.pubsub
 
 import java.util.List
+import java.util.Map
 
 public class Message {
 	//message types...
@@ -20,7 +21,7 @@ public class Message {
 	public String clt
 	public String path
 	
-	public Auth auth
+	public Map<String, String> auth
 	
 	// from request
 	transient (Class<?>[]) => List<Object> argsConverter = null
@@ -50,17 +51,5 @@ public class Message {
 		if (res == null)
 			res = resultConverter?.apply(type)
 		return res as T
-	}
-}
-
-public class Auth {
-	public val String type
-	public val String token
-	public val String idp
-	
-	new(String type, String token, String idp) {
-		this.type = type
-		this.token = token
-		this.idp = idp
 	}
 }
