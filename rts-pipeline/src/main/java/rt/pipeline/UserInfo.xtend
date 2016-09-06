@@ -1,6 +1,5 @@
-package rt.plugin.service.an
+package rt.pipeline
 
-import java.lang.annotation.Target
 import java.util.Set
 import java.util.List
 
@@ -12,9 +11,4 @@ class UserInfo {
 		this.name = name
 		this.groups = groups.toSet
 	}
-}
-
-@Target(METHOD)
-annotation Authorize {
-	String[] value = #[]
 }

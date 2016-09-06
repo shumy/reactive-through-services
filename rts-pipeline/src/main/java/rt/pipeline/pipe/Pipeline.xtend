@@ -11,13 +11,17 @@ import rt.pipeline.pipe.use.ChannelService
 import rt.async.pubsub.IPublisher
 import rt.async.pubsub.IResource
 import java.util.HashSet
+import java.util.Map
+import rt.pipeline.UserInfo
 
 class Pipeline {
 	@Accessors val IMessageBus mb
 	@Accessors(PUBLIC_SETTER) (Throwable) => void failHandler = null
 	
 	val interceptors = new ArrayList<IComponent>
+	
 	val services = new HashMap<String, IComponent>
+	val serviceAuthorizations = new HashMap<String, Map<String, String>>
 	val ctxServices = new HashSet<IComponent>
 	
 	new() { this(new DefaultMessageBus) }
@@ -59,6 +63,7 @@ class Pipeline {
 		services.put(ChannelService.name, chService)
 	}
 	
+	
 	def getComponentPaths() {
 		return services.keySet
 	}
@@ -67,33 +72,84 @@ class Pipeline {
 		return services.get(path)
 	}
 	
-	def addComponent(String path, IComponent component) {
+	def void addComponent(String path, IComponent component) {
+		addComponent(path, component, #{ 'all' -> 'all' })
+	}
+	
+	def void addComponent(String path, IComponent component, Map<String, String> authorizations) {
 		services.put(path, component)
+		serviceAuthorizations.put(path, authorizations)
 	}
 	
-	def void removeComponent(String path) {
-		services.remove(path)
+	def removeComponent(String path) {
+		val cmp = services.remove(path)
+		serviceAuthorizations.remove(cmp)
+		return cmp
 	}
-	
 	
 	
 	def getService(String address) {
 		return services.get('srv:' + address)
 	}
-		
+	
 	def void addService(String address, IComponent service) {
 		addService(address, service, false)
 	}
 	
+	def void addService(String address, IComponent service, Map<String, String> authorizations) {
+		addService(address, service, false, authorizations)
+	}
+	
 	def void addService(String address, IComponent service, boolean asContext) {
-		if (asContext)
-			ctxServices.add(service)
-			
-		services.put('srv:' + address, service)
+		addService(address, service, asContext, #{ 'all' -> 'all' })
+	}
+
+	def void addService(String address, IComponent service, boolean asContext, Map<String, String> authorizations) {
+		val srvAddress = 'srv:' + address
+		addComponent(srvAddress, service, authorizations)
+		
+		if (asContext) ctxServices.add(service)
 	}
 	
 	def void removeService(String address) {
-		val srv = services.remove('srv:' + address)
+		val srvAddress = 'srv:' + address
+		val srv = removeComponent(srvAddress)
+		
 		ctxServices.remove(srv)
+	}
+	
+	def addAuthorization(String path, String cmd, String group) {
+		var auths = serviceAuthorizations.get(path)
+		if (auths === null) {
+			auths = new HashMap<String, String>
+			serviceAuthorizations.put(path, auths)
+		}
+		
+		auths.put(cmd, group)
+	}
+	
+	def boolean isAuthorized(Message msg, UserInfo user) {
+		val auth = serviceAuthorizations.get(msg.path)
+		if (auth === null) return false
+		
+		val allGroup = auth.get('all')
+		if (allGroup !== null) {
+			if (allGroup == 'all') return true
+			
+			if (user === null) return false
+			
+			return user.groups.contains(allGroup)
+		}
+		
+		val methGroup = auth.get(msg.cmd)
+		if (methGroup !== null) {
+			if (methGroup == 'all') return true
+			
+			if (user === null) return false
+			
+			return user.groups.contains(methGroup)
+		}
+		
+		return false
 	}
 }

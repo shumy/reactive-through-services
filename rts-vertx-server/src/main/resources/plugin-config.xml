@@ -20,5 +20,8 @@
         <entry type="srv" ref="rt.vertx.server.service.SubscriberService"/>
         <entry type="srv" ref="rt.vertx.server.service.WebFileService"/>
         <entry type="srv" ref="rt.vertx.server.service.OAuthService"/>
+        <entry type="srv" ref="rt.vertx.server.service.UsersService"/>
+        <entry type="srv" ref="rt.vertx.server.service.FileDownloaderService"/>
+        <entry type="srv" ref="rt.vertx.server.service.FolderManagerService"/>
     </entries>
 </config>

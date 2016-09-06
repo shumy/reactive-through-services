@@ -9,9 +9,9 @@ import rt.pipeline.pipe.PipeResource
 import rt.pipeline.pipe.channel.IPipeChannel.PipeChannelInfo
 import rt.pipeline.pipe.use.ChannelService
 import rt.plugin.service.IServiceClientFactory
+import rt.plugin.service.ServiceException
 import rt.vertx.server.CtxHeaders
 import rt.vertx.server.ServiceClientFactory
-import rt.plugin.service.ServiceException
 
 class WsResource {
 	static val logger = LoggerFactory.getLogger('WS-RESOURCE')
@@ -47,20 +47,15 @@ class WsResource {
 			
 			contextCallback = [
 				object(IServiceClientFactory, srvClientFactory)
-				if (parent.headersMap != null) {
-					val reqHeaders = #{
-						//TODO: add more possible required headers...
-						'client' -> client
-					}
-					
-					val headers = new CtxHeaders
-					reqHeaders.forEach[ key, value |
-						if (parent.headersMap.containsKey(key))
-							headers.add(parent.headersMap.get(key), value)
-					]
-					
-					object(CtxHeaders, headers)
-				}
+				
+				val headers = new CtxHeaders
+				headers.add('client', client)
+				
+				message.headers?.forEach[ key, value |
+					headers.add(key, value)
+				]
+				
+				object(CtxHeaders, headers)
 			]
 			
 			closeCallback = [ ws.close ]
@@ -76,7 +71,7 @@ class WsResource {
 				
 				//process backward channel error/reject/timeout
 				bus.replyListener(chReqMsg.replyID + '/reply-error')[
-					logger.error('CHANNEL-BIND-ERROR {} {}', chInfo.uuid, result(String))
+					logger.error('CHANNEL-BIND-ERROR {} {}', chInfo.uuid, result(RuntimeException).message)
 					parent.forgetChannelBind(chInfo)
 				]
 				
@@ -99,11 +94,11 @@ class WsResource {
 			sb.append(textData)
 			if (isFinal) {
 				val textMsg = sb.toString
+				sb.length = 0
+				
 				logger.info('RECEIVED {} {}', Thread.currentThread, textMsg)
 				
 				val msg = parent.converter.fromJson(textMsg)
-				sb.length = 0
-				
 				resource.process(msg)
 			}
 		]
@@ -121,7 +116,7 @@ class WsResource {
 	
 	private def void send(Message msg) {
 		if (msg.cmd == Message.CMD_ERROR) {
-			val ex = msg.result(Exception)
+			val ex = msg.result(RuntimeException)
 			if (ex instanceof ServiceException) {
 				val sex = ex as ServiceException
 				msg.result = #{ 'message' -> sex.message, 'httpCode' -> sex.httpCode }

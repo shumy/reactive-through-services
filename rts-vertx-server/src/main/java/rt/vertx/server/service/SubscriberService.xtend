@@ -30,8 +30,9 @@ class SubscriberService {
 class RemoteSubscriber {
 	public static val String SERVICE 	= 'events'
 	
-	public static val String NEXT 		= 'nxt'
-	public static val String COMPLETE 	= 'clp'
+	public static val String NEXT 		= 'ev:nxt'
+	public static val String ERROR 		= 'ev:err'
+	public static val String COMPLETE 	= 'ev:clp'
 	
 	val String address
 	val IPublisher publisher
@@ -40,6 +41,10 @@ class RemoteSubscriber {
 	
 	def void next(Object sData) {
 		publisher.publish(address, SERVICE, NEXT, Event.B => [ address = this.address data = sData ])
+	}
+	
+	def void error(String message) {
+		publisher.publish(address, SERVICE, ERROR, Event.B => [ address = this.address data = message ])
 	}
 	
 	def void complete() {

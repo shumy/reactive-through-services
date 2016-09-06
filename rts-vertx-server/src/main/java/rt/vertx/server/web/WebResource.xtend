@@ -60,15 +60,9 @@ class WebResource {
 			]
 			
 			contextCallback = [
-				if (parent.headersMap != null) {
-					val headers = new CtxHeaders
-					req.headers.forEach[
-						if (parent.headersMap.containsKey(key))
-							headers.add(parent.headersMap.get(key), value)
-					]
-					
-					object(CtxHeaders, headers)
-				}
+				val headers = new CtxHeaders
+				parent.headersProcessor?.apply(req.headers, headers)
+				object(CtxHeaders, headers)
 			]
 		]
 		

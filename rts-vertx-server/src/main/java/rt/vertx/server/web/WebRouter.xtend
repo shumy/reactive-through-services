@@ -1,23 +1,26 @@
 package rt.vertx.server.web
 
+import io.netty.handler.codec.http.QueryStringDecoder
 import io.vertx.core.http.HttpMethod
 import io.vertx.core.http.HttpServer
+import java.util.ArrayList
+import java.util.List
+import org.eclipse.xtend.lib.annotations.Accessors
 import org.slf4j.LoggerFactory
 import rt.pipeline.IComponent
 import rt.pipeline.pipe.Pipeline
 import rt.plugin.service.Router
 import rt.plugin.service.WebMethod
+import rt.vertx.server.CtxHeaders
 import rt.vertx.server.DefaultVertxServer
 
 import static extension rt.vertx.server.URIParserHelper.*
-import org.eclipse.xtend.lib.annotations.Accessors
-import java.util.Map
+import io.vertx.core.MultiMap
 
 class WebRouter extends Router {
 	static val logger = LoggerFactory.getLogger('WEB-ROUTER')
 	
-	//@Accessors val resources = new HashMap<String, WebResource>
-	@Accessors var Map<String, String> headersMap
+	@Accessors var (MultiMap, CtxHeaders) => void headersProcessor
 	
 	package val DefaultVertxServer parent
 	package val HttpServer server
@@ -33,8 +36,10 @@ class WebRouter extends Router {
 		this.pipeline = parent.pipeline
 		
 		server.requestHandler[ req |
-			logger.debug('REQUEST {}', req.uri)
-			val uriSplits = req.uri.split('\\?')
+			val uri = QueryStringDecoder.decodeComponent(req.uri)
+			
+			logger.debug('REQUEST {}', uri)
+			val uriSplits = uri.split('\\?')
 			
 			//req.headers.entries.forEach[ println('''key:«key», value:«value» ''') ]
 			
@@ -60,6 +65,19 @@ class WebRouter extends Router {
 		val route = baseRoute + uriPattern
 		val routePaths = route.routeSplits.routePaths
 		return route(false, WebMethod.ALL, routePaths, srvAddress, 'notify', #['ctx.request'])
+	}
+	
+	def vrtxService(String uriPattern, String srvAddress, IComponent vrtxService, List<String> adicionalParamMaps) {
+		pipeline.addService(srvAddress, vrtxService)
+		
+		val route = baseRoute + uriPattern
+		val routePaths = route.routeSplits.routePaths
+		
+		val paramMaps = new ArrayList(adicionalParamMaps.size + 1)
+		paramMaps.add('ctx.request')
+		paramMaps.addAll(adicionalParamMaps)
+		
+		return route(false, WebMethod.ALL, routePaths, srvAddress, 'notify', paramMaps)
 	}
 	
 	private def getWebMethod(HttpMethod httpMethod) {

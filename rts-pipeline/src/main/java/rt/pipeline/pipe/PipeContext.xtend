@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory
 import rt.async.pubsub.IMessageBus
 import rt.async.pubsub.Message
 import rt.pipeline.IComponent
+import rt.pipeline.UserInfo
 
 class PipeContext {
 	static val logger = LoggerFactory.getLogger('PIPELINE')
@@ -152,6 +153,14 @@ class PipeContext {
 	}
 	
 	private def void deliverRequest() {
+		//validate authorization...
+		val user = object(UserInfo)
+		if (!pipeline.isAuthorized(message, user)) {
+			logger.error('Authorization failed on {}', message.path)
+			fail(new RuntimeException('Unauthorized user!'))
+			return
+		}
+		
 		val srv = pipeline.getComponent(message.path)
 		if(srv != null) {
 			logger.debug('DELIVER {}', message.path)

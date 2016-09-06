@@ -62,8 +62,8 @@ class ServiceClient {
 				if (replyMsg.cmd == Message.CMD_OK) {
 					result.resolve(replyMsg.result(anPublic.retType))
 				} else {
-					val errorMsg = replyMsg.result(String)
-					result.reject(new RuntimeException(errorMsg))
+					val error = replyMsg.result(RuntimeException)
+					result.reject(error)
 				}
 			]
 	}

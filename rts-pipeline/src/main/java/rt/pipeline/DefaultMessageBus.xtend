@@ -43,7 +43,10 @@ class DefaultMessageBus implements IMessageBus {
 		subscriptions.get(address)?.forEach[ send(msg) ]
 		
 		timeout[
-			val replyTimeoutMsg = new Message => [ id=msg.id clt=msg.clt typ=Message.REPLY cmd=Message.CMD_TIMEOUT result='''Timeout for «msg.path» -> «msg.cmd»'''.toString]
+			val replyTimeoutMsg = new Message => [
+				id=msg.id clt=msg.clt typ=Message.REPLY cmd=Message.CMD_TIMEOUT
+				result=new RuntimeException('''Timeout for «msg.path» -> «msg.cmd»''')
+			]
 			replyTimeoutMsg.reply
 		]
 	}

@@ -1,24 +1,42 @@
 package rt.data
 
 import java.util.HashMap
+import java.util.List
+import java.util.Map
+import org.eclipse.xtend.lib.annotations.Accessors
 
-class DataRepository<D> {
-	val table = new HashMap<String, D>
-	val (Change) => void onChange
+interface IDataRepository<D> {
+	def List<D> list()
 	
-	new((Change) => void onChange) {
-		this.onChange = onChange
+	def D get(String id)
+	def void put(String id, D data)
+	def void remove(String id)
+}
+
+class DataRepository<D> implements IDataRepository<D> {
+	@Accessors var (Change) => void onChange
+	
+	val Map<String, D> table
+	
+	new() { this(new HashMap<String, D>) }
+	new(Map<String, D> table) {
+		this.table = table
 	}
 	
-	def list() { table.values.toList }
+	override list() { table.values.toList }
 	
-	def void put(String id, D data) {
-		onChange.apply(new Change(Change.Operation.PUT, data))
+	override get(String id) {
+		return table.get(id)
 	}
 	
-	def void remove(String id) {
+	override put(String id, D data) {
+		table.put(id, data)
+		onChange?.apply(new Change(Change.Operation.PUT, data))
+	}
+	
+	override remove(String id) {
 		val value = table.remove(id)
-		if (value != null)
+		if (value != null && onChange != null)
 			onChange.apply(new Change(Change.Operation.REMOVE, id))
 	}
 }
@@ -26,11 +44,11 @@ class DataRepository<D> {
 class Change {
 	enum Operation { PUT, REMOVE }
 	
-	public val String oper
+	public val Operation oper
 	public val Object data
 	
 	new(Operation oper, Object data) {
-		this.oper = oper.name.toLowerCase
+		this.oper = oper
 		this.data = data
 	}
 }

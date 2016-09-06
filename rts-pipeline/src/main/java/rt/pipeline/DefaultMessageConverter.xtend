@@ -19,7 +19,7 @@ class DefaultMessageConverter {
 		val objArgs = obj.get('args')?.asJsonArray
 		objArgs?.forEach[ jsonArgs.add(toString) ]
 		
-		val jsonAuth = obj.get('auth')?.asJsonObject
+		val jsonHeaders = obj.get('headers')?.asJsonObject
 		
 		return new Message(jsonArgs.createArgsConverter, jsonResult.createResultConverter) => [
 			id = obj.get('id').asLong
@@ -28,8 +28,8 @@ class DefaultMessageConverter {
 			clt = obj.get('clt')?.asString
 			path = obj.get('path')?.asString
 			
-			if (jsonAuth != null)
-				auth = gson.fromJson(jsonAuth, Map)
+			if (jsonHeaders != null)
+				headers = gson.fromJson(jsonHeaders, Map)
 		]
 	]
 	

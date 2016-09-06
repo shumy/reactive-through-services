@@ -21,7 +21,7 @@ public class Message {
 	public String clt
 	public String path
 	
-	public Map<String, String> auth
+	public Map<String, String> headers
 	
 	// from request
 	transient (Class<?>[]) => List<Object> argsConverter = null

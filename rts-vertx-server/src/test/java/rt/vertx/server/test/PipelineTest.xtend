@@ -118,6 +118,7 @@ class PipelineTest {
 		
 		val pipeline = new Pipeline(new DefaultMessageBus) => [
 			addInterceptor(new ValidatorInterceptor)
+			addAuthorization('target', 'all', 'all')
 			failHandler = [ ctx.fail(it) ]
 		]
 		
@@ -148,6 +149,7 @@ class PipelineTest {
 		
 		val pipeline = new Pipeline(new DefaultMessageBus) => [
 			addInterceptor(new ValidatorInterceptor)
+			addAuthorization('uid', 'all', 'all')
 			failHandler = [ ctx.fail(it) ]
 		]
 		
