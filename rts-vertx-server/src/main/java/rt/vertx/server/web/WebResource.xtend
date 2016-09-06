@@ -12,9 +12,9 @@ import org.eclipse.xtend.lib.annotations.Accessors
 import org.slf4j.LoggerFactory
 import rt.async.pubsub.Message
 import rt.pipeline.pipe.PipeResource
+import rt.plugin.service.CtxHeaders
 import rt.plugin.service.RouteConfig
 import rt.plugin.service.ServiceException
-import rt.vertx.server.CtxHeaders
 
 class WebResource {
 	static val logger = LoggerFactory.getLogger('WEB-RESOURCE')

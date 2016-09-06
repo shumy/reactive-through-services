@@ -8,9 +8,9 @@ import rt.async.pubsub.Message
 import rt.pipeline.pipe.PipeResource
 import rt.pipeline.pipe.channel.IPipeChannel.PipeChannelInfo
 import rt.pipeline.pipe.use.ChannelService
+import rt.plugin.service.CtxHeaders
 import rt.plugin.service.IServiceClientFactory
 import rt.plugin.service.ServiceException
-import rt.vertx.server.CtxHeaders
 import rt.vertx.server.ServiceClientFactory
 
 class WsResource {

@@ -1,4 +1,4 @@
-package rt.vertx.server
+package rt.plugin.service
 
 import java.util.HashMap
 import org.eclipse.xtend.lib.annotations.Accessors

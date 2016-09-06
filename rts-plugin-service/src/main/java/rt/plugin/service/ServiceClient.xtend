@@ -9,6 +9,7 @@ import rt.async.promise.PromiseResult
 import rt.async.pubsub.IMessageBus
 import rt.async.pubsub.Message
 import rt.plugin.service.an.Public
+import java.util.HashMap
 
 class ServiceClient {
 	static val logger = LoggerFactory.getLogger('PROXY')
@@ -54,6 +55,14 @@ class ServiceClient {
 	}
 	
 	private def send(String address, Message sendMsg, PromiseResult<Object> result, Public anPublic) {
+		if (ServiceUtils.tokenType !== null) {
+			if (sendMsg.headers === null)
+				sendMsg.headers = new HashMap<String, String>
+			
+			sendMsg.headers.put('auth', ServiceUtils.tokenType)
+			sendMsg.headers.put('token', ServiceUtils.authToken)
+		}
+		
 		if (anPublic.notif)
 			bus.publish(address, sendMsg)
 		else

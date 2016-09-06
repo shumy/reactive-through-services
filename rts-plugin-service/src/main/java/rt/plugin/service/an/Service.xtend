@@ -30,6 +30,8 @@ import rt.plugin.service.IServiceClientFactory
 import rt.plugin.service.ServiceClient
 import rt.plugin.service.descriptor.DMethod
 import rt.plugin.service.descriptor.IDescriptor
+import rt.plugin.service.ServiceUtils
+import rt.plugin.service.CtxHeaders
 
 @Target(TYPE)
 @Active(ServiceProcessor)
@@ -127,6 +129,12 @@ class ServiceProcessor extends AbstractClassProcessor {
 				
 				final «IServiceClientFactory» clientFactory = ctx.object(«IServiceClientFactory».class);
 				final «ServiceClient» client = clientFactory != null ? clientFactory.getServiceClient() : null;
+				
+				final «CtxHeaders» ctxHeaders = ctx.object(CtxHeaders.class);
+				if (ctxHeaders != null && ctxHeaders.get("auth") != null) {
+					«ServiceUtils».setTokenType(ctxHeaders.get("auth"));
+					«ServiceUtils».setAuthToken(ctxHeaders.get("token"));
+				}
 				
 				try {
 					switch(msg.cmd) {

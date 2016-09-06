@@ -9,8 +9,8 @@ import rt.data.IDataRepository
 import rt.pipeline.IComponent
 import rt.pipeline.UserInfo
 import rt.pipeline.pipe.PipeContext
+import rt.plugin.service.CtxHeaders
 import rt.plugin.service.ServiceException
-import rt.vertx.server.CtxHeaders
 
 interface JwtProvider {
 	def String getPubKey(String kid)

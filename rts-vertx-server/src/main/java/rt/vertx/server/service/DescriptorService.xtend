@@ -21,7 +21,7 @@ import rt.plugin.service.descriptor.IDescriptor
 class DescriptorService {
 	val Pipeline pipeline
 	
-	@Default('false') val boolean autoDetect 
+	@Default('false') val boolean autoDetect
 	@Optional val List<String> services
 	
 	transient var List<String> _services

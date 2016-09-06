@@ -1,6 +1,7 @@
 package rt.vertx.server.web
 
 import io.netty.handler.codec.http.QueryStringDecoder
+import io.vertx.core.MultiMap
 import io.vertx.core.http.HttpMethod
 import io.vertx.core.http.HttpServer
 import java.util.ArrayList
@@ -9,13 +10,12 @@ import org.eclipse.xtend.lib.annotations.Accessors
 import org.slf4j.LoggerFactory
 import rt.pipeline.IComponent
 import rt.pipeline.pipe.Pipeline
+import rt.plugin.service.CtxHeaders
 import rt.plugin.service.Router
 import rt.plugin.service.WebMethod
-import rt.vertx.server.CtxHeaders
 import rt.vertx.server.DefaultVertxServer
 
 import static extension rt.vertx.server.URIParserHelper.*
-import io.vertx.core.MultiMap
 
 class WebRouter extends Router {
 	static val logger = LoggerFactory.getLogger('WEB-ROUTER')

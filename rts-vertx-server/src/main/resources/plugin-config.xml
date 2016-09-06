@@ -1,27 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <config>
     <entries>
-        <entry type="srv" ref="rt.vertx.server.web.FileUploaderService"/>
-        <entry type="srv" ref="rt.vertx.server.web.WebFileHandler"/>
-        <entry type="srv" ref="rt.vertx.server.web.WebFileService"/>
-        <entry type="srv" ref="rt.vertx.server.web.service.FileUploaderService"/>
-        <entry type="srv" ref="rt.vertx.server.web.service.WebFileService"/>
-        <entry type="srv" ref="rt.vertx.server.web.service.SpecsService"/>
-        <entry type="srv" ref="rt.vertx.server.web.service.DescriptorService"/>
-        <entry type="srv" ref="rt.vertx.server.web.service.RouterService"/>
-        <entry type="srv" ref="rt.vertx.server.web.service.ObservableService"/>
-        <entry type="srv" ref="rt.vertx.server.web.service.TransferService"/>
-        <entry type="srv" ref="rt.vertx.server.web.service.ObserverService"/>
-        <entry type="srv" ref="rt.vertx.server.web.service.SubscriptionService"/>
-        <entry type="srv" ref="rt.vertx.server.web.service.SubscriberService"/>
         <entry type="srv" ref="rt.vertx.server.service.DescriptorService"/>
-        <entry type="srv" ref="rt.vertx.server.service.FileUploaderService"/>
-        <entry type="srv" ref="rt.vertx.server.service.RouterService"/>
         <entry type="srv" ref="rt.vertx.server.service.SubscriberService"/>
-        <entry type="srv" ref="rt.vertx.server.service.WebFileService"/>
-        <entry type="srv" ref="rt.vertx.server.service.OAuthService"/>
         <entry type="srv" ref="rt.vertx.server.service.UsersService"/>
-        <entry type="srv" ref="rt.vertx.server.service.FileDownloaderService"/>
         <entry type="srv" ref="rt.vertx.server.service.FolderManagerService"/>
+        <entry type="srv" ref="rt.vertx.server.service.RouterService"/>
+        <entry type="srv" ref="rt.vertx.server.service.WebFileService"/>
     </entries>
 </config>
