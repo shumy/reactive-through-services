@@ -7,5 +7,6 @@
         <entry type="srv" ref="rt.vertx.server.service.FolderManagerService"/>
         <entry type="srv" ref="rt.vertx.server.service.RouterService"/>
         <entry type="srv" ref="rt.vertx.server.service.WebFileService"/>
+        <entry type="srv" ref="rt.vertx.server.service.RepositoryService"/>
     </entries>
 </config>

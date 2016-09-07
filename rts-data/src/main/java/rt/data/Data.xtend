@@ -28,8 +28,9 @@ class DataProcessor extends AbstractClassProcessor {
 	override doValidate(ClassDeclaration clazz, extension ValidationContext ctx) {
 		val allFields = clazz.declaredFields.filter[ !(transient || static) ].toList
 		allFields.forEach[
-			if (!final)
-				addError('Variable fields not supported in data types!')
+			val optional = findAnnotation(Optional.findTypeGlobally) != null
+			if (!final && !optional)
+				addError('Variable fields not supported in non optional data types!')
 		]
 		
 		clazz.declaredMethods.forEach[

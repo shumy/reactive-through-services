@@ -10,6 +10,7 @@ import rt.pipeline.pipe.Pipeline
 import rt.vertx.server.web.WebRouter
 import rt.vertx.server.ws.WsRouter
 import rt.async.pubsub.IMessageBus
+import rt.plugin.service.ServiceUtils
 
 class DefaultVertxServer {
 	@Accessors val HttpServer server
@@ -33,10 +34,12 @@ class DefaultVertxServer {
 		this.pipeline = new Pipeline
 		this.wsRouter = new WsRouter(this, wsBaseRoute)
 		this.webRouter = new WebRouter(this, webBaseRoute)
+		
+		AsyncUtils.set(new VertxAsyncUtils(vertx))
+		ServiceUtils.publisher = pipeline.mb
 	}
 	
 	def void listen(int port) {
-		AsyncUtils.set(new VertxAsyncUtils(vertx))
 		server.listen(port)
 	}
 }

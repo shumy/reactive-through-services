@@ -52,7 +52,6 @@ class ClientRouter implements IServiceClientFactory {
 		this.pipeline = pipeline
 		this.serviceClient = new ServiceClient(pipeline.mb, server, client, redirects)
 		
-		pipeline.addAuthorization('ch:srv', 'all', 'all')
 		pipeline.mb.subscribe(server)[ send ]
 	}
 	

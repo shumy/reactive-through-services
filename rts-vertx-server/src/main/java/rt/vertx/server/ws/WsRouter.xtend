@@ -10,6 +10,7 @@ import rt.pipeline.pipe.channel.IPipeChannel.PipeChannelInfo
 import rt.vertx.server.DefaultVertxServer
 
 import static extension rt.vertx.server.URIParserHelper.*
+import rt.async.pubsub.IResource
 
 class WsRouter {
 	static val logger = LoggerFactory.getLogger('WS-ROUTER')
@@ -22,7 +23,7 @@ class WsRouter {
 	
 	val String baseRoute
 	
-	var (WsResource) => void onOpen = null
+	var (IResource) => void onOpen = null
 	var (String) => void onClose = null
 	
 	//channels info...
@@ -81,7 +82,7 @@ class WsRouter {
 		]
 	}
 	
-	def void onOpen((WsResource) => void callback) { onOpen = callback }
+	def void onOpen((IResource) => void callback) { onOpen = callback }
 	def void onClose((String) => void callback) { onClose = callback }
 	
 	package def void waitForChannelBind(PipeChannelInfo info, (IPipeChannel) => void onBind) {
@@ -94,9 +95,9 @@ class WsRouter {
 		chRequestsHandlers.remove(info.uuid)
 	}
 	
-	private def void addResource(WsResource resource) {
-		resources.put(resource.client, resource)
-		onOpen?.apply(resource)
+	private def void addResource(WsResource wsRes) {
+		resources.put(wsRes.client, wsRes)
+		onOpen?.apply(wsRes.resource)
 	}
 	
 	private def void removeResource(String clientUUID) {

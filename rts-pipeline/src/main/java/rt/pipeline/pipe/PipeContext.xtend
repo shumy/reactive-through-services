@@ -46,7 +46,7 @@ class PipeContext {
 				
 			} catch(RuntimeException ex) {
 				ex.printStackTrace
-				fail(ex)
+				if (message.typ != Message.PUBLISH) fail(ex)
 			}
 		}
 	}

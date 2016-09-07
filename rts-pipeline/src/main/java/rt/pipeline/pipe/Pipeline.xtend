@@ -2,16 +2,15 @@ package rt.pipeline.pipe
 
 import java.util.ArrayList
 import java.util.HashMap
+import java.util.HashSet
+import java.util.Map
 import org.eclipse.xtend.lib.annotations.Accessors
 import rt.async.pubsub.IMessageBus
+import rt.async.pubsub.IPublisher
+import rt.async.pubsub.IResource
 import rt.async.pubsub.Message
 import rt.pipeline.DefaultMessageBus
 import rt.pipeline.IComponent
-import rt.pipeline.pipe.use.ChannelService
-import rt.async.pubsub.IPublisher
-import rt.async.pubsub.IResource
-import java.util.HashSet
-import java.util.Map
 import rt.pipeline.UserInfo
 
 class Pipeline {
@@ -57,10 +56,6 @@ class Pipeline {
 	
 	def void addInterceptor(IComponent interceptor) {
 		interceptors.add(interceptor)
-	}
-	
-	def void addChannelService(IComponent chService) {
-		services.put(ChannelService.name, chService)
 	}
 	
 	

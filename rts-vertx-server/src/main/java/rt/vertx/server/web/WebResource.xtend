@@ -101,7 +101,7 @@ class WebResource {
 	private def void processResponse(Message reply, HttpServerResponse res, String path) {
 		if (reply.cmd != Message.CMD_OK) {
 			//process exception...
-			val ex = reply.result(Exception)
+			val ex = reply.result(RuntimeException)
 			if (ex instanceof ServiceException) {
 				val sex = ex as ServiceException
 				res.statusCode = sex.httpCode

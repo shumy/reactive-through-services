@@ -41,6 +41,9 @@ class JwtAuthInterceptor implements IComponent {
 				
 				val header = getHeader(token)
 				val pubKey = provider.getPubKey(header.kid)
+				if (pubKey === null)
+					throw new ServiceException(500, 'Public key failed for kid: ' + header.kid)
+				
 				val cert = X509CertUtils.parse(pubKey)
 				
 				val jwtVerifier = new JWTVerifier(cert.publicKey, provider.audience, provider.issuer)
