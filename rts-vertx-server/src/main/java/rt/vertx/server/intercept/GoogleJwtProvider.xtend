@@ -1,19 +1,44 @@
 package rt.vertx.server.intercept
 
+import com.google.gson.Gson
+import io.vertx.core.Vertx
+import io.vertx.core.http.HttpClientOptions
+import java.util.Map
 import org.eclipse.xtend.lib.annotations.Accessors
+import org.slf4j.LoggerFactory
 
 class GoogleJwtProvider implements JwtProvider {
-	//TODO: configs shouldn't be hard coded...
+	static val logger = LoggerFactory.getLogger(GoogleJwtProvider)
 	
-	@Accessors val audience = '61929327789-7an73tpqqk1rrt2veopv1brsfcoetmrj.apps.googleusercontent.com'
 	@Accessors val issuer = 'accounts.google.com'
+	@Accessors val String audience
 	
-	//available at: https://www.googleapis.com/oauth2/v1/certs
-	val pubKeys = #{
-		"10efbf9f9a3e8ec5e7dfa7961d71e2e4bfda2435" -> "-----BEGIN CERTIFICATE-----\nMIIDJjCCAg6gAwIBAgIIe7CS2rJz7jUwDQYJKoZIhvcNAQEFBQAwNjE0MDIGA1UE\nAxMrZmVkZXJhdGVkLXNpZ25vbi5zeXN0ZW0uZ3NlcnZpY2VhY2NvdW50LmNvbTAe\nFw0xNjA5MDYxMTQzMzRaFw0xNjA5MDkxMjEzMzRaMDYxNDAyBgNVBAMTK2ZlZGVy\nYXRlZC1zaWdub24uc3lzdGVtLmdzZXJ2aWNlYWNjb3VudC5jb20wggEiMA0GCSqG\nSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDORJGwDyelyBrh0pK33X461JcDjzVj3iO3\nm2friHYxS1SdD/Uk/7jFwMFhUbnabUJ1zsWrb9ylQ6+bbuMDEhzihjEuTVi3Ilf1\nx7mnauRsrILvWdKrmibesETifeFhRrSc8Jxc0LS4L8bRRNVj86yJhLqFI1VKcerJ\nKfnTKJ3wQFZjywccKyoS2WTi7BddqWCelnkFcjbbJBZABKdl14iJEqHFJZ2QOtst\nSrUWbJ82f29puEgANmx2MIveIJ8lVbxhN2e05tlFWy6H97Ob0rv6XdTjTQS9kDtE\n38O3lAYLqBKOjizI/lOQZcPqILqtTHrsUvODDD8ujQ7iRgQXMMvPAgMBAAGjODA2\nMAwGA1UdEwEB/wQCMAAwDgYDVR0PAQH/BAQDAgeAMBYGA1UdJQEB/wQMMAoGCCsG\nAQUFBwMCMA0GCSqGSIb3DQEBBQUAA4IBAQCcE0rRzc86F2x7BhhW5a066a90SaZT\nz7faPCqnJfYa/EVnC8KYkB9dKt/TXfUKZrnHo0sVf+T3hiPFdcepSmJVIm7av8uS\nFtiZ+tWftRAVXIBL5wwq7jT4j9JruP1e0DXQ7w6755Kr0Vs/uHCpw/benHVc6w5A\n/wk3cnQ4ZgYlAwDZILKwWP2yJXhIibkwqf3dRlqv+Wj/CFa1Uf2AE3pi7ryeybdY\n9tqzdpe34j5GCoJbgXKeKdBjZ+BVObcsnGrxJVKluZYfkgHbTPIiCQreKwAm5uPc\n1JMrTcd6p5ar8PG/KUij22i1qhGsFGwrsLyv9oDkMhwNZGjNNU3Mhbfe\n-----END CERTIFICATE-----\n",
-		"2593971cc4a211ef0c706fc3d808580b1b9e5420" -> "-----BEGIN CERTIFICATE-----\nMIIDJjCCAg6gAwIBAgIIC4cQv5E3aAQwDQYJKoZIhvcNAQEFBQAwNjE0MDIGA1UE\nAxMrZmVkZXJhdGVkLXNpZ25vbi5zeXN0ZW0uZ3NlcnZpY2VhY2NvdW50LmNvbTAe\nFw0xNjA5MDQxMTQzMzRaFw0xNjA5MDcxMjEzMzRaMDYxNDAyBgNVBAMTK2ZlZGVy\nYXRlZC1zaWdub24uc3lzdGVtLmdzZXJ2aWNlYWNjb3VudC5jb20wggEiMA0GCSqG\nSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC7pvR+k0yBuFrZssBH4nzj2WtkBsm2MBj5\njMWgaElj3hlzGbWdUNvvvBhAaDib8tosnq2k1F5jG0M+9aHDrjS51bz+HHCZyAn/\nt3v2eELS22+xsqRN1SKKNfen2XgWfiV7id0480NEcCXhQjnq7HpWL/aSaoxZjGbG\n4ZP9sp9yJX/LKiYFwPQVZ4rk3kzydr9b0Dq587UL93DEBG/qjq0vmyHeE/p4lHo9\nWoChZNuzu/bdLa2VwzscKvH1hHse/XjTZBm+At16rql4HM5stWLFfoBTANM8HpVR\n63O3sMrHdjbSsNfnz+OeslY6/zSw4+/ngWWlboKdRKOqenFa4K15AgMBAAGjODA2\nMAwGA1UdEwEB/wQCMAAwDgYDVR0PAQH/BAQDAgeAMBYGA1UdJQEB/wQMMAoGCCsG\nAQUFBwMCMA0GCSqGSIb3DQEBBQUAA4IBAQALZ4xzAm0Yf6i6xFEWemZ5oEcEiAkr\nMBczfKHAOl5oxnoKv24jkd5rlZmm1IlF3jsRluUzC1ljnyFi10OBfZ78hzTIM03k\ndpEdMo2G+Ur3B6ysrjnrsMJJ1KMuLpTIIMblVTvL/RMbbOkIjTqk6vmy8bSLd/y2\nGnLjZ3mHrQu8v8hZ71n2GEFPuh+EvyjMUrZjM7MM6uuWZmUUaVeJee9Z6WyAbg4i\nZnCRbw8z+mS2AqfBk04XWK2JFtKtCrK/mOs+kIUz6hcnhk8xDR16KkwfBr9U4mYG\n1St73gpJaEvyIcoPjblR8CpIfZcT3AuRJOBN9LjC3+QiDmwUaw6sM/2L\n-----END CERTIFICATE-----\n",
-		"078968a3c05b3ddcc141d36a94a116a5be4fdbe7" -> "-----BEGIN CERTIFICATE-----\nMIIDJjCCAg6gAwIBAgIILdmt1ZM/LFQwDQYJKoZIhvcNAQEFBQAwNjE0MDIGA1UE\nAxMrZmVkZXJhdGVkLXNpZ25vbi5zeXN0ZW0uZ3NlcnZpY2VhY2NvdW50LmNvbTAe\nFw0xNjA5MDUxMTQzMzRaFw0xNjA5MDgxMjEzMzRaMDYxNDAyBgNVBAMTK2ZlZGVy\nYXRlZC1zaWdub24uc3lzdGVtLmdzZXJ2aWNlYWNjb3VudC5jb20wggEiMA0GCSqG\nSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCnDGQUSaul/vBh8buBGf+Vh3C+x2+iPj95\nJoWSj6sEAyBza32YmqPTSOuwvwe5y+5crPcjyfY7oHebhahYyHO47Z/K6ralD8fV\n1r4/kabfhxy5FvCfpD4XJXyhP445bsi5DSnv0J1mW5jpoQMFa2YYPSwhT577Bo4W\nzwONmrph0CE+V9GXKzngCtlsVuh3HaqXnyrFXqJvM4ttez9GdOzJDpT7m6EYJoHT\nR3vwuoceq7qS2ScqLnLQQ4mccCikjx3bvcyEnAnWL+1Opa9fbzXZE2tI/3YfkJiM\nbZjlff0XSJWv81tnQbgEh5w5BMu4thObA96tJIsyf1iQY3XxROxTAgMBAAGjODA2\nMAwGA1UdEwEB/wQCMAAwDgYDVR0PAQH/BAQDAgeAMBYGA1UdJQEB/wQMMAoGCCsG\nAQUFBwMCMA0GCSqGSIb3DQEBBQUAA4IBAQADUd9b8Doxv8J5k0auecG2OyM3jIz6\n0KsV9a5TcuvMjb9rrLgJ/FMnsawcpsHXp5/vxd5KEbIJJUyOKBJArGjQNiipOtR6\n9GM5GCsyxptxpkv0iyWFqVbey7sBPYDZBtFRAQjNp4kZKKcJMbkib5rlcoVfYvQw\nMpHEegAOeYa36HHIWePs7ZEs8Lu1Am/UKqjyM7f3x5thhqkCK5kCp3zzT0rMYtFI\ngddUDKsMgiQpyTrwPa8XbrF1ftF5TeGpn0j8MOoBe4+w0/zotEBBMga1JuUiZBZB\nY/7OrFYAbViHHmfoySrXuIjkuHM2W66Q6yIPs4Y9+/i2YBMNt2fzbkvi\n-----END CERTIFICATE-----\n",
-		"84cc933f035b6269e683ee215e8ea3d81164b189" -> "-----BEGIN CERTIFICATE-----\nMIIDJjCCAg6gAwIBAgIIeWh0Vq0lsSIwDQYJKoZIhvcNAQEFBQAwNjE0MDIGA1UE\nAxMrZmVkZXJhdGVkLXNpZ25vbi5zeXN0ZW0uZ3NlcnZpY2VhY2NvdW50LmNvbTAe\nFw0xNjA5MDcxMTQzMzRaFw0xNjA5MTAxMjEzMzRaMDYxNDAyBgNVBAMTK2ZlZGVy\nYXRlZC1zaWdub24uc3lzdGVtLmdzZXJ2aWNlYWNjb3VudC5jb20wggEiMA0GCSqG\nSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC2oI5aCKvOUj37yj4zsRc80m3aotjnJNVz\nEka1tlfW5AY7OJN96u7O/y1IVRebTXOzjXL3ge1+MbaUE1BjBDKJJnrYZdmpMWX7\n2pcR6Ue8iXYtv9eFsE0o4zCWgr76jS2XmZORkG3bEexScO9cof1zdgHzH/N6gFEv\nNQGZXLbjFoSG1naoP1s6tdThN++VLu0nFV8IlHFUD9aovkV6otBA/bm21/ZsY7nn\nNaCkgHtTLeImF2odszPaeFhzdllpjIgqGg4JQv8c4dzD+9UDRpYxx76hFr62jdtC\n03VgtDMGZAyqu5cdbGZfT2XEhEmmDkyzDXVs1HDpu/JRLzdXjNMbAgMBAAGjODA2\nMAwGA1UdEwEB/wQCMAAwDgYDVR0PAQH/BAQDAgeAMBYGA1UdJQEB/wQMMAoGCCsG\nAQUFBwMCMA0GCSqGSIb3DQEBBQUAA4IBAQAI5WfEDTlrE/4428dUQ4nCgMM0dWFL\nMYlxSJicsda8Yn3v27O+jhGiXcoAtTunbZsE07IMEK9FyyU/ZjspVk8ZFH6BFNSi\nYYluvW1wHAJdWX0+6X/zSvzDo3pLEqxHs6ywkZYNnsKeZqfVRBTnZD27fgNS9nFJ\nalAMmdwvmdeDPVToDQO0y7UiPHWiAsEETd4SXiKkGGTS0CQ9yrzCf5G09Nhrl1wh\nLesO8E6PrFdvsunNI3XpHUdrujX1dYjJdP/3URIFnOtEWwfa8c2mL5sCOC8ONUJ1\no2tFX+X3R//D0gN39dspzSO0gxQJ2oK9qOUo4wgK5CJMqSAfo1jfPahx\n-----END CERTIFICATE-----\n"
+	val gson = new Gson()
+	var Map<String, String> pubKeys = null
+	
+	//Public certs available at: https://www.googleapis.com/oauth2/v1/certs
+	new(Vertx vertx, String audience) {
+		this.audience = audience
+		
+		val httpOptions = new HttpClientOptions => [
+			defaultHost = 'www.googleapis.com'
+			defaultPort = 443
+			ssl = true
+		]
+		
+		val httpClient = vertx.createHttpClient(httpOptions)
+		logger.info('Loading google public certs...')
+		httpClient.getNow('/oauth2/v1/certs')[ resp |
+			if (resp.statusCode != 200) {
+				logger.error('Fail to load google public certs: {}', resp.statusMessage)
+				throw new RuntimeException('Fail to load google public certs!')
+			}
+			
+			resp.bodyHandler[
+				val body = new String(bytes, 'UTF8')
+				pubKeys = gson.fromJson(body, Map)
+			]
+		]
 	}
 	
 	override getPubKey(String kid) { pubKeys.get(kid) }

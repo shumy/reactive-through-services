@@ -1,0 +1,16 @@
+{
+  "name": "rts-ts-client",
+  "version": "1.0.0",
+  "license": "Apache-2.0",
+  "scripts": {
+    "start": "tsc && concurrently \"npm run tsc:w\" ",
+    "postinstall": "typings install",
+    "tsc": "tsc",
+    "tsc:w": "tsc -w"
+  },
+  "main": "./dist/rts-ts-client.js",
+  "typings": "./dist/rts-ts-client.d.ts",
+  "dependencies": {
+    "rxjs": "^5.0.0-beta.6"
+  }
+}

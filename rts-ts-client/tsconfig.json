@@ -1,0 +1,23 @@
+{
+	"compileOnSave": true,
+	"compilerOptions": {
+		"target": "es5",
+		"module": "system",
+		"moduleResolution": "node",
+		"removeComments": true,
+		"preserveConstEnums": true,
+		"emitDecoratorMetadata": true,
+		"experimentalDecorators": true,
+		"noImplicitAny": false,
+		"sourceMap": true,
+    "declaration": true,
+    "outDir":"dist"
+	},
+	"exclude": [
+		"node_modules"
+	],
+	"files": [
+		"rts-ts-client.ts",
+		"typings/index.d.ts"
+	]
+}

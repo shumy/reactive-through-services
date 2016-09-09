@@ -5,6 +5,10 @@
 
 .vertx/
 .settings/
+
 target/
+dist/
 xtend-gen/
 downloads/
+node_modules/
+typings/
