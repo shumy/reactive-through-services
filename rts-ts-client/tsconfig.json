@@ -10,8 +10,8 @@
 		"experimentalDecorators": true,
 		"noImplicitAny": false,
 		"sourceMap": true,
-    "declaration": true,
-    "outDir":"dist"
+		"declaration": true,
+		"outDir":"dist"
 	},
 	"exclude": [
 		"node_modules"

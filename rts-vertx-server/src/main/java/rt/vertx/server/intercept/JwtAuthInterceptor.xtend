@@ -4,6 +4,7 @@ import com.auth0.jwt.JWTVerifier
 import com.auth0.jwt.pem.X509CertUtils
 import com.google.gson.Gson
 import java.util.Base64
+import java.util.List
 import rt.data.Data
 import rt.data.IDataRepository
 import rt.pipeline.IComponent
@@ -38,8 +39,8 @@ class JwtAuthInterceptor implements IComponent {
 		if (headers != null && headers.get('auth') == 'jwt') {
 			try {
 				val token = headers.get('token')
-				
 				val header = getHeader(token)
+				
 				val pubKey = provider.getPubKey(header.kid)
 				if (pubKey === null)
 					throw new ServiceException(500, 'Public key failed for kid: ' + header.kid)
@@ -49,7 +50,10 @@ class JwtAuthInterceptor implements IComponent {
 				val jwtVerifier = new JWTVerifier(cert.publicKey, provider.audience, provider.issuer)
 				val jwt = jwtVerifier.verify(token)
 				
-				ctx.process(jwt.get('email') as String)
+				val email = jwt.get('email') as String
+				val groups = jwt.get('groups') as List<String>
+				
+				ctx.process(email, groups)
 			} catch(Exception ex) {
 				ex.printStackTrace
 				ctx.fail(new ServiceException(401, '''Token validation fail'''))
@@ -61,18 +65,22 @@ class JwtAuthInterceptor implements IComponent {
 		ctx.next
 	}
 	
-	def void process(PipeContext ctx, String user) {
-		println('Auth-User: ' + user)
-
+	def void process(PipeContext ctx, String user, List<String> groups) {
+		println('''Auth-User: «user»''')
+		
+		val userInfo = new UserInfo(user, groups)
+		ctx.resource.object(UserInfo, userInfo)
+		ctx.object(UserInfo, userInfo)
+		
+		/*
 		val userInfo = users.get(user)
 		if (userInfo != null) {
 			ctx.resource.object(UserInfo, userInfo)
 			ctx.object(UserInfo, userInfo)
-		}
+		}*/
 		
 		ctx.next
 	}
-	
 	
 	
 	private def getHeader(String token) {

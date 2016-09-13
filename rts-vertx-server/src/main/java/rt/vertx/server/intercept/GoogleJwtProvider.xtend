@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory
 class GoogleJwtProvider implements JwtProvider {
 	static val logger = LoggerFactory.getLogger(GoogleJwtProvider)
 	
-	@Accessors val issuer = 'accounts.google.com'
+	@Accessors val issuer = 'https://accounts.google.com'
 	@Accessors val String audience
 	
 	val gson = new Gson()
