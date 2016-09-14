@@ -38,12 +38,13 @@ class JwtAuthInterceptor implements IComponent {
 	}
 	
 	override apply(PipeContext ctx) {
+		/* opens a back-door after user is logged out!
 		val userInfo = ctx.resource.object(UserInfo)
 		if (userInfo != null) {
 			ctx.object(UserInfo, userInfo)
 			ctx.next
 			return
-		}
+		}*/
 		
 		val headers = ctx.object(CtxHeaders)
 		if (headers != null && headers.get('auth') == 'jwt') {
