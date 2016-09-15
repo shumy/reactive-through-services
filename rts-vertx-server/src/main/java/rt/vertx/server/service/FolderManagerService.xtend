@@ -15,7 +15,7 @@ import rt.plugin.service.an.Context
 import rt.plugin.service.an.Public
 import rt.plugin.service.an.Service
 
-@Service(metadata = false)
+@Service
 @Data(metadata = false)
 class FolderManagerService {
 	static val logger = LoggerFactory.getLogger(FolderManagerService)
