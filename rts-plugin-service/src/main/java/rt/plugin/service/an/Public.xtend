@@ -8,5 +8,5 @@ import java.lang.annotation.Retention
 annotation Public {
 	Class<?> retType = Void
 	boolean notif = false
-	boolean async = false
+	boolean worker = false
 }

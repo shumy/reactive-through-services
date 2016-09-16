@@ -32,6 +32,7 @@ import rt.plugin.service.descriptor.DMethod
 import rt.plugin.service.descriptor.IDescriptor
 import rt.plugin.service.ServiceUtils
 import rt.plugin.service.CtxHeaders
+import rt.async.promise.Promise
 
 @Target(TYPE)
 @Active(ServiceProcessor)
@@ -70,7 +71,7 @@ class ServiceProcessor extends AbstractClassProcessor {
 		for (MutableMethodDeclaration meth: publicMethods) {
 			val annoPublicRef = meth.findAnnotation(Public.findTypeGlobally)
 			val isNotification = annoPublicRef.getBooleanValue('notif')
-			val isAsync = annoPublicRef.getBooleanValue('async')
+			val isWorker = annoPublicRef.getBooleanValue('worker')
 			
 			//make a copy because the parameters will be changed
 			val methParameters = meth.parameters.map[it as MutableParameterDeclaration].toList
@@ -80,7 +81,6 @@ class ServiceProcessor extends AbstractClassProcessor {
 				meth.addParameter(getStringValue('name'), getClassValue('type'))
 			]
 			
-			val retType = meth.returnType.simpleName
 			val hasIntervalSimbol = methParameters.size != 0 && ctxArgs.size != 0
 			switchCases.add('''
 				case "«meth.simpleName»":
@@ -88,34 +88,24 @@ class ServiceProcessor extends AbstractClassProcessor {
 						final «List.canonicalName»<Object> «meth.simpleName»Args = msg.args(«FOR param: methParameters SEPARATOR ','» «param.type.simpleName.replaceFirst('<.*>', '')».class«ENDFOR» );
 					«ENDIF»
 					
-					«IF isAsync»
+					«IF isWorker»
 						«AsyncUtils.canonicalName».task(() -> {
-							«IF retType != 'void'»final Object «meth.simpleName»Ret = «ENDIF»«meth.simpleName»(«addMessageArgs(meth.simpleName + 'Args', methParameters)»«IF hasIntervalSimbol»,«ENDIF»«meth.addContextArgs(ctx, ctxArgs)»);
-							«IF retType != 'void'»
+							«meth.addReturnType(ctx)»
+								«meth.addMethodCall(methParameters, hasIntervalSimbol, ctxArgs, ctx)»
+							«IF meth.returnType.wrapperIfPrimitive != Void.newTypeReference»
 								return «meth.simpleName»Ret;
 							«ELSE»
 								return null;
 							«ENDIF»
 						}).then(res -> {
-							«IF !isNotification»
-								«IF retType != 'void'»
-									ctx.replyOK(res);
-								«ELSE»
-									ctx.replyOK();
-								«ENDIF»
-							«ENDIF»
+							«meth.addReturnProcess(isNotification, 'res', ctx)»
 						}).error(err -> {
 							ctx.replyError(err);
 						});
 					«ELSE»
-						«IF retType != 'void'»final Object «meth.simpleName»Ret = «ENDIF»«meth.simpleName»(«addMessageArgs(meth.simpleName + 'Args', methParameters)»«IF hasIntervalSimbol»,«ENDIF»«meth.addContextArgs(ctx, ctxArgs)»);
-						«IF !isNotification»
-							«IF retType != 'void'»
-								ctx.replyOK(«meth.simpleName»Ret);
-							«ELSE»
-								ctx.replyOK();
-							«ENDIF»
-						«ENDIF»
+						«meth.addReturnType(ctx)»
+							«meth.addMethodCall(methParameters, hasIntervalSimbol, ctxArgs, ctx)»
+						«meth.addReturnProcess(isNotification, meth.simpleName + 'Ret', ctx)»
 					«ENDIF»
 					break;
 			''')
@@ -177,7 +167,7 @@ class ServiceProcessor extends AbstractClassProcessor {
 	
 	def getContextArgs(MutableMethodDeclaration meth, extension TransformationContext ctx) {
 		val ctxArgs = new LinkedList<AnnotationReference>
-
+		
 		meth.annotations.forEach[
 			if (annotationTypeDeclaration ==  Proxy.findTypeGlobally || annotationTypeDeclaration ==  Context.findTypeGlobally) {
 				ctxArgs.add(it)
@@ -190,7 +180,37 @@ class ServiceProcessor extends AbstractClassProcessor {
 		return ctxArgs
 	}
 	
-	def addContextArgs(MutableMethodDeclaration meth, extension TransformationContext ctx, List<AnnotationReference> ctxArgs) '''
+	def addReturnType(MethodDeclaration meth, extension TransformationContext ctx) '''
+		«IF meth.returnType.wrapperIfPrimitive != Void.newTypeReference»
+			«IF Promise.newTypeReference.isAssignableFrom(meth.returnType)»
+				final Promise<«meth.returnType.actualTypeArguments.get(0)»> «meth.simpleName»Ret =
+			«ELSE»
+				final Object «meth.simpleName»Ret =
+			«ENDIF»
+		«ENDIF»
+	'''
+	
+	def addMethodCall(MethodDeclaration meth, List<MutableParameterDeclaration> methParameters, boolean hasIntervalSimbol, List<AnnotationReference> ctxArgs, extension TransformationContext ctx) '''
+		«meth.simpleName»(«addMessageArgs(meth.simpleName + 'Args', methParameters)»«IF hasIntervalSimbol»,«ENDIF»«meth.addContextArgs(ctx, ctxArgs)»);
+	'''
+	
+	def addReturnProcess(MethodDeclaration meth, boolean isNotification, String varName, extension TransformationContext ctx) '''
+		«IF !isNotification»
+			«IF meth.returnType.wrapperIfPrimitive != Void.newTypeReference»
+				«IF Promise.newTypeReference.isAssignableFrom(meth.returnType)»
+					«varName»
+						.then(pRes -> «IF meth.returnType.actualTypeArguments.get(0) != Void.newTypeReference»ctx.replyOK(pRes)«ELSE»ctx.replyOK()«ENDIF»)
+						.error(pError -> ctx.replyError(pError));
+				«ELSE»
+					ctx.replyOK(«varName»);
+				«ENDIF»
+			«ELSE»
+				ctx.replyOK();
+			«ENDIF»
+		«ENDIF»
+	'''
+	
+	def addContextArgs(MethodDeclaration meth, extension TransformationContext ctx, List<AnnotationReference> ctxArgs) '''
 		«FOR annoRef: ctxArgs SEPARATOR ','»
 			«IF annoRef.annotationTypeDeclaration == Proxy.findTypeGlobally»
 				client.create("«annoRef.getSrvPath»", «annoRef.getClassValue('type')».class)

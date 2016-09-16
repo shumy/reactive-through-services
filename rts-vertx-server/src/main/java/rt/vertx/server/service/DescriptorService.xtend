@@ -22,27 +22,23 @@ class DescriptorService {
 	val Pipeline pipeline
 	
 	@Default('false') val boolean autoDetect
-	@Optional val List<String> services
-	
-	transient var List<String> _services
+	@Optional var List<String> services
 	
 	@Validation
 	def construct() {
-		if (!autoDetect && services == null)
+		if (!autoDetect && services === null)
 			throw new ValidationException('Service config are not optional with auto detection off!')
 		
 		if (autoDetect)
-			_services = pipeline.componentPaths.map[ replaceAll('srv:', '') ].filter[ pipeline.getService(it) instanceof IDescriptor ].toList
-		else
-			_services = services
+			services = pipeline.componentPaths.map[ replaceAll('srv:', '') ].filter[ pipeline.getService(it) instanceof IDescriptor ].toList
 	}
 	
 	@Public
-	def List<String> specs() { _services }
+	def List<String> specs() { services }
 	
 	@Public
 	def Spec srvSpec(String srvName) {
-		if (!_services.contains(srvName))
+		if (!services.contains(srvName))
 			throw new ServiceException(404, 'Service spec not found!')
 			
 		val desc = pipeline.getService(srvName) as IDescriptor

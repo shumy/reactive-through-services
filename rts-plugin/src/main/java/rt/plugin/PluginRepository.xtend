@@ -1,25 +1,23 @@
 package rt.plugin
 
-import org.eclipse.aether.RepositorySystem
-import org.apache.maven.repository.internal.MavenRepositorySystemUtils
-import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory
-import org.eclipse.aether.spi.connector.RepositoryConnectorFactory
-import org.eclipse.aether.transport.file.FileTransporterFactory
-import org.eclipse.aether.transport.http.HttpTransporterFactory
-import org.eclipse.aether.spi.connector.transport.TransporterFactory
-import rt.plugin.output.DefaultErrorHandler
-import org.eclipse.aether.repository.LocalRepository
-import rt.plugin.output.ConsoleTransferListener
-import rt.plugin.output.ConsoleRepositoryListener
-import org.eclipse.aether.util.graph.transformer.ConflictResolver
-import org.eclipse.aether.DefaultRepositorySystemSession
-import org.eclipse.aether.util.graph.manager.DependencyManagerUtils
-import org.eclipse.xtend.lib.annotations.Accessors
-import org.eclipse.aether.repository.RemoteRepository
-import java.util.HashMap
 import java.net.URL
 import java.net.URLClassLoader
+import java.util.HashMap
+import org.apache.maven.repository.internal.MavenRepositorySystemUtils
+import org.eclipse.aether.DefaultRepositorySystemSession
+import org.eclipse.aether.RepositorySystem
+import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory
+import org.eclipse.aether.repository.LocalRepository
+import org.eclipse.aether.repository.RemoteRepository
+import org.eclipse.aether.spi.connector.RepositoryConnectorFactory
+import org.eclipse.aether.spi.connector.transport.TransporterFactory
+import org.eclipse.aether.transport.file.FileTransporterFactory
+import org.eclipse.aether.transport.http.HttpTransporterFactory
+import org.eclipse.aether.util.graph.manager.DependencyManagerUtils
+import org.eclipse.aether.util.graph.transformer.ConflictResolver
+import org.eclipse.xtend.lib.annotations.Accessors
 import rt.plugin.config.PluginConfigFactory
+import rt.plugin.output.DefaultErrorHandler
 
 class PluginRepository {
 	@Accessors val plugins = new PluginList(this)

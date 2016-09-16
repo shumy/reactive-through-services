@@ -8,6 +8,8 @@ import rt.data.Optional
 import rt.plugin.service.an.Context
 import rt.plugin.service.an.Public
 import rt.plugin.service.an.Service
+import rt.data.Validation
+import rt.plugin.service.ServiceUtils
 
 @Service
 @Data(metadata = false)
@@ -34,8 +36,14 @@ class RemoteSubscriber {
 	public static val String ERROR 		= 'ev:err'
 	public static val String COMPLETE 	= 'ev:clp'
 	
+	transient var IPublisher publisher
+	
 	val String address
-	val IPublisher publisher
+	
+	@Validation
+	def void constructor() {
+		publisher = ServiceUtils.publisher
+	}
 	
 	def (Change) => void link() { return [ next ] }
 	

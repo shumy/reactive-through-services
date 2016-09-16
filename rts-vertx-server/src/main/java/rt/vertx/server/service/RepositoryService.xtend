@@ -4,14 +4,12 @@ import java.util.ArrayList
 import java.util.HashMap
 import java.util.List
 import java.util.Map
-import rt.async.pubsub.IPublisher
 import rt.async.pubsub.IResource
 import rt.data.Data
 import rt.data.Optional
 import rt.data.Repository
 import rt.data.Validation
 import rt.plugin.service.ServiceException
-import rt.plugin.service.ServiceUtils
 import rt.plugin.service.an.Context
 import rt.plugin.service.an.Public
 import rt.plugin.service.an.Service
@@ -20,14 +18,11 @@ import rt.plugin.service.an.Service
 @Data(metadata = false)
 class RepositoryService {
 	transient val dataRepos = new HashMap<String, Repository<?>>
-	transient var IPublisher publisher
 	
 	@Optional var List<String> repos
 	
 	@Validation
 	def void constructor() {
-		publisher = ServiceUtils.publisher
-		
 		if (repos === null)
 			repos = new ArrayList<String>
 		
@@ -76,7 +71,7 @@ class RepositoryService {
 	}
 	
 	private def void createDataRepo(String adr) {
-		val ro = RemoteSubscriber.B => [ address = adr publisher = this.publisher ]
+		val ro = RemoteSubscriber.B => [ address = adr ]
 		val repo = new Repository<Object>
 		repo.onChange = ro.link
 		
