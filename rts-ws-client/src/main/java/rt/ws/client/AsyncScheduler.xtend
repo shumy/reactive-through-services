@@ -15,12 +15,12 @@ class Task implements Delayed {
 	}
 	
 	override getDelay(TimeUnit unit) {
-		return atTime - System.currentTimeMillis 
+		return atTime - System.currentTimeMillis
 	}
 	
 	override compareTo(Delayed delayed) {
 		val t = delayed as Task
-		return (t.atTime - atTime) as int
+		return (atTime - t.atTime) as int
 	}
 }
 
@@ -32,7 +32,6 @@ class AsyncScheduler {
 	}
 	
 	def void run() {
-		AsyncUtils.set(new SchedulerAsyncUtils(this))
 		while (true) {
 			val task = queue.poll
 			if (task != null)
@@ -43,8 +42,8 @@ class AsyncScheduler {
 	static class SchedulerAsyncUtils extends AsyncUtils {
 		val AsyncScheduler scheduler
 		
-		new(AsyncScheduler scheduler) { this(scheduler, false, 3000L) }
-		new(AsyncScheduler scheduler, boolean isWorker) { this(scheduler, isWorker, 3000L) }
+		new(AsyncScheduler scheduler) { this(scheduler, false, 5000L) }
+		new(AsyncScheduler scheduler, boolean isWorker) { this(scheduler, isWorker, 5000L) }
 		new(AsyncScheduler scheduler, boolean isWorker, long timeout) {
 			super(isWorker, timeout)
 			this.scheduler = scheduler

@@ -19,7 +19,7 @@ abstract class AsyncResult {
 	
 	protected def void throwError(Throwable error) {
 		if (upStack === null) {
-			println('Unhandled error!')
+			error.printStackTrace
 			return
 		}
 		
