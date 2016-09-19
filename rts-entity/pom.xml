@@ -3,7 +3,7 @@
 	<parent>
 		<groupId>rts.core</groupId>
 		<artifactId>rts-core</artifactId>
-		<version>0.2.0</version>
+		<version>0.3.0</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<artifactId>rts-entity</artifactId>

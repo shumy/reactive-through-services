@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>rts.core</groupId>
 	<artifactId>rts-core</artifactId>
-	<version>0.2.0</version>
+	<version>0.3.0</version>
 	<packaging>pom</packaging>
 
 	<properties>
@@ -61,6 +61,7 @@
 	</build>
 
 	<modules>
+    <module>rts-async</module>
 		<module>rts-pipeline</module>
     <module>rts-data</module>
 		<module>rts-entity</module>
