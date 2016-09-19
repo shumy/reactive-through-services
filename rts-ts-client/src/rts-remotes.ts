@@ -28,7 +28,7 @@ export abstract class BaseObservable<D> extends Observable<D> implements EventPr
   process(cmd: CmdType, data: any) {
     if (cmd === 'ev:nxt') {
       this._onEvent(data)
-    } else if (cmd === 'ev:clp') {
+    } else if (cmd === 'ev:cpl') {
       this.sub.complete()
       this.reqCallback(this, 'complete')
     } else if (cmd === 'ev:err') {

@@ -1,5 +1,7 @@
+import { Observable, Subscriber } from 'rxjs/Rx';
+
 import { Pipeline, PipeResource } from './rts-pipeline'
-import { MessageBus, IMessage, TYP } from './rts-messagebus'
+import { MessageBus, Subscription, IMessage, TYP } from './rts-messagebus'
 import { IAuthManager } from './rts-auth'
 
 export interface IServiceClientFactory {
@@ -22,7 +24,7 @@ export class ClientRouter implements IServiceClientFactory {
     this.url = server + '?client=' + client
     this._serviceClient = new ServiceClient(this.bus, this.server, this.client)
 
-    this.bus.listener(server, _ => this.send(_))
+    this.bus.subscribe(server, _ => this.send(_))
     this.connect()
   }
 
@@ -134,6 +136,8 @@ export class ServiceClient {
               console.log('PROXY-REPLY: ', replyMsg)
               if (replyMsg.cmd === TYP.CMD_OK) {
                 resolve(replyMsg.res)
+              } else if (replyMsg.cmd === TYP.CMD_OBSERVABLE) {
+                resolve(new RemoteObservable(srvClient.bus, replyMsg.res))
               } else {
                 reject(replyMsg.res)
               }
@@ -144,5 +148,70 @@ export class ServiceClient {
     }
 
     return new Proxy({}, handler)
+  }
+}
+
+class RemoteObservable extends Observable<any> {
+  private data = []
+  private isComplete = false
+
+  private listener: Subscription
+  private sub: Subscriber<any>
+
+  constructor(bus: MessageBus, address: string) {
+    super(sub => {
+      this.sub = sub
+      
+      if (this.data.length !== 0) {
+        this.data.forEach(entry => {
+          if (entry[0] === true) {
+            this.sub.next(entry[1])
+          } else {
+            this.sub.error(entry[1])
+            this.listener.remove()
+          }
+        })
+      }
+
+      if (this.isComplete) {
+        this.sub.complete()
+        this.listener.remove()
+      }
+    })
+    
+    //TODO: timeout for responses? -> remove listener...
+    this.listener = bus.subscribe(address, msg => {
+      if (msg.cmd === TYP.CMD_OK) {
+        this.processNext(msg.res)
+      } else if (msg.cmd === TYP.CMD_COMPLETE) {
+        this.processComplete()
+      } else if (msg.cmd === TYP.CMD_ERROR) {
+        this.processError(msg.res)
+      }
+    })
+  }
+
+  private processNext(data: any) {
+    if (this.sub)
+      this.sub.next(data)
+    else
+      this.data.push([true, data])
+  }
+
+  private processComplete() {
+    if (this.sub) {
+      this.sub.complete()
+      this.listener.remove()
+    } else {
+      this.isComplete = true
+    }
+  }
+
+  private processError(error: any) {
+    if (this.sub) {
+      this.sub.error(error)
+      this.listener.remove()
+    } else
+      this.data.push([false, error])
   }
 }

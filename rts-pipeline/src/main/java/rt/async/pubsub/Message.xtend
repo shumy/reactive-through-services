@@ -5,14 +5,16 @@ import java.util.Map
 
 public class Message {
 	//message types...
-	public static val String PUBLISH = 'pub'
-	public static val String SEND = 'snd'
-	public static val String REPLY = 'rpl'
+	public static val String PUBLISH = 			'pub'
+	public static val String SEND = 			'snd'
+	public static val String REPLY = 			'rpl'
 	
 	//reply command types...
-	public static val String CMD_OK = 'ok'
-	public static val String CMD_ERROR = 'err'
-	public static val String CMD_TIMEOUT = 'tout'
+	public static val String CMD_OK = 			'ok'
+	public static val String CMD_OBSERVABLE = 	'obs'
+	public static val String CMD_COMPLETE = 	'cpl'
+	public static val String CMD_ERROR = 		'err'
+	public static val String CMD_TIMEOUT = 		'tout'
 	
 	// from all
 	public Long id

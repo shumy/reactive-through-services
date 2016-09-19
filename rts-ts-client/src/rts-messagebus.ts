@@ -1,5 +1,5 @@
 export class MessageBus {
-  listeners = new Map<string, Set<Listener>>()
+  listeners = new Map<string, Set<Subscription>>()
   private replyListeners = new Map<string, (msg: IMessage) => void>()
 
   publish(address: string, msg: IMessage) {
@@ -53,21 +53,21 @@ export class MessageBus {
     this.replyListeners.set(replyID, listener)
   }
 
-  listener(address: string, callback: (msg: IMessage) => void) {
+  subscribe(address: string, callback: (msg: IMessage) => void) {
     let holder = this.listeners.get(address)
     if (!holder) {
-      holder = new Set<Listener>()
+      holder = new Set<Subscription>()
       this.listeners.set(address, holder)
     }
 
-    let rtsListener = new Listener(this, address, callback)
+    let rtsListener = new Subscription(this, address, callback)
     holder.add(rtsListener)
 
     return rtsListener
   }
 }
 
-export class Listener {
+export class Subscription {
   constructor(private parent: MessageBus, private address: string, private callback: (msg: IMessage) => void) { }
 
   send(msg: IMessage) {
@@ -93,11 +93,13 @@ export interface IMessage {
 }
 
 export class TYP {
-  static PUBLISH = 'pub'
-  static SEND = 'snd'
-  static REPLY = 'rpl'
+  static PUBLISH =          'pub'
+  static SEND =             'snd'
+  static REPLY =            'rpl'
 
-  static CMD_OK = 'ok'
-  static CMD_ERROR = 'err'
-  static CMD_TIMEOUT = 'tout'
+  static CMD_OK =           'ok'
+  static CMD_OBSERVABLE =   'obs'
+  static CMD_COMPLETE =     'cpl'
+  static CMD_ERROR =        'err'
+  static CMD_TIMEOUT =      'tout'
 }

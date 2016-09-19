@@ -1,4 +1,4 @@
-import { MessageBus, Listener, IMessage, TYP } from './rts-messagebus'
+import { MessageBus, Subscription, IMessage, TYP } from './rts-messagebus'
 
 export class Pipeline {
   private _failHandler: (String) => void = null
@@ -49,7 +49,7 @@ export class Pipeline {
 }
 
 export class PipeResource {
-  subscriptions = new Map<string, Listener>()
+  subscriptions = new Map<string, Subscription>()
 
   constructor(private pipeline: Pipeline, private client: string, private sendCallback: (msg: IMessage) => void, private closeCallback: () => void) {
     console.log('RESOURCE-CREATE ', this.client)
@@ -68,7 +68,7 @@ export class PipeResource {
       return false
 
     console.log('RESOURCE-SUBSCRIBE ', address)
-    let listener = this.pipeline.mb.listener(address, this.sendCallback)
+    let listener = this.pipeline.mb.subscribe(address, this.sendCallback)
 
     this.subscriptions.set(address, listener)
     return true

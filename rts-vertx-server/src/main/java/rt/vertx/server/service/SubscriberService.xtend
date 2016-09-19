@@ -34,7 +34,7 @@ class RemoteSubscriber {
 	
 	public static val String NEXT 		= 'ev:nxt'
 	public static val String ERROR 		= 'ev:err'
-	public static val String COMPLETE 	= 'ev:clp'
+	public static val String COMPLETE 	= 'ev:cpl'
 	
 	transient var IPublisher publisher
 	

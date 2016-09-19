@@ -18,6 +18,8 @@ import org.eclipse.xtend.lib.macro.declaration.MutableParameterDeclaration
 import org.eclipse.xtend.lib.macro.declaration.TypeReference
 import org.eclipse.xtend.lib.macro.declaration.Visibility
 import rt.async.AsyncUtils
+import rt.async.observable.Observable
+import rt.async.promise.Promise
 import rt.async.pubsub.Message
 import rt.data.schema.SProperty
 import rt.data.schema.SType
@@ -26,13 +28,12 @@ import rt.pipeline.pipe.PipeContext
 import rt.plugin.config.PluginConfig
 import rt.plugin.config.PluginConfigFactory
 import rt.plugin.config.PluginEntry
+import rt.plugin.service.CtxHeaders
 import rt.plugin.service.IServiceClientFactory
 import rt.plugin.service.ServiceClient
+import rt.plugin.service.ServiceUtils
 import rt.plugin.service.descriptor.DMethod
 import rt.plugin.service.descriptor.IDescriptor
-import rt.plugin.service.ServiceUtils
-import rt.plugin.service.CtxHeaders
-import rt.async.promise.Promise
 
 @Target(TYPE)
 @Active(ServiceProcessor)
@@ -97,11 +98,12 @@ class ServiceProcessor extends AbstractClassProcessor {
 							«ELSE»
 								return null;
 							«ENDIF»
-						}).then(res -> {
-							«meth.addReturnProcess(isNotification, 'res', ctx)»
-						}).error(err -> {
-							ctx.replyError(err);
-						});
+						}).then(
+							res -> {
+								«meth.addReturnProcess(isNotification, 'res', ctx)»
+							},
+							err -> ctx.replyError(err)
+						);
 					«ELSE»
 						«meth.addReturnType(ctx)»
 							«meth.addMethodCall(methParameters, hasIntervalSimbol, ctxArgs, ctx)»
@@ -184,6 +186,8 @@ class ServiceProcessor extends AbstractClassProcessor {
 		«IF meth.returnType.wrapperIfPrimitive != Void.newTypeReference»
 			«IF Promise.newTypeReference.isAssignableFrom(meth.returnType)»
 				final Promise<«meth.returnType.actualTypeArguments.get(0)»> «meth.simpleName»Ret =
+			«ELSEIF Observable.newTypeReference.isAssignableFrom(meth.returnType)»
+				final Observable<«meth.returnType.actualTypeArguments.get(0)»> «meth.simpleName»Ret =
 			«ELSE»
 				final Object «meth.simpleName»Ret =
 			«ENDIF»
@@ -198,9 +202,18 @@ class ServiceProcessor extends AbstractClassProcessor {
 		«IF !isNotification»
 			«IF meth.returnType.wrapperIfPrimitive != Void.newTypeReference»
 				«IF Promise.newTypeReference.isAssignableFrom(meth.returnType)»
-					«varName»
-						.then(pRes -> «IF meth.returnType.actualTypeArguments.get(0) != Void.newTypeReference»ctx.replyOK(pRes)«ELSE»ctx.replyOK()«ENDIF»)
-						.error(pError -> ctx.replyError(pError));
+					«varName».then(
+						pRes -> «IF meth.returnType.actualTypeArguments.get(0) != Void.newTypeReference»ctx.replyOK(pRes)«ELSE»ctx.replyOK()«ENDIF»,
+						pError -> ctx.replyError(pError)
+					);
+				«ELSEIF Observable.newTypeReference.isAssignableFrom(meth.returnType)»
+					final String «varName»UUID = UUID.randomUUID().toString();
+					ctx.replyObservable(«varName»UUID);
+					«varName».subscribe(
+						oNext -> ctx.publishNext(«varName»UUID, oNext),
+						() -> ctx.publishComplete(«varName»UUID),
+						pError -> ctx.publishError(«varName»UUID, pError)
+					);
 				«ELSE»
 					ctx.replyOK(«varName»);
 				«ENDIF»

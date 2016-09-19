@@ -125,6 +125,17 @@ class PipeContext {
 				cmd = Message.CMD_OK
 				result = resultObj
 			]
+			
+			reply(reply)
+		}
+	}
+	
+	def void replyObservable(String uuid) {
+		if(!inFail) {
+			val reply = new Message => [
+				cmd = Message.CMD_OBSERVABLE
+				result = "evt:" + uuid
+			]
 	
 			reply(reply)
 		}
@@ -142,6 +153,54 @@ class PipeContext {
 			
 			logger.error('REPLY-ERROR {}', ex)
 			reply(reply)
+		}
+	}
+	
+	
+	def void publish(Message pub) {
+		if(!inFail) {
+			pub => [
+				id = message.id
+				clt = message.clt
+				typ = Message.PUBLISH
+			]
+			
+			resource.send(pub)
+		}
+	}
+	
+	def void publishNext(String uuid, Object resultObj) {
+		if(!inFail) {
+			val pub = new Message => [
+				cmd = Message.CMD_OK
+				path = 'evt:' + uuid
+				result = resultObj
+			]
+			
+			resource.send(pub)
+		}
+	}
+	
+	def void publishComplete(String uuid) {
+		if(!inFail) {
+			val pub = new Message => [
+				cmd = Message.CMD_COMPLETE
+				path = 'evt:' + uuid
+			]
+			
+			resource.send(pub)
+		}
+	}
+	
+	def void publishError(String uuid, Throwable ex) {
+		if(!inFail) {
+			val pub = new Message => [
+				cmd = Message.CMD_ERROR
+				path = 'evt:' + uuid
+				result = ex
+			]
+			
+			resource.send(pub)
 		}
 	}
 	
