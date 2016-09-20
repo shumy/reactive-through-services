@@ -1,4 +1,4 @@
-package rt.vertx.server.service
+package rt.utils.service
 
 import java.util.HashMap
 import java.util.List

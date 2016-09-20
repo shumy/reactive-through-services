@@ -1,4 +1,4 @@
-package rt.vertx.server.service
+package rt.utils.service
 
 import rt.data.Data
 import rt.plugin.service.an.Service

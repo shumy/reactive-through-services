@@ -1,4 +1,4 @@
-package rt.vertx.server.service
+package rt.utils.service
 
 import rt.async.AsyncUtils
 import rt.async.pubsub.IPublisher
