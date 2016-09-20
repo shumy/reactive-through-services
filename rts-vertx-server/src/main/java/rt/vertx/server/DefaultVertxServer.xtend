@@ -5,12 +5,13 @@ import io.vertx.core.http.HttpServer
 import io.vertx.core.http.HttpServerOptions
 import org.eclipse.xtend.lib.annotations.Accessors
 import rt.async.AsyncUtils
+import rt.async.pubsub.IMessageBus
 import rt.pipeline.DefaultMessageConverter
 import rt.pipeline.pipe.Pipeline
 import rt.vertx.server.web.WebRouter
 import rt.vertx.server.ws.WsRouter
-import rt.async.pubsub.IMessageBus
-import rt.plugin.service.ServiceUtils
+
+import static rt.async.AsyncUtils.*
 
 class DefaultVertxServer {
 	@Accessors val HttpServer server
@@ -36,7 +37,7 @@ class DefaultVertxServer {
 		this.webRouter = new WebRouter(this, webBaseRoute)
 		
 		AsyncUtils.set(new VertxAsyncUtils(vertx))
-		ServiceUtils.publisher = pipeline.mb
+		AsyncUtils.publisher = pipeline.mb
 	}
 	
 	def void listen(int port) {

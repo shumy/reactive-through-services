@@ -4,14 +4,14 @@
 	<artifactId>rts-core</artifactId>
 	<version>0.3.0</version>
 	<packaging>pom</packaging>
-
+	
 	<properties>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<xtendVersion>2.10.0</xtendVersion>
 	</properties>
-
+	
 	<dependencies>
 		<dependency>
 			<groupId>org.eclipse.xtend</groupId>
@@ -23,7 +23,7 @@
 			<artifactId>slf4j-api</artifactId>
 			<version>1.7.21</version>
 		</dependency>
-
+		
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
@@ -31,14 +31,14 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
-
+	
 	<build>
 		<resources>
 			<resource>
 				<directory>src/main/resources</directory>
 			</resource>
 		</resources>
-
+		
 		<plugins>
 			<plugin>
 				<groupId>org.eclipse.xtend</groupId>
@@ -59,11 +59,11 @@
 			</plugin>
 		</plugins>
 	</build>
-
+	
 	<modules>
-    <module>rts-async</module>
+		<module>rts-async</module>
 		<module>rts-pipeline</module>
-    <module>rts-data</module>
+		<module>rts-data</module>
 		<module>rts-entity</module>
 		<module>rts-plugin-config</module>
 		<module>rts-plugin</module>

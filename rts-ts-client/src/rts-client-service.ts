@@ -191,11 +191,11 @@ class RemoteObservable extends Observable<any> {
     })
   }
 
-  private processNext(data: any) {
+  private processNext(item: any) {
     if (this.sub)
-      this.sub.next(data)
+      this.sub.next(item)
     else
-      this.data.push([true, data])
+      this.data.push([true, item])
   }
 
   private processComplete() {

@@ -8,6 +8,7 @@ import org.eclipse.xtend.lib.annotations.Accessors
 import org.java_websocket.client.WebSocketClient
 import org.java_websocket.handshake.ServerHandshake
 import org.slf4j.LoggerFactory
+import rt.async.AsyncUtils
 import rt.async.pubsub.ISubscription
 import rt.async.pubsub.Message
 import rt.pipeline.DefaultMessageConverter
@@ -17,9 +18,9 @@ import rt.pipeline.pipe.channel.IPipeChannel.PipeChannelInfo
 import rt.pipeline.pipe.use.ChannelService
 import rt.plugin.service.IServiceClientFactory
 import rt.plugin.service.ServiceClient
-import rt.plugin.service.ServiceUtils
-import rt.async.AsyncUtils
 import rt.ws.client.AsyncScheduler.SchedulerAsyncUtils
+
+import static rt.async.AsyncUtils.*
 
 class ClientRouter implements IServiceClientFactory {
 	static val logger = LoggerFactory.getLogger('CLIENT-ROUTER')
@@ -58,7 +59,7 @@ class ClientRouter implements IServiceClientFactory {
 		pipeline.mb.subscribe(server)[ send ]
 		
 		AsyncUtils.set(new SchedulerAsyncUtils(scheduler))
-		ServiceUtils.publisher = pipeline.mb
+		AsyncUtils.publisher = pipeline.mb
 	}
 	
 	def <T> T createProxy(String srvName, Class<T> proxy) {

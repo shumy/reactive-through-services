@@ -1,8 +1,8 @@
 package rt.async
 
-abstract class AsyncResult {
+abstract class AsyncResult<R> {
 	protected var boolean isComplete = false
-	protected var AsyncResult upStack = null
+	protected var AsyncResult<?> upStack = null
 	
 	protected var (Throwable) => void onReject = null
 	
@@ -10,11 +10,30 @@ abstract class AsyncResult {
 		isComplete =  true
 		
 		if (onReject !== null) {
-			AsyncStack.push(this)
-			onReject.apply(error)
-			AsyncStack.pop
+			try {
+				AsyncStack.push(this)
+				onReject.apply(error)
+				AsyncStack.pop
+			} catch (Throwable ex) {
+				AsyncStack.pop
+				throwError(ex)
+			}
 		} else
 			throwError(error)
+	}
+	
+	protected def void init((Throwable) => void onReject) {
+		this.upStack = AsyncStack.peek
+		this.onReject = onReject
+		
+		try {
+			AsyncStack.push(this)
+			invoke(this as R)
+			AsyncStack.pop
+		} catch (Throwable error) {
+			AsyncStack.pop
+			reject(error)
+		}
 	}
 	
 	protected def void throwError(Throwable error) {
@@ -25,4 +44,6 @@ abstract class AsyncResult {
 		
 		upStack.reject(error)
 	}
+	
+	def void invoke(R sub)
 }

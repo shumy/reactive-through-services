@@ -7,6 +7,7 @@ import org.eclipse.xtend.lib.macro.Active
 import org.eclipse.xtend.lib.macro.TransformationContext
 import org.eclipse.xtend.lib.macro.declaration.MutableInterfaceDeclaration
 import rt.async.promise.Promise
+import rt.async.observable.Observable
 
 @Target(TYPE)
 @Retention(RUNTIME)
@@ -32,7 +33,12 @@ class ServiceProxyProcessor extends AbstractInterfaceProcessor {
 					proxyMeth.returnType = Promise.newTypeReference(interMeth.returnType)
 				
 				val anRef = Public.newAnnotationReference[
-					setClassValue('retType', interMeth.returnType)
+					val retType = if (Observable.newTypeReference.isAssignableFrom(interMeth.returnType))
+							interMeth.returnType.actualTypeArguments.get(0)
+						else 
+							interMeth.returnType
+					
+					setClassValue('retType', retType)
 					setBooleanValue('notif', isNotification)
 				]
 				

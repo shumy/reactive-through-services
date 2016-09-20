@@ -1,15 +1,15 @@
 package rt.vertx.server.service
 
+import rt.async.AsyncUtils
 import rt.async.pubsub.IPublisher
 import rt.async.pubsub.IResource
 import rt.data.Change
 import rt.data.Data
 import rt.data.Optional
+import rt.data.Validation
 import rt.plugin.service.an.Context
 import rt.plugin.service.an.Public
 import rt.plugin.service.an.Service
-import rt.data.Validation
-import rt.plugin.service.ServiceUtils
 
 @Service
 @Data(metadata = false)
@@ -42,7 +42,7 @@ class RemoteSubscriber {
 	
 	@Validation
 	def void constructor() {
-		publisher = ServiceUtils.publisher
+		publisher = AsyncUtils.publisher
 	}
 	
 	def (Change) => void link() { return [ next ] }

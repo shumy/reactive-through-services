@@ -34,6 +34,7 @@ import rt.plugin.service.ServiceClient
 import rt.plugin.service.ServiceUtils
 import rt.plugin.service.descriptor.DMethod
 import rt.plugin.service.descriptor.IDescriptor
+import java.util.UUID
 
 @Target(TYPE)
 @Active(ServiceProcessor)
@@ -207,7 +208,7 @@ class ServiceProcessor extends AbstractClassProcessor {
 						pError -> ctx.replyError(pError)
 					);
 				«ELSEIF Observable.newTypeReference.isAssignableFrom(meth.returnType)»
-					final String «varName»UUID = UUID.randomUUID().toString();
+					final String «varName»UUID = «UUID.canonicalName».randomUUID().toString();
 					ctx.replyObservable(«varName»UUID);
 					«varName».subscribe(
 						oNext -> ctx.publishNext(«varName»UUID, oNext),

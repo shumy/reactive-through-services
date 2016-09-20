@@ -3,23 +3,16 @@ package rt.async.observable
 import rt.async.AsyncResult
 import rt.async.AsyncStack
 
-abstract class ObservableResult<T> extends AsyncResult {
+abstract class ObservableResult<T> extends AsyncResult<ObservableResult<T>> {
 	var (T) => void onNext = null
 	var () => void onComplete = null
 	
 	def observe() { new Observable<T>(this) }
 	
-	def subscribe((T) => void onNext, () => void onComplete, (Throwable) => void onReject) {
-		this.upStack = AsyncStack.peek
+	def void subscribe((T) => void onNext, () => void onComplete, (Throwable) => void onReject) {
 		this.onNext = onNext
 		this.onComplete = onComplete
-		this.onReject = onReject
-		
-		try {
-			invoke(this)
-		} catch (Throwable error) {
-			reject(error)
-		}
+		init(onReject)
 	}
 	
 	def void next(T data) {
@@ -49,6 +42,4 @@ abstract class ObservableResult<T> extends AsyncResult {
 			}
 		}
 	}
-	
-	def void invoke(ObservableResult<T> sub)
 }

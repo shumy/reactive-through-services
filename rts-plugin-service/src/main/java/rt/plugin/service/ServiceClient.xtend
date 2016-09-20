@@ -1,15 +1,18 @@
 package rt.plugin.service
 
 import java.lang.reflect.Proxy
+import java.util.HashMap
 import java.util.Map
 import java.util.concurrent.atomic.AtomicLong
 import org.slf4j.LoggerFactory
 import rt.async.AsyncUtils
+import rt.async.observable.ObservableResult
 import rt.async.promise.PromiseResult
 import rt.async.pubsub.IMessageBus
+import rt.async.pubsub.ISubscription
 import rt.async.pubsub.Message
 import rt.plugin.service.an.Public
-import java.util.HashMap
+import java.util.ArrayList
 
 class ServiceClient {
 	static val logger = LoggerFactory.getLogger('PROXY')
@@ -70,10 +73,94 @@ class ServiceClient {
 				logger.debug('REPLY id:{} clt:{} cmd:{}', replyMsg.id, replyMsg.clt, replyMsg.cmd)
 				if (replyMsg.cmd == Message.CMD_OK) {
 					result.resolve(replyMsg.result(anPublic.retType))
+				} else if (replyMsg.cmd == Message.CMD_OBSERVABLE) {
+					result.resolve(new RemoteObservable(bus, anPublic.retType, replyMsg.result(String)).observe)
 				} else {
 					val error = replyMsg.result(RuntimeException)
 					result.reject(error)
 				}
 			]
+	}
+}
+
+class RemoteObservable<T> extends ObservableResult<T> {
+	private val IMessageBus bus
+	private val Class<T> retType
+	private val String address
+	
+	private val data = new ArrayList<Entry>
+	private val ISubscription listener
+	
+	private var boolean isReady = false
+	private var boolean isEnded = false
+	
+	new(IMessageBus bus, Class<T> retType, String address) {
+		this.bus = bus
+		this.retType = retType
+		this.address = address
+		
+		//TODO: timeout for responses? -> remove listener...
+		this.listener = bus.subscribe(address, [
+			if (cmd == Message.CMD_OK) {
+				this.processNext(result(retType))
+			} else if (cmd == Message.CMD_COMPLETE) {
+				this.processComplete()
+			} else if (cmd === Message.CMD_ERROR) {
+				this.processError(result(Throwable))
+			}
+		])
+	}
+	
+	override invoke(ObservableResult<T> sub) {
+		this.isReady = true
+		
+		if (data.size !== 0) {
+			data.forEach[
+				if (isValue === true) {
+					next(value as T)
+				} else {
+					listener.remove
+					reject(value as Throwable)
+				}
+			]
+		}
+
+		if (isEnded) {
+			complete
+			listener.remove
+		}
+	}
+	
+	private def processNext(T item) {
+		if (isReady)
+			next(item)
+		else
+			this.data.add(new Entry(true, item))
+	}
+	
+	private def processComplete() {
+		if (isReady) {
+			listener.remove
+			complete
+		} else
+			isEnded = true
+	}
+	
+	private def processError(Throwable error) {
+		if (isReady) {
+			listener.remove
+			reject(error)
+		} else
+			this.data.add(new Entry(false, error))
+	}
+	
+	static class Entry {
+		val boolean isValue
+		val Object value
+		
+		new(boolean isValue, Object value) {
+			this.isValue = isValue
+			this.value = value
+		}
 	}
 }

@@ -3,21 +3,14 @@ package rt.async.promise
 import rt.async.AsyncStack
 import rt.async.AsyncResult
 
-abstract class PromiseResult<T> extends AsyncResult {
+abstract class PromiseResult<T> extends AsyncResult<PromiseResult<T>> {
 	var (T) => void onResolve = null
 	
 	def promise() { new Promise<T>(this) }
 	
-	def subscribe((T) => void onResolve, (Throwable) => void onReject) {
-		this.upStack = AsyncStack.peek
+	def void subscribe((T) => void onResolve, (Throwable) => void onReject) {
 		this.onResolve = onResolve
-		this.onReject = onReject
-		
-		try {
-			invoke(this)
-		} catch (Throwable error) {
-			reject(error)
-		}
+		init(onReject)
 	}
 	
 	def void resolve(T data) {
@@ -34,6 +27,4 @@ abstract class PromiseResult<T> extends AsyncResult {
 			}
 		}
 	}
-	
-	def void invoke(PromiseResult<T> sub)
 }
