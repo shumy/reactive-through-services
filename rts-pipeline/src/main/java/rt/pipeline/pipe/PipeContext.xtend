@@ -160,7 +160,6 @@ class PipeContext {
 	def void publish(Message pub) {
 		if(!inFail) {
 			pub => [
-				id = message.id
 				clt = message.clt
 				typ = Message.PUBLISH
 			]
@@ -177,7 +176,7 @@ class PipeContext {
 				result = resultObj
 			]
 			
-			resource.send(pub)
+			publish(pub)
 		}
 	}
 	
@@ -188,7 +187,7 @@ class PipeContext {
 				path = 'evt:' + uuid
 			]
 			
-			resource.send(pub)
+			publish(pub)
 		}
 	}
 	
@@ -200,7 +199,7 @@ class PipeContext {
 				result = ex
 			]
 			
-			resource.send(pub)
+			publish(pub)
 		}
 	}
 	

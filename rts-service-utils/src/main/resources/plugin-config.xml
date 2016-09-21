@@ -1,11 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <config>
     <entries>
-        <entry type="srv" ref="rt.vertx.server.service.RepositoryService"/>
-        <entry type="srv" ref="rt.vertx.server.service.DescriptorService"/>
-        <entry type="srv" ref="rt.vertx.server.service.UsersService"/>
-        <entry type="srv" ref="rt.vertx.server.service.RouterService"/>
-        <entry type="srv" ref="rt.vertx.server.service.SubscriberService"/>
         <entry type="srv" ref="rt.utils.service.DescriptorService"/>
         <entry type="srv" ref="rt.utils.service.RepositoryService"/>
         <entry type="srv" ref="rt.utils.service.RouterService"/>
