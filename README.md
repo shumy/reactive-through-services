@@ -1,4 +1,4 @@
-# real-time-services
+# reactive-through-services
 
 Using Xtend Active Annotations and Vertx.io server.
 Main objective of this project is to define bidirectional services in the form of, ex:
