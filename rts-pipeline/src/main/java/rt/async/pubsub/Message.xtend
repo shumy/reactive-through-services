@@ -14,7 +14,6 @@ public class Message {
 	public static val String CMD_OBSERVABLE = 	'obs'
 	public static val String CMD_COMPLETE = 	'cpl'
 	public static val String CMD_ERROR = 		'err'
-	public static val String CMD_TIMEOUT = 		'tout'
 	
 	// from all
 	public Long id

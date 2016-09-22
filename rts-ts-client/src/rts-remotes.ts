@@ -26,12 +26,12 @@ export abstract class BaseObservable<D> extends Observable<D> implements EventPr
   }
 
   process(cmd: CmdType, data: any) {
-    if (cmd === 'ev:nxt') {
+    if (cmd === 'ev:nxt' as CmdType) {
       this._onEvent(data)
-    } else if (cmd === 'ev:cpl') {
+    } else if (cmd === 'ev:cpl' as CmdType) {
       this.sub.complete()
       this.reqCallback(this, 'complete')
-    } else if (cmd === 'ev:err') {
+    } else if (cmd === 'ev:err' as CmdType) {
       this.sub.error(data)
       //TODO: disconnect on error? (optional)
     }

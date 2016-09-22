@@ -5,13 +5,16 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.HashMap
+import java.util.Map
 import org.slf4j.LoggerFactory
 import rt.data.Data
 import rt.data.Default
+import rt.data.Optional
 import rt.pipeline.PathValidator
 import rt.plugin.service.ServiceException
 import rt.plugin.service.an.Public
 import rt.plugin.service.an.Service
+import rt.data.Validation
 
 @Service(metadata = false)
 @Data(metadata = false)
@@ -24,25 +27,18 @@ class WebFileService {
 	@Default('false') val boolean resource
 	@Default('false') val boolean cache
 	
+	@Optional var Map<String, String> replace
+	
 	val String folder
 	
-	/*@Public(notif = true)
-	def void notify(HttpServerRequest req) {
-		val filePath = folder + req.path.filePath
-		
-		logger.debug(filePath)
-		req.response.sendFile(filePath, 0, Long.MAX_VALUE)[
-			if (!succeeded) {
-				logger.error('File not found: {}', filePath)
-				req.response.statusCode = 404
-				req.response.end
-			}
-		]
-	}*/
+	@Validation
+	def void constructor() {
+		replace = replace?:#{}
+	}
 	
 	@Public
 	def ByteBuffer file(String path) {
-		val filePath = folder + path.filePath
+		val filePath = folder + path.filePath.redirect
 		
 		logger.debug(filePath)
 		var Path urlPath = null
@@ -89,5 +85,19 @@ class WebFileService {
 		} else {
 			if (!path.startsWith('/')) '/' + path else path
 		}
+	}
+	
+	private def redirect(String uri) {
+		for (key: replace.keySet) {
+			if (uri.startsWith(key)) {
+				val value = replace.get(key)
+				val redirect = uri.replaceFirst(key, value)
+				
+				logger.info('Redirect: {} -> {}', uri, redirect)
+				return redirect
+			}
+		}
+		
+		return uri
 	}
 }

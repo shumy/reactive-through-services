@@ -44,7 +44,7 @@ class DefaultMessageBus implements IMessageBus {
 		
 		timeout[
 			val replyTimeoutMsg = new Message => [
-				id=msg.id clt=msg.clt typ=Message.REPLY cmd=Message.CMD_TIMEOUT
+				id=msg.id clt=msg.clt typ=Message.REPLY cmd=Message.CMD_ERROR
 				result=new RuntimeException('''Timeout for «msg.path» -> «msg.cmd»''')
 			]
 			replyTimeoutMsg.reply

@@ -33,7 +33,9 @@ class ServiceProxyProcessor extends AbstractInterfaceProcessor {
 					proxyMeth.returnType = Promise.newTypeReference(interMeth.returnType)
 				
 				val anRef = Public.newAnnotationReference[
-					val retType = if (Observable.newTypeReference.isAssignableFrom(interMeth.returnType))
+					val isServerAsync = Observable.newTypeReference.isAssignableFrom(interMeth.returnType) || Promise.newTypeReference.isAssignableFrom(interMeth.returnType) 
+					val retType = 
+						if (isServerAsync)
 							interMeth.returnType.actualTypeArguments.get(0)
 						else 
 							interMeth.returnType

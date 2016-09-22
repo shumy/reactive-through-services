@@ -101,5 +101,4 @@ export class TYP {
   static CMD_OBSERVABLE =   'obs'
   static CMD_COMPLETE =     'cpl'
   static CMD_ERROR =        'err'
-  static CMD_TIMEOUT =      'tout'
 }
