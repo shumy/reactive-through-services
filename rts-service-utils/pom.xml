@@ -9,10 +9,15 @@
 	<artifactId>rts-service-utils</artifactId>
 	
 	<dependencies>
-  	<dependency>
-			<groupId>rts.core</groupId>
+	<dependency>
+		<groupId>rts.core</groupId>
 			<artifactId>rts-plugin-service</artifactId>
 			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.bitbucket.b_c</groupId>
+			<artifactId>jose4j</artifactId>
+			<version>0.5.2</version>
 		</dependency>
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
