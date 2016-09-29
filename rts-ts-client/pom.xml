@@ -1,13 +1,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
-		<groupId>rts.core</groupId>
+		<groupId>com.github.shumy</groupId>
 		<artifactId>rts-core</artifactId>
 		<version>0.3.0</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<artifactId>rts-ts-client</artifactId>
-    <packaging>pom</packaging>
+	<packaging>pom</packaging>
 	
 	<build>
 		<plugins>
@@ -15,19 +15,19 @@
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>exec-maven-plugin</artifactId>
 				<version>1.5.0</version>
-                <executions>
-                    <execution>
-                        <id>tsc-compile</id>
-                        <phase>compile</phase>
-                        <configuration>
-                            <workingDirectory>${project.basedir}</workingDirectory>
-                            <executable>tsc</executable>
-                        </configuration>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                    </execution>
-                </executions>
+				<executions>
+					<execution>
+						<id>tsc-compile</id>
+						<phase>compile</phase>
+						<configuration>
+							<workingDirectory>${project.basedir}</workingDirectory>
+							<executable>tsc</executable>
+						</configuration>
+						<goals>
+							<goal>exec</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>

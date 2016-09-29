@@ -19,11 +19,11 @@ class PluginLoaderTest {
 		val local = '''«home»«File.separator».m2«File.separator»repository'''
 		
 		repo = new PluginRepository(local) => [
-			plugins += 'rts.core:rts-plugin-test:0.3.0'
+			plugins += 'com.github.shumy:rts-plugin-test:0.3.0'
 			resolve
 		]
 		
-		plugin = repo.plugins.artifact('rts.core:rts-plugin-test:0.3.0')
+		plugin = repo.plugins.artifact('com.github.shumy:rts-plugin-test:0.3.0')
 	}
 	
 	@Test
