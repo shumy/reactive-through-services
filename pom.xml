@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.shumy</groupId>
 	<artifactId>rts-core</artifactId>
-	<version>0.3.0</version>
+	<version>${global.version}</version>
 	<packaging>pom</packaging>
 	
 	<name>Reactive Through Services</name>
@@ -10,6 +10,7 @@
 	<url>https://github.com/shumy/reactive-through-services</url>
 	
 	<properties>
+		<global.version>0.3.0</global.version>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -32,6 +33,12 @@
 			<organizationUrl>http://ieeta.web.ua.pt/</organizationUrl>
 		</developer>
 	</developers>
+	
+	<scm>
+		<connection>scm:git:git@github.com:shumy/reactive-through-services.git</connection>
+		<developerConnection>scm:git:git@github.com:shumy/reactive-through-services.git</developerConnection>
+		<url>git@github.com:shumy/reactive-through-services.git</url>
+	</scm>
 	
 	<dependencies>
 		<dependency>
@@ -78,8 +85,33 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>flatten-maven-plugin</artifactId>
+				<version>1.0.0</version>
+				<executions>
+					<execution>
+						<id>flatten</id>
+						<phase>process-resources</phase>
+						<goals>
+							<goal>flatten</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
+	
+	<distributionManagement>
+		<repository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
+		</repository>
+		<snapshotRepository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+		</snapshotRepository>
+	</distributionManagement>
 	
 	<modules>
 		<module>rts-async</module>

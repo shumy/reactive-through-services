@@ -37,7 +37,7 @@ class PluginArtifact {
 		
 		descriptorRequest = new ArtifactDescriptorRequest => [
 			artifact = new DefaultArtifact(reference)
-			repositories = #[repo.centraRepository]
+			repositories = #[repo.centralRepository]
 		]
 		
 		collectRequest = new CollectRequest => [

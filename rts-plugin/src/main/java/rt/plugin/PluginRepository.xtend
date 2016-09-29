@@ -18,12 +18,14 @@ import org.eclipse.aether.util.graph.transformer.ConflictResolver
 import org.eclipse.xtend.lib.annotations.Accessors
 import rt.plugin.config.PluginConfigFactory
 import rt.plugin.output.DefaultErrorHandler
+import rt.plugin.output.ConsoleTransferListener
+import rt.plugin.output.ConsoleRepositoryListener
 
 class PluginRepository {
 	@Accessors val plugins = new PluginList(this)
 
 	package val RepositorySystem system
-	package val RemoteRepository centraRepository
+	package val RemoteRepository centralRepository
 	package val LocalRepository localRepository
 	package val DefaultRepositorySystemSession session
 	
@@ -50,12 +52,12 @@ class PluginRepository {
 		
 		system = locator.getService(RepositorySystem)
 		
-		centraRepository = new RemoteRepository.Builder('central', 'default', remoteRepoPath).build
+		centralRepository = new RemoteRepository.Builder('central', 'default', remoteRepoPath).build
 		localRepository = new LocalRepository(localPath)
 		
 		session = MavenRepositorySystemUtils.newSession => [
-			//transferListener = new ConsoleTransferListener
-			//repositoryListener = new ConsoleRepositoryListener
+			transferListener = new ConsoleTransferListener
+			repositoryListener = new ConsoleRepositoryListener
 			
 			setConfigProperty(ConflictResolver.NODE_DATA_WINNER, true)
 			setConfigProperty(DependencyManagerUtils.CONFIG_PROP_VERBOSE, true)

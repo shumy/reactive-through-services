@@ -3,26 +3,30 @@
 	<parent>
 		<groupId>com.github.shumy</groupId>
 		<artifactId>rts-core</artifactId>
-		<version>0.3.0</version>
+		<version>${global.version}</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<artifactId>rts-plugin-test</artifactId>
-
+	
+	<properties>
+		<maven.deploy.skip>true</maven.deploy.skip>
+	</properties>
+	
 	<dependencies>
 		<dependency>
 			<groupId>com.github.shumy</groupId>
 			<artifactId>rts-plugin-service</artifactId>
-			<version>${project.version}</version>
+			<version>${global.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.github.shumy</groupId>
 			<artifactId>rts-data</artifactId>
-			<version>${project.version}</version>
+			<version>${global.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.github.shumy</groupId>
 			<artifactId>rts-entity</artifactId>
-			<version>${project.version}</version>
+			<version>${global.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.code.gson</groupId>

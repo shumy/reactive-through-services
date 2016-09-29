@@ -1,6 +1,7 @@
 .git
 .classpath
 .project
+.flattened-pom.xml
 *.log
 
 .vertx/

@@ -3,8 +3,12 @@
 	<parent>
 		<groupId>com.github.shumy</groupId>
 		<artifactId>rts-core</artifactId>
-		<version>0.3.0</version>
+		<version>${global.version}</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<artifactId>rts-entity</artifactId>
+	
+	<properties>
+		<maven.deploy.skip>true</maven.deploy.skip>
+	</properties>
 </project>
