@@ -7,6 +7,7 @@
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<artifactId>rts-ts-client</artifactId>
+	<name>${global.name} - ts-client</name>
 	<packaging>pom</packaging>
 	
 	<properties>

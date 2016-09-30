@@ -7,9 +7,10 @@
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<artifactId>rts-pipeline</artifactId>
+	<name>${global.name} - pipeline</name>
 	
 	<dependencies>
-	<dependency>
+		<dependency>
 			<groupId>com.github.shumy</groupId>
 			<artifactId>rts-async</artifactId>
 			<version>${global.version}</version>

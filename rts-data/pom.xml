@@ -7,4 +7,5 @@
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<artifactId>rts-data</artifactId>
+	<name>${global.name} - data</name>
 </project>

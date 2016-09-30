@@ -7,4 +7,5 @@
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<artifactId>rts-plugin-config</artifactId>
+	<name>${global.name} - plugin-config</name>
 </project>

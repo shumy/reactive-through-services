@@ -7,4 +7,5 @@
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<artifactId>rts-async</artifactId>
+	<name>${global.name} - async</name>
 </project>

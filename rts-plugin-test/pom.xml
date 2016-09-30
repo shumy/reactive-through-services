@@ -7,6 +7,7 @@
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<artifactId>rts-plugin-test</artifactId>
+	<name>${global.name} - plugin-test</name>
 	
 	<properties>
 		<maven.deploy.skip>true</maven.deploy.skip>

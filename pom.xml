@@ -5,11 +5,12 @@
 	<version>${global.version}</version>
 	<packaging>pom</packaging>
 	
-	<name>Reactive Through Services</name>
+	<name>${global.name}</name>
 	<description>Framework to build reactive services for reactive application front-ends</description>
 	<url>https://github.com/shumy/reactive-through-services</url>
 	
 	<properties>
+		<global.name>Reactive Through Services</global.name>
 		<global.version>0.3.0</global.version>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
@@ -90,10 +91,6 @@
 				<artifactId>flatten-maven-plugin</artifactId>
 				<configuration>
 					<flattenMode>ossrh</flattenMode>
-					<pomElements>
-						<!-- Options at http://www.mojohaus.org/flatten-maven-plugin/apidocs/org/codehaus/mojo/flatten/ElementHandling.html -->
-						<name>expand</name>
-					</pomElements>
 				</configuration>
 				<executions>
 					<execution>
