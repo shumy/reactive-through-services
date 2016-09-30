@@ -1,7 +1,7 @@
 # reactive-through-services
 
 Modules available at [Maven Central](http://search.maven.org/)
-```
+```xml
 <dependency>
 	<groupId>com.github.shumy</groupId>
 	<artifactId>replace-with-artifact</artifactId>
