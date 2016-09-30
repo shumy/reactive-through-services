@@ -26,8 +26,8 @@ Not available (experimental):
 ### Why ?
 Front-end programming is inherently asynchronous, and there has always been something missing to allow the building of front-ends in a reactive functional like way. Functional Reactive Programing (FRP) is a paradigm for software development centered on data streams, it's getting a lot of visibility by integrating with frameworks like Angular and React. However there is an impedance mismatch between the reactive UI and the required server side services. Common REST services do not integrate well with this new paradigm, Reactive Throught Services (RTS) is a framework to fill the gap between the reactive frontend and backend services.
 
-Using Xtend Active Annotations and Vertx.io server.
-Main objective of this project is to define reactive bidirectional services in the form of, ex:
+Using [Xtend Active Annotations](https://eclipse.org/xtend/documentation/204_activeannotations.html) and [Vertx.io](http://vertx.io/) server.
+The main objective of this project is to define reactive bidirectional services in the form of, e.g:
 ```
 @Service("test")
 class AnnotatedService {
