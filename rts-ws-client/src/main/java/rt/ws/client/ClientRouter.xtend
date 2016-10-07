@@ -8,21 +8,23 @@ import org.eclipse.xtend.lib.annotations.Accessors
 import org.java_websocket.client.WebSocketClient
 import org.java_websocket.handshake.ServerHandshake
 import org.slf4j.LoggerFactory
+import rt.async.AsyncScheduler
+import rt.async.AsyncScheduler.SchedulerAsyncUtils
 import rt.async.AsyncUtils
-import rt.async.pubsub.ISubscription
-import rt.async.pubsub.Message
-import rt.pipeline.DefaultMessageConverter
+import rt.pipeline.IResourceProvider
+import rt.pipeline.bus.DefaultMessageConverter
+import rt.pipeline.bus.ISubscription
+import rt.pipeline.bus.Message
 import rt.pipeline.pipe.PipeResource
 import rt.pipeline.pipe.Pipeline
 import rt.pipeline.pipe.channel.IPipeChannel.PipeChannelInfo
 import rt.pipeline.pipe.use.ChannelService
 import rt.plugin.service.IServiceClientFactory
 import rt.plugin.service.ServiceClient
-import rt.ws.client.AsyncScheduler.SchedulerAsyncUtils
 
 import static rt.async.AsyncUtils.*
 
-class ClientRouter implements IServiceClientFactory {
+class ClientRouter implements IServiceClientFactory, IResourceProvider {
 	static val logger = LoggerFactory.getLogger('CLIENT-ROUTER')
 	
 	@Accessors val String server
@@ -37,7 +39,8 @@ class ClientRouter implements IServiceClientFactory {
 	
 	val ready = new AtomicBoolean
 	
-	PipeResource resource = null
+	@Accessors(PUBLIC_GETTER) var PipeResource resource = null
+	
 	WebSocketClient ws = null
 	ISubscription chSubscription = null
 	
@@ -54,7 +57,7 @@ class ClientRouter implements IServiceClientFactory {
 		this.server = server
 		this.client = client
 		this.pipeline = pipeline
-		this.serviceClient = new ServiceClient(pipeline.mb, server, client, redirects)
+		this.serviceClient = new ServiceClient(this, pipeline.mb, server, client, redirects)
 		
 		pipeline.mb.subscribe(server)[ send ]
 		

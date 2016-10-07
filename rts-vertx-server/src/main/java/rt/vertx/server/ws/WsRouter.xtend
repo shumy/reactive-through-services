@@ -4,13 +4,13 @@ import io.vertx.core.http.HttpServer
 import java.util.HashMap
 import org.eclipse.xtend.lib.annotations.Accessors
 import org.slf4j.LoggerFactory
+import rt.pipeline.IResource
 import rt.pipeline.pipe.Pipeline
 import rt.pipeline.pipe.channel.IPipeChannel
 import rt.pipeline.pipe.channel.IPipeChannel.PipeChannelInfo
 import rt.vertx.server.DefaultVertxServer
 
 import static extension rt.vertx.server.URIParserHelper.*
-import rt.async.pubsub.IResource
 
 class WsRouter {
 	static val logger = LoggerFactory.getLogger('WS-ROUTER')

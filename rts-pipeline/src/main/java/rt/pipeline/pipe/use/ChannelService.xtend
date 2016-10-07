@@ -1,8 +1,8 @@
 package rt.pipeline.pipe.use
 
 import org.eclipse.xtend.lib.annotations.Accessors
-import rt.async.pubsub.Message
 import rt.pipeline.IComponent
+import rt.pipeline.bus.Message
 import rt.pipeline.pipe.PipeContext
 import rt.pipeline.pipe.channel.IPipeChannel
 import rt.pipeline.pipe.channel.IPipeChannel.PipeChannelInfo

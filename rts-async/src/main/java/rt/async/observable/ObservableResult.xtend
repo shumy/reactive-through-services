@@ -7,12 +7,20 @@ abstract class ObservableResult<T> extends AsyncResult<ObservableResult<T>> {
 	var (T) => void onNext = null
 	var () => void onComplete = null
 	
+	var () => void onCancel = null
+	var (long) => void onRequest = null
+	
+	def void onCancel(() => void onCancel) { this.onCancel = onCancel }
+	def void onRequest((long) => void onRequest) { this.onRequest = onRequest }
+	
 	def observe() { new Observable<T>(this) }
 	
-	def void subscribe((T) => void onNext, () => void onComplete, (Throwable) => void onReject) {
+	def Subscription subscribe((T) => void onNext, () => void onComplete, (Throwable) => void onReject) {
 		this.onNext = onNext
 		this.onComplete = onComplete
 		init(onReject)
+		
+		return new Subscription(this)
 	}
 	
 	def void next(T data) {
@@ -40,6 +48,21 @@ abstract class ObservableResult<T> extends AsyncResult<ObservableResult<T>> {
 				AsyncStack.pop
 				reject(error)
 			}
+		}
+	}
+	
+	static class Subscription {
+		val ObservableResult<?> oResult
+		new(ObservableResult<?> oResult) {
+			this.oResult = oResult
+		}
+		
+		def void cancel() {
+			oResult?.onCancel.apply
+		}
+	
+		def void request(long n) {
+			oResult?.onRequest.apply(n)
 		}
 	}
 }

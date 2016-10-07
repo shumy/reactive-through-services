@@ -3,8 +3,9 @@ package rt.vertx.server.ws
 import io.vertx.core.http.ServerWebSocket
 import org.eclipse.xtend.lib.annotations.Accessors
 import org.slf4j.LoggerFactory
-import rt.async.pubsub.ISubscription
-import rt.async.pubsub.Message
+import rt.pipeline.IResourceProvider
+import rt.pipeline.bus.ISubscription
+import rt.pipeline.bus.Message
 import rt.pipeline.pipe.PipeResource
 import rt.pipeline.pipe.channel.IPipeChannel.PipeChannelInfo
 import rt.pipeline.pipe.use.ChannelService
@@ -13,7 +14,7 @@ import rt.plugin.service.IServiceClientFactory
 import rt.plugin.service.ServiceException
 import rt.vertx.server.ServiceClientFactory
 
-class WsResource {
+class WsResource implements IResourceProvider {
 	static val logger = LoggerFactory.getLogger('WS-RESOURCE')
 	
 	@Accessors val String client
@@ -35,7 +36,7 @@ class WsResource {
 		this.client = client
 		this.onClose = onClose
 		
-		this.srvClientFactory = new ServiceClientFactory(parent.pipeline.mb, client, ws.textHandlerID) => [
+		this.srvClientFactory = new ServiceClientFactory(this, parent.pipeline.mb, client, ws.textHandlerID) => [
 			redirects.put('srv:channel', client + '/ch:req')
 		]
 		

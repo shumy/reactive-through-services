@@ -1,4 +1,4 @@
-package rt.async.pubsub
+package rt.async
 
 interface IPublisher {
 	def void publish(String address, String cmd, Object result)

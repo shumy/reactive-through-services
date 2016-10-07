@@ -51,7 +51,7 @@ export class Pipeline {
 export class PipeResource {
   subscriptions = new Map<string, Subscription>()
 
-  constructor(private pipeline: Pipeline, private client: string, private sendCallback: (msg: IMessage) => void, private closeCallback: () => void) {
+  constructor(private pipeline: Pipeline, public client: string, private sendCallback: (msg: IMessage) => void, private closeCallback: () => void) {
     console.log('RESOURCE-CREATE ', this.client)
   }
 
@@ -63,13 +63,18 @@ export class PipeResource {
     this.sendCallback(msg)
   }
 
-  subscribe(address: string) {
+  subscribe(address: string, callback?: (msg: IMessage) => void) {
     if (this.subscriptions.has(address))
       return false
 
     console.log('RESOURCE-SUBSCRIBE ', address)
-    let listener = this.pipeline.mb.subscribe(address, this.sendCallback)
+    let useCallback: (msg: IMessage) => void
+    if (callback)
+      useCallback = callback
+    else
+      useCallback = this.sendCallback
 
+    let listener = this.pipeline.mb.subscribe(address, useCallback)
     this.subscriptions.set(address, listener)
     return true
   }

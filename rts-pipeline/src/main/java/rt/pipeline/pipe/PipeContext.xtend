@@ -4,10 +4,10 @@ import java.util.HashMap
 import java.util.Iterator
 import org.eclipse.xtend.lib.annotations.Accessors
 import org.slf4j.LoggerFactory
-import rt.async.pubsub.IMessageBus
-import rt.async.pubsub.Message
 import rt.pipeline.IComponent
 import rt.pipeline.UserInfo
+import rt.pipeline.bus.IMessageBus
+import rt.pipeline.bus.Message
 
 class PipeContext {
 	static val logger = LoggerFactory.getLogger('PIPELINE')
@@ -130,11 +130,11 @@ class PipeContext {
 		}
 	}
 	
-	def void replyObservable(String uuid) {
+	def void replyObservable(String address) {
 		if(!inFail) {
 			val reply = new Message => [
 				cmd = Message.CMD_OBSERVABLE
-				result = "evt:" + uuid
+				result = address
 			]
 	
 			reply(reply)
@@ -165,41 +165,6 @@ class PipeContext {
 			]
 			
 			resource.send(pub)
-		}
-	}
-	
-	def void publishNext(String uuid, Object resultObj) {
-		if(!inFail) {
-			val pub = new Message => [
-				cmd = Message.CMD_OK
-				path = 'evt:' + uuid
-				result = resultObj
-			]
-			
-			publish(pub)
-		}
-	}
-	
-	def void publishComplete(String uuid) {
-		if(!inFail) {
-			val pub = new Message => [
-				cmd = Message.CMD_COMPLETE
-				path = 'evt:' + uuid
-			]
-			
-			publish(pub)
-		}
-	}
-	
-	def void publishError(String uuid, Throwable ex) {
-		if(!inFail) {
-			val pub = new Message => [
-				cmd = Message.CMD_ERROR
-				path = 'evt:' + uuid
-				result = ex
-			]
-			
-			publish(pub)
 		}
 	}
 	

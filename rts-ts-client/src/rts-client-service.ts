@@ -1,28 +1,27 @@
-import { Observable, Subscriber } from 'rxjs/Rx';
-
 import { Pipeline, PipeResource } from './rts-pipeline'
 import { MessageBus, Subscription, IMessage, TYP } from './rts-messagebus'
 import { IAuthManager } from './rts-auth'
+import { RTSObservable } from './rts-observables'
 
 export interface IServiceClientFactory {
   serviceClient: ServiceClient
 }
 
-export class ClientRouter implements IServiceClientFactory {
+export class ClientRouter implements IServiceClientFactory  {
   private _ready = false
   private url: string
 
-  private resource: PipeResource = null
   private websocket: WebSocket
   private _serviceClient: ServiceClient
 
-  public authMgr: IAuthManager
+  resource: PipeResource = null
+  authMgr: IAuthManager
 
   get bus() { return this.pipeline.mb }
 
   constructor(public server: string, public client: string, public pipeline: Pipeline = new Pipeline) {
     this.url = server + '?client=' + client
-    this._serviceClient = new ServiceClient(this.bus, this.server, this.client)
+    this._serviceClient = new ServiceClient(this)
 
     this.bus.subscribe(server, _ => this.send(_))
     this.connect()
@@ -114,9 +113,9 @@ export class ServiceClient {
   private uuid: string
   private msgID = 0		      //increment for every new message
 
-  constructor(private bus: MessageBus, private server: string, client: string) {
+  constructor(private router: ClientRouter) {
     ServiceClient.clientSeq++
-    this.uuid = ServiceClient.clientSeq + ':' + client
+    this.uuid = ServiceClient.clientSeq + ':' + router.client
   }
 
   create(srvName: string): any {
@@ -132,12 +131,12 @@ export class ServiceClient {
             let sendMsg: IMessage = { id: srvClient.msgID, clt: srvClient.uuid, path: srvPath, cmd: srvMeth, args: srvArgs }
 
             console.log('PROXY-SEND: ', sendMsg)
-            srvClient.bus.send(srvClient.server, sendMsg, (replyMsg) => {
+            srvClient.router.bus.send(srvClient.router.server, sendMsg, (replyMsg) => {
               console.log('PROXY-REPLY: ', replyMsg)
               if (replyMsg.cmd === TYP.CMD_OK) {
                 resolve(replyMsg.res)
               } else if (replyMsg.cmd === TYP.CMD_OBSERVABLE) {
-                resolve(new RemoteObservable(srvClient.bus, replyMsg.res))
+                resolve(new RTSObservable(srvClient.router.resource, replyMsg.res))
               } else {
                 reject(replyMsg.res)
               }
@@ -148,70 +147,5 @@ export class ServiceClient {
     }
 
     return new Proxy({}, handler)
-  }
-}
-
-class RemoteObservable extends Observable<any> {
-  private data = []
-  private isComplete = false
-
-  private listener: Subscription
-  private sub: Subscriber<any>
-
-  constructor(bus: MessageBus, address: string) {
-    super(sub => {
-      this.sub = sub
-      
-      if (this.data.length !== 0) {
-        this.data.forEach(entry => {
-          if (entry[0] === true) {
-            this.sub.next(entry[1])
-          } else {
-            this.sub.error(entry[1])
-            this.listener.remove()
-          }
-        })
-      }
-
-      if (this.isComplete) {
-        this.sub.complete()
-        this.listener.remove()
-      }
-    })
-    
-    //TODO: timeout for responses? -> remove listener...
-    this.listener = bus.subscribe(address, msg => {
-      if (msg.cmd === TYP.CMD_OK) {
-        this.processNext(msg.res)
-      } else if (msg.cmd === TYP.CMD_COMPLETE) {
-        this.processComplete()
-      } else if (msg.cmd === TYP.CMD_ERROR) {
-        this.processError(msg.res)
-      }
-    })
-  }
-
-  private processNext(item: any) {
-    if (this.sub)
-      this.sub.next(item)
-    else
-      this.data.push([true, item])
-  }
-
-  private processComplete() {
-    if (this.sub) {
-      this.sub.complete()
-      this.listener.remove()
-    } else {
-      this.isComplete = true
-    }
-  }
-
-  private processError(error: any) {
-    if (this.sub) {
-      this.sub.error(error)
-      this.listener.remove()
-    } else
-      this.data.push([false, error])
   }
 }

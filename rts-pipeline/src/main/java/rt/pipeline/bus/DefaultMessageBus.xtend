@@ -1,14 +1,10 @@
-package rt.pipeline
+package rt.pipeline.bus
 
 import java.util.HashMap
 import java.util.HashSet
 import java.util.Set
 import java.util.concurrent.ConcurrentHashMap
 import org.eclipse.xtend.lib.annotations.Accessors
-import rt.async.pubsub.IMessageBus
-import rt.async.pubsub.IObserver
-import rt.async.pubsub.ISubscription
-import rt.async.pubsub.Message
 
 import static rt.async.AsyncUtils.*
 import org.slf4j.LoggerFactory

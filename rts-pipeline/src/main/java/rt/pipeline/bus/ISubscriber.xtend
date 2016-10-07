@@ -1,4 +1,4 @@
-package rt.async.pubsub
+package rt.pipeline.bus
 
 interface ISubscriber {
 	def ISubscription subscribe(String address, (Message) => void listener)

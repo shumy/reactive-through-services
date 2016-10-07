@@ -4,6 +4,7 @@ export * from './src/rts-pipeline';
 export * from './src/rts-client-service';
 export * from './src/rts-remotes';
 export * from './src/rts-service-utils';
+export * from './src/openid-connect';
 
 /**
  * Fast UUID generator, RFC4122 version 4 compliant.

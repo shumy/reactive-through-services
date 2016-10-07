@@ -5,8 +5,8 @@ import io.vertx.core.http.HttpServer
 import io.vertx.core.http.HttpServerOptions
 import org.eclipse.xtend.lib.annotations.Accessors
 import rt.async.AsyncUtils
-import rt.async.pubsub.IMessageBus
-import rt.pipeline.DefaultMessageConverter
+import rt.pipeline.bus.DefaultMessageConverter
+import rt.pipeline.bus.IMessageBus
 import rt.pipeline.pipe.Pipeline
 import rt.vertx.server.web.WebRouter
 import rt.vertx.server.ws.WsRouter

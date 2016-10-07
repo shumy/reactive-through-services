@@ -1,4 +1,4 @@
-package rt.async.pubsub
+package rt.pipeline.bus
 
 import java.util.List
 import java.util.Map
@@ -12,7 +12,9 @@ public class Message {
 	//reply command types...
 	public static val String CMD_OK = 			'ok'
 	public static val String CMD_OBSERVABLE = 	'obs'
+	public static val String CMD_REQUEST = 		'req'
 	public static val String CMD_COMPLETE = 	'cpl'
+	public static val String CMD_CANCEL = 		'cnl'
 	public static val String CMD_ERROR = 		'err'
 	
 	// from all

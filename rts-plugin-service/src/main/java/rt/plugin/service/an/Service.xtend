@@ -20,10 +20,10 @@ import org.eclipse.xtend.lib.macro.declaration.Visibility
 import rt.async.AsyncUtils
 import rt.async.observable.Observable
 import rt.async.promise.Promise
-import rt.async.pubsub.Message
 import rt.data.schema.SProperty
 import rt.data.schema.SType
 import rt.pipeline.IComponent
+import rt.pipeline.bus.Message
 import rt.pipeline.pipe.PipeContext
 import rt.plugin.config.PluginConfig
 import rt.plugin.config.PluginConfigFactory
@@ -34,7 +34,7 @@ import rt.plugin.service.ServiceClient
 import rt.plugin.service.ServiceUtils
 import rt.plugin.service.descriptor.DMethod
 import rt.plugin.service.descriptor.IDescriptor
-import java.util.UUID
+import rt.plugin.service.observable.ObservableSkeleton
 
 @Target(TYPE)
 @Active(ServiceProcessor)
@@ -208,13 +208,8 @@ class ServiceProcessor extends AbstractClassProcessor {
 						pError -> ctx.replyError(pError)
 					);
 				«ELSEIF Observable.newTypeReference.isAssignableFrom(meth.returnType)»
-					final String «varName»UUID = «UUID.canonicalName».randomUUID().toString();
-					ctx.replyObservable(«varName»UUID);
-					«varName».subscribe(
-						oNext -> ctx.publishNext(«varName»UUID, oNext),
-						() -> ctx.publishComplete(«varName»UUID),
-						pError -> ctx.publishError(«varName»UUID, pError)
-					);
+					final «ObservableSkeleton.canonicalName» «varName»Ske = new «ObservableSkeleton.canonicalName»(«varName», ctx);
+					ctx.replyObservable(«varName»Ske.process());
 				«ELSE»
 					ctx.replyOK(«varName»);
 				«ENDIF»

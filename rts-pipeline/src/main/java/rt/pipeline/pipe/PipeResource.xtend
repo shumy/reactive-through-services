@@ -3,10 +3,10 @@ package rt.pipeline.pipe
 import java.util.HashMap
 import org.eclipse.xtend.lib.annotations.Accessors
 import org.slf4j.LoggerFactory
-import rt.async.pubsub.IMessageBus
-import rt.async.pubsub.IResource
-import rt.async.pubsub.ISubscription
-import rt.async.pubsub.Message
+import rt.pipeline.IResource
+import rt.pipeline.bus.IMessageBus
+import rt.pipeline.bus.ISubscription
+import rt.pipeline.bus.Message
 import rt.pipeline.pipe.channel.IPipeChannel
 
 class PipeResource implements IResource {
@@ -35,15 +35,23 @@ class PipeResource implements IResource {
 	}
 	
 	override subscribe(String address) {
+		subscribe(address, sendCallback)
+	}
+	
+	override subscribe(String address, (Message)=>void listener) {
 		if(subscriptions.containsKey(address)) return;
 		
-		val sub = pipeline.mb.subscribe(address, sendCallback)
+		val sub = pipeline.mb.subscribe(address, listener)
 		subscriptions.put(address, sub)
 	}
 	
 	override unsubscribe(String address) {
 		val listener = subscriptions.remove(address)
 		listener?.remove
+	}
+	
+	override send(Message msg) {
+		sendCallback?.apply(msg)
 	}
 	
 	override disconnect() {
@@ -55,10 +63,6 @@ class PipeResource implements IResource {
 			pipeline.process(this, msg, contextCallback)
 		else
 			pipeline.process(this, msg)
-	}
-	
-	def void send(Message msg) {
-		sendCallback?.apply(msg)
 	}
 	
 	def void addChannel(IPipeChannel channel) {

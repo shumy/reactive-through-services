@@ -5,13 +5,13 @@ import java.util.HashMap
 import java.util.HashSet
 import java.util.Map
 import org.eclipse.xtend.lib.annotations.Accessors
-import rt.async.pubsub.IMessageBus
-import rt.async.pubsub.IPublisher
-import rt.async.pubsub.IResource
-import rt.async.pubsub.Message
-import rt.pipeline.DefaultMessageBus
+import rt.async.IPublisher
 import rt.pipeline.IComponent
+import rt.pipeline.IResource
 import rt.pipeline.UserInfo
+import rt.pipeline.bus.DefaultMessageBus
+import rt.pipeline.bus.IMessageBus
+import rt.pipeline.bus.Message
 
 class Pipeline {
 	@Accessors val IMessageBus mb

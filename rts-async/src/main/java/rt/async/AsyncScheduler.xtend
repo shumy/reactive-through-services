@@ -1,6 +1,5 @@
-package rt.ws.client
+package rt.async
 
-import rt.async.AsyncUtils
 import java.util.concurrent.DelayQueue
 import java.util.concurrent.Delayed
 import java.util.concurrent.TimeUnit

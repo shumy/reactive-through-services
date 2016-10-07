@@ -9,9 +9,9 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import rt.async.pubsub.Message
-import rt.pipeline.DefaultMessageBus
 import rt.pipeline.IComponent
+import rt.pipeline.bus.DefaultMessageBus
+import rt.pipeline.bus.Message
 import rt.pipeline.pipe.Pipeline
 import rt.pipeline.pipe.use.ValidatorInterceptor
 import rt.plugin.PluginRepository

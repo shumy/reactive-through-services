@@ -1,12 +1,12 @@
 package rt.utils.service
 
 import rt.async.AsyncUtils
-import rt.async.pubsub.IPublisher
-import rt.async.pubsub.IResource
+import rt.async.IPublisher
 import rt.data.Change
 import rt.data.Data
 import rt.data.Optional
 import rt.data.Validation
+import rt.pipeline.IResource
 import rt.plugin.service.an.Context
 import rt.plugin.service.an.Public
 import rt.plugin.service.an.Service

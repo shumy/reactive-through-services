@@ -1,17 +1,21 @@
 package rt.async.observable
 
+import org.eclipse.xtend.lib.annotations.Accessors
+
 class Observable<T> {
-	val ObservableResult<T> sub
+	val ObservableResult<T> oResult
 	var () => void onComplete = null
 	var (Throwable) => void onError = null
 	
-	package new(ObservableResult<T> sub) {
-		this.sub = sub
+	@Accessors(PUBLIC_GETTER) var ObservableResult.Subscription subscription = null
+	
+	package new(ObservableResult<T> oResult) {
+		this.oResult = oResult
 	}
 	
 	def Observable<T> filter((T) => boolean filterFun) {
 		val ObservableResult<T> newObs = [ obs |
-			sub.subscribe([ if (filterFun.apply(it)) obs.next(it) ], [ obs.complete ], [ obs.reject(it) ])
+			oResult.subscribe([ if (filterFun.apply(it)) obs.next(it) ], [ obs.complete ], [ obs.reject(it) ])
 		]
 		
 		return newObs.observe
@@ -19,7 +23,7 @@ class Observable<T> {
 	
 	def <R> Observable<R> map((T) => R transformFun) {
 		val ObservableResult<R> newObs = [ obs |
-			sub.subscribe([ obs.next( transformFun.apply(it) ) ], [ obs.complete ], [ obs.reject(it) ])
+			oResult.subscribe([ obs.next( transformFun.apply(it) ) ], [ obs.complete ], [ obs.reject(it) ])
 		]
 		
 		return newObs.observe
@@ -54,7 +58,7 @@ class Observable<T> {
 			else
 				[ this.onError.apply(it) onError.apply(it) ]
 		
-		sub.subscribe(onNext, newOnComplete, newOnError)
+		this.subscription = oResult.subscribe(onNext, newOnComplete, newOnError)
 	}
 	
 	def subscribe((T) => void onNext, () => void onComplete) {

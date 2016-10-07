@@ -4,11 +4,11 @@ import java.util.ArrayList
 import java.util.HashMap
 import java.util.List
 import java.util.Map
-import rt.async.pubsub.IResource
 import rt.data.Data
 import rt.data.Optional
 import rt.data.Repository
 import rt.data.Validation
+import rt.pipeline.IResource
 import rt.plugin.service.ServiceException
 import rt.plugin.service.an.Context
 import rt.plugin.service.an.Public

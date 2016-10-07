@@ -1,8 +1,6 @@
-package rt.async.pubsub
+package rt.pipeline.bus
 
-import rt.async.pubsub.Message
-import rt.async.pubsub.ISubscriber
-import rt.async.pubsub.IPublisher
+import rt.async.IPublisher
 
 interface IMessageBus extends ISubscriber, IPublisher {
 	def void publish(String address, Message msg)

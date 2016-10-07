@@ -99,6 +99,8 @@ export class TYP {
 
   static CMD_OK =           'ok'
   static CMD_OBSERVABLE =   'obs'
+  static CMD_REQUEST =      'req'
   static CMD_COMPLETE =     'cpl'
+  static CMD_CANCEL =       'cnl'
   static CMD_ERROR =        'err'
 }

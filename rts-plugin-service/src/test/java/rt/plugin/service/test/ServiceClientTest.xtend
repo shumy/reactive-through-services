@@ -3,8 +3,8 @@ package rt.plugin.service.test
 import java.util.Collections
 import org.junit.Test
 import rt.async.AsyncUtils
-import rt.async.pubsub.Message
-import rt.pipeline.DefaultMessageBus
+import rt.pipeline.bus.DefaultMessageBus
+import rt.pipeline.bus.Message
 import rt.plugin.service.ServiceClient
 
 class ServiceClientTest {
@@ -24,7 +24,7 @@ class ServiceClientTest {
 			mb.publish(reply.clt + '+' + reply.id, reply)
 		]
 		
-		val srvClient = new ServiceClient(mb, 'srv:address', 'clt:address', Collections.EMPTY_MAP)
+		val srvClient = new ServiceClient(null, mb, 'srv:address', 'clt:address', Collections.EMPTY_MAP)
 		val srvProxy = srvClient.create('test', SrvInterface)
 		
 		srvProxy.hello('Alex').then[
