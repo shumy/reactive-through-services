@@ -1,7 +1,33 @@
 # reactive-through-services
 
-Using Xtend Active Annotations and Vertx.io server.
-Main objective of this project is to define bidirectional services in the form of, ex:
+Modules available at [Maven Central](http://search.maven.org/)
+```xml
+<dependency>
+	<groupId>com.github.shumy</groupId>
+	<artifactId>replace-with-artifact</artifactId>
+	<version>0.3.0</version>
+</dependency>
+```
+
+Available artifacts:
+* rts-async
+* rts-data
+* rts-pipeline
+* rts-plugin
+* rts-plugin-config
+* rts-plugin-service
+* rts-service-utils
+* rts-ws-client
+* rts-vertx-server
+
+Not available (experimental):
+* rts-entity
+
+### Why ?
+Front-end programming is inherently asynchronous, and there has always been something missing to allow the building of front-ends in a reactive functional like way. Functional Reactive Programing (FRP) is a paradigm for software development centered on data streams, it's getting a lot of visibility by integrating with frameworks like Angular and React. However there is an impedance mismatch between the reactive UI and the required server side services. Common REST services do not integrate well with this new paradigm, Reactive Throught Services (RTS) is a framework to fill the gap between the reactive frontend and backend services.
+
+Using [Xtend Active Annotations](https://eclipse.org/xtend/documentation/204_activeannotations.html) and [Vertx.io](http://vertx.io/) server.
+The main objective of this project is to define reactive bidirectional services in the form of, e.g:
 ```
 @Service("test")
 class AnnotatedService {
@@ -23,7 +49,7 @@ And then, from a unique definition, generate code for:
 * Service definition (API Schema)
 * Service UI for testing.
 
-Some objectives are similar to projects like [Swagger](http://swagger.io/)
+The API Schema is similar to projects like [Swagger](http://swagger.io/)
 The advantage of Xtend Active Annotations over other DSL's for code generation, is that we can mix the meta-programming, models and definitions with the user code.
 * The code generation is easily controlled by developers. Other annotations can be added.
 * The re-generation do not interfere with already existent user code.
@@ -54,6 +80,8 @@ Accept-Encoding: gzip,deflate,sdch\r\n
 Accept-Language: en-US,en;q=0.8\r\n
 \r\n
 ```
+
+But... best of all, you don't need to get rid of REST services completely. The RTS has a unique [Architecture](https://github.com/shumy/reactive-through-services/wiki/Architecture-Overview) that can support different endpoints, as long it's compliant with the [Endpoint Models](https://github.com/shumy/reactive-through-services/wiki/RTS-Endpoint-Models).
 
 #### References
 * [WebSockets vs REST: Understanding the Difference](https://www.pubnub.com/blog/2015-01-05-websockets-vs-rest-api-understanding-the-difference/)
