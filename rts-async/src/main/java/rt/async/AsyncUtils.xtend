@@ -13,10 +13,6 @@ abstract class AsyncUtils {
 	static def setDefault() { local.set(new DefaultAsyncUtils()) }
 	static def setDefault(long timeout) { local.set(new DefaultAsyncUtils(false, timeout)) }
 	
-	
-	static def IPublisher getPublisher() { local.get.publisher }
-	static def void setPublisher(IPublisher publisher) { local.get.publisher = publisher }
-	
 	static def isWorker() {
 		return local.get.isWorker
 	}
@@ -50,7 +46,6 @@ abstract class AsyncUtils {
 	}
 	
 	//configs...
-	@Accessors var IPublisher publisher = null
 	@Accessors val boolean isWorker
 	@Accessors val long timeout
 	

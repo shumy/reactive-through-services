@@ -12,6 +12,7 @@ import rt.async.AsyncScheduler
 import rt.async.AsyncScheduler.SchedulerAsyncUtils
 import rt.async.AsyncUtils
 import rt.pipeline.IResourceProvider
+import rt.pipeline.bus.ContextUtils
 import rt.pipeline.bus.DefaultMessageConverter
 import rt.pipeline.bus.ISubscription
 import rt.pipeline.bus.Message
@@ -22,7 +23,7 @@ import rt.pipeline.pipe.use.ChannelService
 import rt.plugin.service.IServiceClientFactory
 import rt.plugin.service.ServiceClient
 
-import static rt.async.AsyncUtils.*
+import static rt.pipeline.bus.ContextUtils.*
 
 class ClientRouter implements IServiceClientFactory, IResourceProvider {
 	static val logger = LoggerFactory.getLogger('CLIENT-ROUTER')
@@ -62,7 +63,7 @@ class ClientRouter implements IServiceClientFactory, IResourceProvider {
 		pipeline.mb.subscribe(server)[ send ]
 		
 		AsyncUtils.set(new SchedulerAsyncUtils(scheduler))
-		AsyncUtils.publisher = pipeline.mb
+		ContextUtils.publisher = pipeline.mb
 	}
 	
 	def <T> T createProxy(String srvName, Class<T> proxy) {

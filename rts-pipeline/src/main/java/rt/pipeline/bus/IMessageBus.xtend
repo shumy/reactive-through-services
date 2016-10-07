@@ -1,7 +1,5 @@
 package rt.pipeline.bus
 
-import rt.async.IPublisher
-
 interface IMessageBus extends ISubscriber, IPublisher {
 	def void publish(String address, Message msg)
 	

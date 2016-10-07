@@ -5,12 +5,12 @@ import java.util.HashMap
 import java.util.HashSet
 import java.util.Map
 import org.eclipse.xtend.lib.annotations.Accessors
-import rt.async.IPublisher
 import rt.pipeline.IComponent
 import rt.pipeline.IResource
 import rt.pipeline.UserInfo
 import rt.pipeline.bus.DefaultMessageBus
 import rt.pipeline.bus.IMessageBus
+import rt.pipeline.bus.IPublisher
 import rt.pipeline.bus.Message
 
 class Pipeline {

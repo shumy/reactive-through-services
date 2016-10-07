@@ -1,7 +1,5 @@
 package rt.utils.service
 
-import rt.async.AsyncUtils
-import rt.async.IPublisher
 import rt.data.Change
 import rt.data.Data
 import rt.data.Optional
@@ -10,6 +8,8 @@ import rt.pipeline.IResource
 import rt.plugin.service.an.Context
 import rt.plugin.service.an.Public
 import rt.plugin.service.an.Service
+import rt.pipeline.bus.IPublisher
+import rt.pipeline.bus.ContextUtils
 
 @Service
 @Data(metadata = false)
@@ -42,7 +42,7 @@ class RemoteSubscriber {
 	
 	@Validation
 	def void constructor() {
-		publisher = AsyncUtils.publisher
+		publisher = ContextUtils.publisher
 	}
 	
 	def (Change) => void link() { return [ next ] }
