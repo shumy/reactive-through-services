@@ -27,12 +27,9 @@ export class OIDCClient {
   authInfo: AuthInfoResponse
 
   constructor(private issuer: OIDCIssuer, private clientId: string) {
-    //TODO: use UUID for nonce ?
-    let nonce = 'xpto'
-
     this.redirectUri = window.location.protocol + '//' + window.location.host + '/'
 
-    this.authEndpoint = issuer.discover.authorization_endpoint + '?scope=email+openid&response_type=token+id_token&nonce=' + nonce + '&redirect_uri=' + this.redirectUri + '&client_id=' + clientId
+    this.authEndpoint = issuer.discover.authorization_endpoint + '?scope=email+openid&response_type=token+id_token&nonce=' + this.genNonce() + '&redirect_uri=' + this.redirectUri + '&client_id=' + clientId
     this.userInfoEndpoint = issuer.discover.userinfo_endpoint
     this.endSessionEndpoint = issuer.discover.end_session_endpoint
     this.revocationEndpoint = issuer.discover.revocation_endpoint
@@ -70,6 +67,14 @@ export class OIDCClient {
 
   userInfo(): Promise<UserInfoResponse> {
     return get(this.userInfoEndpoint, 3000, { 'Authorization': this.authHeader })
+  }
+
+  private genNonce() {
+    let text = ''
+    let possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+    for( var i=0; i < 5; i++ )
+      text += possible.charAt(Math.floor(Math.random() * possible.length))
+    return text
   }
 
   private clear() {

@@ -48,6 +48,9 @@ class DefaultMessageConverter {
 			val valuesIter = jsonArgs.iterator
 			for (type: types) {
 				val next = valuesIter.next
+				if (next === null)
+					throw new RuntimeException("Argument map non existent!")
+				
 				if (next.class == String) {
 					args.add(gson.fromJson(next as String, type))
 				} else {

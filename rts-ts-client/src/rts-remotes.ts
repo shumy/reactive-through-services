@@ -1,6 +1,6 @@
 import { Observable, Subscriber } from 'rxjs/Rx';
 
-export type CmdType = 'ev:nxt' | 'ev:clp' | 'ev:err'
+export type CmdType = 'ev:nxt' | 'ev:cpl' | 'ev:err'
 export type ReqType = 'init' | 'connect' | 'disconnect' | 'complete'
 
 export interface EventProcessor {
@@ -26,12 +26,12 @@ export abstract class BaseObservable<D> extends Observable<D> implements EventPr
   }
 
   process(cmd: CmdType, data: any) {
-    if (cmd === 'ev:nxt' as CmdType) {
+    if (cmd === 'ev:nxt') {
       this._onEvent(data)
-    } else if (cmd === 'ev:cpl' as CmdType) {
+    } else if (cmd === 'ev:cpl') {
       this.sub.complete()
       this.reqCallback(this, 'complete')
-    } else if (cmd === 'ev:err' as CmdType) {
+    } else if (cmd === 'ev:err') {
       this.sub.error(data)
       //TODO: disconnect on error? (optional)
     }

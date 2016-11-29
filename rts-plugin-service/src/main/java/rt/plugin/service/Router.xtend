@@ -107,7 +107,10 @@ abstract class Router {
 	}
 	
 	protected def restRoute(WebMethod webMethod, List<RoutePath> routePaths, String srvAddress, String srvMethod, List<String> paramMaps) {
-		val processBody = ( webMethod == WebMethod.POST || webMethod == WebMethod.PUT )
+		var processBody = ( webMethod == WebMethod.POST || webMethod == WebMethod.PUT )
+		if (paramMaps.exists[it == 'ctx.request'])
+			processBody = false //special mapping for manual body process...
+		
 		val r = route(processBody, webMethod, routePaths, srvAddress, srvMethod, paramMaps)
 		restRoutes.add(r.config)
 		

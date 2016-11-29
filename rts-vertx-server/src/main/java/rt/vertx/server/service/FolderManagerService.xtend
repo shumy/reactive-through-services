@@ -112,7 +112,11 @@ class FolderManagerService {
 	}
 	
 	private def String theFolder(UserInfo user) {
-		if (!isHomeManager) folder else folder + '/' + user.name
+		val theFolder = if (!isHomeManager) folder else folder + '/' + user.name
+		val fFolder = new File(theFolder)
+		if (!fFolder.exists) fFolder.mkdirs
+		
+		return theFolder
 	}
 }
 

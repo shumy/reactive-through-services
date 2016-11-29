@@ -67,9 +67,10 @@ class WebResource {
 		]
 		
 		logger.trace('REQUEST {}', client)
+		
+		params.put('ctx.path', '''"«req.path»"'''.toString)
 		if (!config.processBody) {
 			params.put('ctx.request', req)
-			params.put('ctx.path', '''"«req.path»"'''.toString)
 			
 			//direct mode, request body will be processed in the service
 			resource.processRequest(params)
