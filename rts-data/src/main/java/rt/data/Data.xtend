@@ -26,12 +26,12 @@ annotation Data {
 
 class DataProcessor extends AbstractClassProcessor {
 	override doValidate(ClassDeclaration clazz, extension ValidationContext ctx) {
-		val allFields = clazz.declaredFields.filter[ !(transient || static) ].toList
+		/*val allFields = clazz.declaredFields.filter[ !(transient || static) ].toList
 		allFields.forEach[
 			val optional = findAnnotation(Optional.findTypeGlobally) != null
 			if (!final && !optional)
 				addError('Variable fields not supported in non optional data types!')
-		]
+		]*/
 		
 		clazz.declaredMethods.forEach[
 			if (findAnnotation(Validation.findTypeGlobally) != null && parameters.length != 0)
@@ -89,6 +89,7 @@ class DataProcessor extends AbstractClassProcessor {
 			val fType = field.type.wrapperIfPrimitive
 			//val fTypeRef = fType?.newTypeReference ?: field.type
 			
+			field.final = false
 			field.markAsRead
 			field.type = fType
 			
@@ -103,11 +104,20 @@ class DataProcessor extends AbstractClassProcessor {
 		
 		clazz.addConstructor[
 			visibility = Visibility.DEFAULT
+			body = '''//only used to support frameworks like JPA/Hibernate'''
+		]
+		
+		clazz.addConstructor[
+			visibility = Visibility.DEFAULT
 			val builderTypeRef = newTypeReference(builderClassName)
 			addParameter('builder', builderTypeRef)
 			body = '''
 				«FOR field: allFields»
-					this.«field.simpleName» = builder.«field.simpleName»;
+					«IF field.findAnnotation(Optional.findTypeGlobally) === null»
+						this.«field.simpleName» = builder.«field.simpleName»;
+					«ELSE»
+						if (builder.«field.simpleName» != null) this.«field.simpleName» = builder.«field.simpleName»;
+					«ENDIF»
 				«ENDFOR»
 			'''
 		]
