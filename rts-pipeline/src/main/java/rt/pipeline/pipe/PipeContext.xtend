@@ -179,7 +179,7 @@ class PipeContext {
 		//validate authorization...
 		val user = object(UserInfo)
 		if (!pipeline.isAuthorized(message, user)) {
-			logger.error('Authorization failed on {}', message.path)
+			logger.error('Authorization failed on {} for user {}', message.path, user?.name)
 			fail(new RuntimeException('Unauthorized user!'))
 			return
 		}

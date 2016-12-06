@@ -209,7 +209,8 @@ class ServiceProcessor extends AbstractClassProcessor {
 					);
 				«ELSEIF Observable.newTypeReference.isAssignableFrom(meth.returnType)»
 					final «ObservableSkeleton.canonicalName» «varName»Ske = new «ObservableSkeleton.canonicalName»(«varName», ctx);
-					ctx.replyObservable(«varName»Ske.process());
+					ctx.replyObservable(«varName»Ske.getAddress());
+					«varName»Ske.process();
 				«ELSE»
 					ctx.replyOK(«varName»);
 				«ENDIF»

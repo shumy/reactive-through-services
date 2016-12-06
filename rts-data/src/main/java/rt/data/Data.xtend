@@ -90,6 +90,7 @@ class DataProcessor extends AbstractClassProcessor {
 			//val fTypeRef = fType?.newTypeReference ?: field.type
 			
 			field.final = false
+			field.visibility = Visibility.DEFAULT
 			field.markAsRead
 			field.type = fType
 			

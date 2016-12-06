@@ -2,6 +2,8 @@ package rt.utils.interceptor
 
 import java.util.List
 import org.jose4j.jwk.HttpsJwks
+import org.jose4j.jwt.consumer.JwtConsumer
+import org.jose4j.jwt.consumer.JwtConsumerBuilder
 import org.jose4j.keys.resolvers.HttpsJwksVerificationKeyResolver
 import rt.data.Data
 import rt.data.Validation
@@ -10,8 +12,6 @@ import rt.pipeline.UserInfo
 import rt.pipeline.pipe.PipeContext
 import rt.plugin.service.CtxHeaders
 import rt.plugin.service.ServiceException
-import org.jose4j.jwt.consumer.JwtConsumer
-import org.jose4j.jwt.consumer.JwtConsumerBuilder
 
 @Data(metadata = false)
 class JwtAuthInterceptor implements IComponent {
@@ -46,10 +46,15 @@ class JwtAuthInterceptor implements IComponent {
 			return
 		}*/
 		
-		val headers = ctx.object(CtxHeaders)
-		if (headers != null && headers.get('auth') == 'jwt') {
+		val jwt = ctx.getAuthToken
+		/*if (jwt == null) {
+			logger.warn("Authorization token not present or in incorrect format!")
+			ctx.fail(new ServiceException(403, "Authorization token not present or in incorrect format!"))
+			return
+		}*/
+		
+		if (jwt != null) {
 			try {
-				val jwt = headers.get('token')
 				val jwtClaims = jwtConsumer.processToClaims(jwt)
 				println('JWT validation succeeded! ' + jwtClaims)
 				
@@ -66,6 +71,29 @@ class JwtAuthInterceptor implements IComponent {
 		}
 		
 		ctx.next
+	}
+	
+	def getAuthToken(PipeContext ctx) {
+		val headers = ctx.object(CtxHeaders)
+		
+		val token = headers.get('token')
+		if (token !== null)
+			return token
+		
+		val cookie = headers.get('cookie')
+		if (cookie === null)
+			return null
+		
+		val cEntries = cookie.split(';')
+		for(entry: cEntries) {
+			val keyValue = entry.trim.split('=')
+			
+			//println('''(key=«keyValue.get(0)», value=«keyValue.get(1)»)''')
+			if (keyValue.get(0) == 'Authorization')
+				return keyValue.get(1)
+		}
+		
+		return null;
 	}
 	
 	def void process(PipeContext ctx, String user, List<String> groups) {

@@ -49,6 +49,7 @@ export class OIDCClient {
     return this.idpRequest(this.authEndpoint).then(hash => {
       console.log('Logged in...')
       this.authInfo = parseHash(hash)
+      Cookies.set('Authorization', this.authInfo.id_token)
       Cookies.set(this.clientId, JSON.stringify(this.authInfo))
       this.setAuthHeader()
       return this.authInfo
@@ -78,6 +79,7 @@ export class OIDCClient {
   }
 
   private clear() {
+    Cookies.remove('Authorization')
     Cookies.remove(this.clientId)
     delete this.authHeader
     delete this.authInfo

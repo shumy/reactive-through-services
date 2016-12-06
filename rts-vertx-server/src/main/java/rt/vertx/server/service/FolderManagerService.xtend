@@ -106,7 +106,13 @@ class FolderManagerService {
 			FileInfo.B => [
 				name = file.name
 				isDir = file.directory
-				if (!isDir) size = file.length
+				if (!isDir) {
+					val splits = file.name.split('\\.')
+					if (splits.length > 1)
+						type = splits.get(splits.length - 1)
+						
+					size = file.length
+				}
 			]
 		]
 	}
@@ -125,5 +131,6 @@ class FileInfo {
 	val String name
 	val Boolean isDir
 	
+	@Optional val String type
 	@Optional val Long size
 }
