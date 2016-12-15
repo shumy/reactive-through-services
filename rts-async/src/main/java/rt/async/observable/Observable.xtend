@@ -29,6 +29,14 @@ class Observable<T> {
 		return newObs.observe
 	}
 	
+	def Observable<T> forEach((T) => void processFun) {
+		val ObservableResult<T> newObs = [ obs |
+			oResult.subscribe([ processFun.apply(it) obs.next(it) ], [ obs.complete ], [ obs.reject(it) ])
+		]
+		
+		return newObs.observe
+	}
+	
 	def Observable<T> onComplete(() => void onComplete) {
 		this.onComplete = onComplete
 		return this
