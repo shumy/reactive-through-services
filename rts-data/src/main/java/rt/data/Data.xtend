@@ -105,14 +105,10 @@ class DataProcessor extends AbstractClassProcessor {
 		
 		clazz.addConstructor[
 			visibility = Visibility.DEFAULT
-			body = '''//only used to support frameworks like JPA/Hibernate'''
-		]
-		
-		clazz.addConstructor[
-			visibility = Visibility.DEFAULT
 			val builderTypeRef = newTypeReference(builderClassName)
 			addParameter('builder', builderTypeRef)
 			body = '''
+				this();
 				«FOR field: allFields»
 					«IF field.findAnnotation(Optional.findTypeGlobally) === null»
 						this.«field.simpleName» = builder.«field.simpleName»;
@@ -122,6 +118,13 @@ class DataProcessor extends AbstractClassProcessor {
 				«ENDFOR»
 			'''
 		]
+		
+		//add default constructor if not exist
+		if (!clazz.declaredConstructors.exists[ simpleName == clazz.simpleName && parameters.length === 0])
+			clazz.addConstructor[
+				visibility = Visibility.DEFAULT
+				body = '''//only used to support frameworks like JPA/Hibernate'''
+			]
 		
 		clazz.addMethod('get')[
 			returnType = object

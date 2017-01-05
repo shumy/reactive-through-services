@@ -5,16 +5,17 @@ import org.jose4j.jwk.HttpsJwks
 import org.jose4j.jwt.consumer.JwtConsumer
 import org.jose4j.jwt.consumer.JwtConsumerBuilder
 import org.jose4j.keys.resolvers.HttpsJwksVerificationKeyResolver
+import org.slf4j.LoggerFactory
 import rt.data.Data
-import rt.data.Validation
 import rt.pipeline.IComponent
 import rt.pipeline.UserInfo
 import rt.pipeline.pipe.PipeContext
 import rt.plugin.service.CtxHeaders
-import rt.plugin.service.ServiceException
+import rt.data.Validation
 
 @Data(metadata = false)
 class JwtAuthInterceptor implements IComponent {
+	transient static val logger = LoggerFactory.getLogger(JwtAuthInterceptor)
 	transient var JwtConsumer jwtConsumer
 	
 	val String jwksUrl
@@ -27,14 +28,14 @@ class JwtAuthInterceptor implements IComponent {
 		val httpsJwksKeyResolver = new HttpsJwksVerificationKeyResolver(httpsJkws)
 		
 		jwtConsumer = new JwtConsumerBuilder()
-			.setRequireExpirationTime() // the JWT must have an expiration time
+			.setRequireExpirationTime // the JWT must have an expiration time
 			.setMaxFutureValidityInMinutes(300) // but the  expiration time can't be too crazy
 			.setAllowedClockSkewInSeconds(30) // allow some leeway in validating time based claims to account for clock skew
 			.setRequireSubject() // the JWT must have a subject claim
 			.setExpectedIssuer(issuer) // whom the JWT needs to have been issued by
 			.setExpectedAudience(audience) // to whom the JWT is intended for
 			.setVerificationKeyResolver(httpsJwksKeyResolver)
-			.build() // create the JwtConsumer instance
+			.build // create the JwtConsumer instance
 	}
 	
 	override apply(PipeContext ctx) {
@@ -47,27 +48,20 @@ class JwtAuthInterceptor implements IComponent {
 		}*/
 		
 		val jwt = ctx.getAuthToken
-		/*if (jwt == null) {
-			logger.warn("Authorization token not present or in incorrect format!")
-			ctx.fail(new ServiceException(403, "Authorization token not present or in incorrect format!"))
-			return
-		}*/
-		
 		if (jwt != null) {
 			try {
 				val jwtClaims = jwtConsumer.processToClaims(jwt)
-				println('JWT validation succeeded! ' + jwtClaims)
+				logger.info('JWT validation succeeded: {}', jwtClaims)
 				
 				val email = jwtClaims.claimsMap.get('email') as String
 				val groups = jwtClaims.claimsMap.get('groups') as List<String>
 				
 				ctx.process(email, groups)
+				return
 			} catch(Exception ex) {
-				ex.printStackTrace
-				ctx.fail(new ServiceException(401, '''Token validation fail'''))
+				//access control in not evaluated here, the interceptor should always succeed.
+				logger.warn('JWT validation failed: {} ', jwt)
 			}
-			
-			return
 		}
 		
 		ctx.next
@@ -88,7 +82,6 @@ class JwtAuthInterceptor implements IComponent {
 		for(entry: cEntries) {
 			val keyValue = entry.trim.split('=')
 			
-			//println('''(key=«keyValue.get(0)», value=«keyValue.get(1)»)''')
 			if (keyValue.get(0) == 'Authorization')
 				return keyValue.get(1)
 		}

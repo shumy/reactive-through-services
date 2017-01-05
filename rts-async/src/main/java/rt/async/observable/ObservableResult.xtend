@@ -58,11 +58,11 @@ abstract class ObservableResult<T> extends AsyncResult<ObservableResult<T>> {
 		}
 		
 		def void cancel() {
-			oResult?.onCancel.apply
+			oResult.onCancel?.apply
 		}
 	
 		def void request(long n) {
-			oResult?.onRequest.apply(n)
+			oResult.onRequest?.apply(n)
 		}
 	}
 }
