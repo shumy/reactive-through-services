@@ -3,6 +3,7 @@ package rt.async
 import java.util.Timer
 import org.eclipse.xtend.lib.annotations.Accessors
 import rt.async.promise.Promise
+import rt.async.promise.PromiseResult
 
 abstract class AsyncUtils {
 	static val local = new ThreadLocal<AsyncUtils>
@@ -94,7 +95,18 @@ abstract class AsyncUtils {
 		}
 		
 		override <T> setTask(()=>T execute) {
-			throw new UnsupportedOperationException('setTask')
+			val PromiseResult<T> pr = [ p |
+				new Thread[
+					AsyncUtils.set(new DefaultAsyncUtils)
+					try {
+						p.resolve(execute.apply)
+					} catch(Throwable ex) {
+						p.reject(ex)
+					}
+				].start
+			]
+			
+			return pr.promise
 		}
 	}
 }
