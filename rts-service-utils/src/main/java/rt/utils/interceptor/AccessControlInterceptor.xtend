@@ -23,5 +23,7 @@ class AccessControlInterceptor implements IComponent {
 			ctx.fail(new ServiceException(401, 'Unauthorized user!'))
 			return
 		}
+		
+		ctx.next
 	}
 }
