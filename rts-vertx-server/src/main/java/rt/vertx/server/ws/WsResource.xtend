@@ -118,8 +118,7 @@ class WsResource implements IResourceProvider {
 		if (msg.cmd == Message.CMD_ERROR) {
 			val ex = msg.result(RuntimeException)
 			if (ex instanceof ServiceException) {
-				val sex = ex as ServiceException
-				msg.result = #{ 'message' -> sex.message, 'httpCode' -> sex.httpCode }
+				msg.result = #{ 'message' -> ex.message, 'httpCode' -> ex.httpCode }
 			} else {
 				msg.result = #{ 'message' -> ex.message }
 			}

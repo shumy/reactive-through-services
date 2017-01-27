@@ -16,6 +16,7 @@ export class ClientRouter implements IServiceClientFactory  {
 
   resource: PipeResource = null
   authMgr: IAuthManager
+  onError: (any) => boolean
 
   get bus() { return this.pipeline.mb }
 
@@ -130,15 +131,20 @@ export class ServiceClient {
             srvClient.msgID++
             let sendMsg: IMessage = { id: srvClient.msgID, clt: srvClient.uuid, path: srvPath, cmd: srvMeth, args: srvArgs }
 
-            console.log('PROXY-SEND: ', sendMsg)
+            //console.log('PROXY-SEND: ', sendMsg)
             srvClient.router.bus.send(srvClient.router.server, sendMsg, (replyMsg) => {
-              console.log('PROXY-REPLY: ', replyMsg)
+              //console.log('PROXY-REPLY: ', replyMsg)
               if (replyMsg.cmd === TYP.CMD_OK) {
                 resolve(replyMsg.res)
               } else if (replyMsg.cmd === TYP.CMD_OBSERVABLE) {
                 resolve(new RTSObservable(srvClient.router.resource, replyMsg.res))
               } else {
-                reject(replyMsg.res)
+                if (srvClient.router.onError) {
+                  if(srvClient.router.onError(replyMsg.res))
+                    reject(replyMsg.res)
+                } else {
+                  reject(replyMsg.res)
+                }
               }
             })
           })

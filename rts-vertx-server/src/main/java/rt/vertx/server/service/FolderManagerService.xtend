@@ -9,11 +9,11 @@ import rt.data.Default
 import rt.data.Optional
 import rt.data.Validation
 import rt.pipeline.PathValidator
-import rt.pipeline.UserInfo
 import rt.plugin.service.ServiceException
 import rt.plugin.service.an.Context
 import rt.plugin.service.an.Public
 import rt.plugin.service.an.Service
+import rt.utils.interceptor.UserInfo
 
 @Service
 @Data(metadata = false)

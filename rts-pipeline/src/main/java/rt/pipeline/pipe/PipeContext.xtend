@@ -5,9 +5,9 @@ import java.util.Iterator
 import org.eclipse.xtend.lib.annotations.Accessors
 import org.slf4j.LoggerFactory
 import rt.pipeline.IComponent
-import rt.pipeline.UserInfo
 import rt.pipeline.bus.IMessageBus
 import rt.pipeline.bus.Message
+import java.util.Set
 
 class PipeContext {
 	static val logger = LoggerFactory.getLogger('PIPELINE')
@@ -175,15 +175,28 @@ class PipeContext {
 		resource.disconnect
 	}
 	
-	private def void deliverRequest() {
-		//validate authorization...
-		val user = object(UserInfo)
-		if (!pipeline.isAuthorized(message, user)) {
-			logger.error('Authorization failed on {} for user {}', message.path, user?.name)
-			fail(new RuntimeException('Unauthorized user!'))
-			return
+	def boolean isAuthorized(Message msg, Set<String> groups) {
+		val auth = pipeline.serviceAuthorizations.get(msg.path)
+		if (auth === null) return false
+		
+		val allGroup = auth.get('all')
+		if (allGroup !== null) {
+			if (allGroup == 'all') return true
+			
+			return groups.contains(allGroup)
 		}
 		
+		val methGroup = auth.get(msg.cmd)
+		if (methGroup !== null) {
+			if (methGroup == 'all') return true
+			
+			return groups.contains(methGroup)
+		}
+		
+		return false
+	}
+	
+	private def void deliverRequest() {
 		val srv = pipeline.getComponent(message.path)
 		if(srv != null) {
 			logger.debug('DELIVER {}', message.path)

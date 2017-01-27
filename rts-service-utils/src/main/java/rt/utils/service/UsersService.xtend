@@ -1,11 +1,11 @@
 package rt.utils.service
 
 import rt.data.Data
-import rt.pipeline.UserInfo
+import rt.plugin.service.ServiceException
 import rt.plugin.service.an.Context
 import rt.plugin.service.an.Public
 import rt.plugin.service.an.Service
-import rt.plugin.service.ServiceException
+import rt.utils.interceptor.UserInfo
 
 @Service
 @Data(metadata = false)

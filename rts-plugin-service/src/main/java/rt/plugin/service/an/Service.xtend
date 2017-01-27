@@ -76,7 +76,7 @@ class ServiceProcessor extends AbstractClassProcessor {
 			val isWorker = annoPublicRef.getBooleanValue('worker')
 			
 			//make a copy because the parameters will be changed
-			val methParameters = meth.parameters.map[it as MutableParameterDeclaration].toList
+			val methParameters = meth.parameters.map[it].toList
 			
 			val ctxArgs = meth.getContextArgs(ctx)
 			ctxArgs.forEach[

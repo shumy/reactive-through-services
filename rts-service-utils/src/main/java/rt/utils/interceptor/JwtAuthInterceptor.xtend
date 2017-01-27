@@ -8,7 +8,6 @@ import org.jose4j.keys.resolvers.HttpsJwksVerificationKeyResolver
 import org.slf4j.LoggerFactory
 import rt.data.Data
 import rt.pipeline.IComponent
-import rt.pipeline.UserInfo
 import rt.pipeline.pipe.PipeContext
 import rt.plugin.service.CtxHeaders
 import rt.data.Validation

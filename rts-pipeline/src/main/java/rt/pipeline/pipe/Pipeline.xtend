@@ -7,7 +7,6 @@ import java.util.Map
 import org.eclipse.xtend.lib.annotations.Accessors
 import rt.pipeline.IComponent
 import rt.pipeline.IResource
-import rt.pipeline.UserInfo
 import rt.pipeline.bus.DefaultMessageBus
 import rt.pipeline.bus.IMessageBus
 import rt.pipeline.bus.IPublisher
@@ -20,7 +19,7 @@ class Pipeline {
 	val interceptors = new ArrayList<IComponent>
 	
 	val services = new HashMap<String, IComponent>
-	val serviceAuthorizations = new HashMap<String, Map<String, String>>
+	package val serviceAuthorizations = new HashMap<String, Map<String, String>>
 	val ctxServices = new HashSet<IComponent>
 	
 	new() { this(new DefaultMessageBus) }
@@ -121,30 +120,5 @@ class Pipeline {
 		}
 		
 		auths.put(cmd, group)
-	}
-	
-	def boolean isAuthorized(Message msg, UserInfo user) {
-		val auth = serviceAuthorizations.get(msg.path)
-		if (auth === null) return false
-		
-		val allGroup = auth.get('all')
-		if (allGroup !== null) {
-			if (allGroup == 'all') return true
-			
-			if (user === null) return false
-			
-			return user.groups.contains(allGroup)
-		}
-		
-		val methGroup = auth.get(msg.cmd)
-		if (methGroup !== null) {
-			if (methGroup == 'all') return true
-			
-			if (user === null) return false
-			
-			return user.groups.contains(methGroup)
-		}
-		
-		return false
 	}
 }

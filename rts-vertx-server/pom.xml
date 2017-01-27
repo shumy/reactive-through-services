@@ -21,6 +21,11 @@
 			<version>${global.version}</version>
 		</dependency>
 		<dependency>
+			<groupId>com.github.shumy</groupId>
+			<artifactId>rts-service-utils</artifactId>
+			<version>${global.version}</version>
+		</dependency>
+		<dependency>
 			<groupId>com.google.code.gson</groupId>
 			<artifactId>gson</artifactId>
 			<version>2.6.2</version>
