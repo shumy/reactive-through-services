@@ -9,6 +9,7 @@ export interface UserInfo {
   name: string
   email: string
   avatar: string
+  groups: string[]
 }
 
 export interface IAuthManager {

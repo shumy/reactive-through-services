@@ -142,6 +142,7 @@ export interface UserInfoResponse {
   email_verified: boolean
   name: string
   picture: string
+  groups: string[]
 }
 
 function get(url: string, timeout: number, headers?: {}): Promise<any> {
