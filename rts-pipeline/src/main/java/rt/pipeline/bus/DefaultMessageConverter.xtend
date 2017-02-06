@@ -51,7 +51,11 @@ class DefaultMessageConverter {
 				if (next === null)
 					throw new RuntimeException("Argument map non existent!")
 				
-				if (next instanceof String && (next as String).startsWith('"')) {
+				if (next instanceof String && (
+					(next as String).startsWith('"') ||
+					(next as String).startsWith('[') ||
+					(next as String).startsWith('{')
+				)) {
 					args.add(gson.fromJson(next as String, type))
 				} else {
 					args.add(next)
