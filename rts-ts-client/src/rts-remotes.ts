@@ -8,7 +8,7 @@ export interface EventProcessor {
 }
 
 export abstract class BaseObservable<D> extends Observable<D> implements EventProcessor {
-  protected sub: Subscriber<any[]>
+  protected sub: Subscriber<any>
   connected = false
 
   constructor(public address: string, protected reqCallback: (remote: any, req: ReqType) => void) {

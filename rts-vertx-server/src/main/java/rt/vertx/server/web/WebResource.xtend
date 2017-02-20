@@ -38,6 +38,7 @@ class WebResource {
 	def void process(HttpServerRequest req, List<String> routeSplits, Map<String, String> queryParams) {
 		//if is REST service, add route parameters
 		val routeParams = config.getParameters(routeSplits)
+		val simplePath = req.path.replaceAll('//', '/')
 		
 		/*println('REQUEST -> ' + routeSplits)
 		queryParams.keySet.forEach[ key |
@@ -56,7 +57,7 @@ class WebResource {
 		val resource = parent.pipeline.createResource(client) => [
 			sendCallback = [
 				logger.trace('RESPONSE {} {}', cmd, client)
-				processResponse(req.response, req.path)
+				processResponse(req.response, simplePath)
 			]
 			
 			contextCallback = [
@@ -68,7 +69,7 @@ class WebResource {
 		
 		logger.trace('REQUEST {}', client)
 		
-		params.put('ctx.path', '''"«req.path»"'''.toString)
+		params.put('ctx.path', '''"«simplePath»"'''.toString)
 		if (!config.processBody) {
 			params.put('ctx.request', req)
 			

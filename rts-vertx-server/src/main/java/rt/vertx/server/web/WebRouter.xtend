@@ -36,7 +36,7 @@ class WebRouter extends Router {
 		this.pipeline = parent.pipeline
 		
 		server.requestHandler[ req |
-			val uri = QueryStringDecoder.decodeComponent(req.uri)
+			val uri = QueryStringDecoder.decodeComponent(req.uri).replaceAll('//', '/')
 			
 			logger.debug('REQUEST {}', uri)
 			val uriSplits = uri.split('\\?')

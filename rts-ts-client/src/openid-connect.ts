@@ -27,7 +27,7 @@ export class OIDCClient {
   authInfo: AuthInfoResponse
 
   constructor(private issuer: OIDCIssuer, private clientId: string) {
-    this.redirectUri = window.location.protocol + '//' + window.location.host + '/'
+    this.redirectUri = window.location.href //window.location.protocol + '//' + window.location.host + '/'
 
     this.authEndpoint = issuer.discover.authorization_endpoint + '?scope=email+openid&response_type=token+id_token&nonce=' + this.genNonce() + '&redirect_uri=' + this.redirectUri + '&client_id=' + clientId
     this.userInfoEndpoint = issuer.discover.userinfo_endpoint
@@ -89,8 +89,10 @@ export class OIDCClient {
     let x = screen.width/2 - 700/2;
     let y = screen.height/2 - 450/2;
 
-    return new Promise<string>((resolve, reject) => {
+    return new Promise<string>((resolve, reject) => { 
       console.log('IDP Request: ', url)
+      console.log('IDP Redirect: ', this.redirectUri)
+
       let authWin = window.open(url, 'OAuth2', 'width=800, height=500, left=' + x + ',top=' + y)
       let intervalId = setInterval(_ => {
         if (!authWin) {
@@ -99,9 +101,9 @@ export class OIDCClient {
         }
 
         try {
-          if (authWin.location.hostname === window.location.hostname) {
-            clearInterval(intervalId)
+          if (authWin.location.origin + authWin.location.pathname === this.redirectUri) {
             let hash = authWin.location.hash
+            clearInterval(intervalId)
             authWin.close()
             resolve(hash)
           }
