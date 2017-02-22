@@ -95,22 +95,23 @@ export class OIDCClient {
 
       let authWin = window.open(url, 'OAuth2', 'width=800, height=500, left=' + x + ',top=' + y)
       let intervalId = setInterval(_ => {
-        if (!authWin) {
-          clearInterval(intervalId)
-          reject('Request not completed!')
-        }
-
         try {
-          if (authWin.location.origin + authWin.location.pathname === this.redirectUri) {
-            let hash = authWin.location.hash
+          if (authWin === undefined || authWin.location === null) {
+            console.log('Auth-Rejected: ', authWin.location)
             clearInterval(intervalId)
+            reject('Request not completed!')
+            return
+          }
+
+          if (authWin.location.origin + authWin.location.pathname === this.redirectUri) {
+            console.log('Auth-Resolved:', authWin.location)
+            clearInterval(intervalId)
+            let hash = authWin.location.hash
             authWin.close()
             resolve(hash)
           }
-        } catch(error) {
-          /*ignore error, this means that login/logout is not ready*/
-        }
-      })
+        } catch(error) { /*ignore error, this means that login/logout is not ready*/ }
+      }, 1)
     })
   }
 
