@@ -96,7 +96,7 @@ export class OIDCClient {
       let authWin = window.open(url, 'OAuth2', 'width=800, height=500, left=' + x + ',top=' + y)
       let intervalId = setInterval(_ => {
         try {
-          if (authWin === undefined || authWin.location === null) {
+          if (authWin === undefined || authWin.location === undefined || authWin.location === null || authWin.location.origin === undefined) {
             console.log('Auth-Rejected: ', authWin.location)
             clearInterval(intervalId)
             reject('Request not completed!')
