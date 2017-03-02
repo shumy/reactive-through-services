@@ -52,10 +52,10 @@ class JwtAuthInterceptor implements IComponent {
 				val jwtClaims = jwtConsumer.processToClaims(jwt)
 				logger.info('JWT validation succeeded: {}', jwtClaims)
 				
-				val email = jwtClaims.claimsMap.get('email') as String
+				val user = ( jwtClaims.claimsMap.get('preferred_username') ?: jwtClaims.claimsMap.get('username') ) as String
 				val groups = jwtClaims.claimsMap.get('groups') as List<String>
 				
-				ctx.process(email, groups)
+				ctx.process(user, groups)
 				return
 			} catch(Exception ex) {
 				//access control in not evaluated here, the interceptor should always succeed.
