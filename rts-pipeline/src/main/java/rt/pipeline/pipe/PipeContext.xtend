@@ -177,7 +177,10 @@ class PipeContext {
 	
 	def boolean isAuthorized(Message msg, Set<String> groups) {
 		val auth = pipeline.serviceAuthorizations.get(msg.path)
-		if (auth === null) return false
+		if (auth === null || auth.empty) return true
+		
+		//if auth has configs, authentication is mandatory
+		if (groups === null) return false
 		
 		val allGroup = auth.get('all')
 		if (allGroup !== null) {

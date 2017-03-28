@@ -67,7 +67,7 @@ class Pipeline {
 	}
 	
 	def void addComponent(String path, IComponent component) {
-		addComponent(path, component, #{ 'all' -> 'all' })
+		addComponent(path, component, #{})
 	}
 	
 	def void addComponent(String path, IComponent component, Map<String, String> authorizations) {
@@ -95,7 +95,7 @@ class Pipeline {
 	}
 	
 	def void addService(String address, IComponent service, boolean asContext) {
-		addService(address, service, asContext, #{ 'all' -> 'all' })
+		addService(address, service, asContext, #{})
 	}
 
 	def void addService(String address, IComponent service, boolean asContext, Map<String, String> authorizations) {

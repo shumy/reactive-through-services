@@ -11,6 +11,7 @@ import rt.pipeline.IComponent
 import rt.pipeline.pipe.PipeContext
 import rt.plugin.service.CtxHeaders
 import rt.data.Validation
+import java.util.Collections
 
 @Data(metadata = false)
 class JwtAuthInterceptor implements IComponent {
@@ -53,7 +54,7 @@ class JwtAuthInterceptor implements IComponent {
 				logger.info('JWT validation succeeded: {}', jwtClaims)
 				
 				val user = ( jwtClaims.claimsMap.get('preferred_username') ?: jwtClaims.claimsMap.get('username') ) as String
-				val groups = jwtClaims.claimsMap.get('groups') as List<String>
+				val groups = ( jwtClaims.claimsMap.get('groups') ?: Collections.EMPTY_LIST ) as List<String>
 				
 				ctx.process(user, groups)
 				return
