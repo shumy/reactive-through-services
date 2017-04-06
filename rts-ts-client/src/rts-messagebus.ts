@@ -21,7 +21,7 @@ export class MessageBus {
     setTimeout(_ => {
       let replyTimeoutMsg: IMessage = { id: msg.id, clt: msg.clt, cmd: TYP.CMD_ERROR, res: 'Timeout for ' + msg.path + '->' + msg.cmd }
       this.reply(replyTimeoutMsg)
-    }, 3000)
+    }, 10000)
   }
 
   reply(msg: IMessage) {
