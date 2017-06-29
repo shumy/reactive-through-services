@@ -29,6 +29,46 @@ class FolderManagerService {
 		if (!fFolder.exists) fFolder.mkdirs
 	}
 	
+	@Public
+	@Context(name = 'user', type = UserInfo)
+	def void delete(String filename) {
+		logger.debug('DELETING {}', filename)
+		
+		//protect against filesystem attacks
+		if (!PathValidator.isValid(filename)) {
+			logger.error('Filename not accepted: {}', filename)
+			throw new ServiceException(403, 'Filename not accepted!')
+		}
+		
+		val filePath = user.theFolder + '/' + filename
+		new File(filePath).delete
+	}
+	
+	@Public(notif = true)
+	@Context(name = 'user', type = UserInfo)
+	def void downloadAndDelete(HttpServerRequest req, String filename) {
+		req.endHandler[
+			logger.debug('DOWNLOADING {}', filename)
+			
+			//protect against filesystem attacks
+			if (!PathValidator.isValid(filename)) {
+				logger.error('Filename not accepted: {}', filename)
+				req.response.statusCode = 403
+				req.response.end = 'Filename not accepted!'
+				return
+			}
+			
+			val filePath = user.theFolder + '/' + filename
+			
+			req.response => [
+				putHeader('Content-Type', 'application/octet-stream')
+				sendFile(filePath)[
+					new File(filePath).delete
+				]
+			]
+		]
+	}
+	
 	@Public(notif = true)
 	@Context(name = 'user', type = UserInfo)
 	def void download(HttpServerRequest req, String filename) {
