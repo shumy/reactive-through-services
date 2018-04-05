@@ -31,6 +31,7 @@ class DefaultVertxServer {
 		
 		this.server = vertx.createHttpServer(new HttpServerOptions => [
 			tcpKeepAlive = true
+			maxWebsocketFrameSize = 1048576
 		])
 		
 		this.pipeline = new Pipeline

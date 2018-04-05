@@ -7,8 +7,8 @@ import rt.async.promise.PromiseResult
 class VertxAsyncUtils extends AsyncUtils {
 	val Vertx vertx
 	
-	new(Vertx vertx) { this(vertx, false, 10000L) }
-	new(Vertx vertx, boolean isWorker) { this(vertx, isWorker, 10000L) }
+	new(Vertx vertx) { this(vertx, false, 30000L) }
+	new(Vertx vertx, boolean isWorker) { this(vertx, isWorker, 30000L) }
 	new(Vertx vertx, boolean isWorker, long timeout) {
 		super(isWorker, timeout)
 		this.vertx = vertx
